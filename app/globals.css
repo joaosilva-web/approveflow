@@ -1,26 +1,98 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── Design token overrides ────────────────────────────────────────────────── */
+
+/* Static color tokens — available as bg-canvas, bg-surface, bg-elevated, etc. */
+@theme {
+  /* App canvas / background */
+  --color-canvas: #06060f;
+  --color-surface: #0d0d1e;
+  --color-elevated: #111122;
+  --color-subtle: #16162a;
+
+  /* Semantic text */
+  --color-muted: #8888aa;
 }
 
+/* Dynamic tokens that reference CSS variables set by next/font */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base ───────────────────────────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-canvas);
+  color: #f0f0ff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a4a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed;
+}
+
+/* ─── Selection ─────────────────────────────────────────────────────────────── */
+
+::selection {
+  background-color: rgba(124, 58, 237, 0.35);
+  color: #f0f0ff;
+}
+
+/* ─── Custom utilities ───────────────────────────────────────────────────────── */
+
+@layer utilities {
+  /* Purple→indigo gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #c4b5fd 0%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Frosted glass surface */
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Soft violet glow shadow */
+  .glow-brand {
+    box-shadow:
+      0 0 60px rgba(124, 58, 237, 0.18),
+      0 0 120px rgba(124, 58, 237, 0.06);
+  }
+
+  /* Improved text wrapping for headlines */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Subtle dot-grid texture */
+  .bg-dot-grid {
+    background-image: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.07) 1px,
+      transparent 1px
+    );
+    background-size: 28px 28px;
+  }
 }

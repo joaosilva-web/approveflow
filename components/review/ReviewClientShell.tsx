@@ -1,0 +1,253 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { Badge } from "@/components/ui/Badge";
+import ApprovalPanel from "@/components/review/ApprovalPanel";
+import CommentSystem, {
+  type CommentData,
+} from "@/components/review/CommentSystem";
+import ImageWithComments from "@/components/review/ImageWithComments";
+import FilePreview from "@/components/review/FilePreview";
+import VersionSwitcher from "@/components/review/VersionSwitcher";
+import { cn } from "@/lib/utils";
+import type { BadgeVariant } from "@/components/ui/Badge";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type Status = "PENDING" | "APPROVED" | "CHANGES_REQUESTED";
+
+interface DeliverySummary {
+  id: string;
+  reviewToken: string;
+  versionNumber: number;
+  label: string | null;
+  status: Status;
+  createdAt: string;
+}
+
+interface ReviewClientShellProps {
+  token: string;
+  signedUrl: string;
+  fileName: string;
+  mimeType: string;
+  allowDownload: boolean;
+  initialStatus: Status;
+  versionNumber: number;
+  label: string | null;
+  projectName: string;
+  clientName: string;
+  initialComments: CommentData[];
+  allDeliveries: DeliverySummary[];
+  isFreelancerPreview?: boolean;
+  freelancerName?: string | null;
+  freelancerDisplayName?: string | null;
+}
+
+// ─── Status badge map ─────────────────────────────────────────────────────────
+
+const statusVariant: Record<Status, BadgeVariant> = {
+  PENDING: "warning",
+  APPROVED: "success",
+  CHANGES_REQUESTED: "error",
+};
+
+const statusLabel: Record<Status, string> = {
+  PENDING: "Awaiting review",
+  APPROVED: "Approved",
+  CHANGES_REQUESTED: "Changes requested",
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function ReviewClientShell({
+  token,
+  signedUrl,
+  fileName,
+  mimeType,
+  allowDownload,
+  initialStatus,
+  versionNumber,
+  label,
+  projectName,
+  clientName,
+  initialComments,
+  allDeliveries,
+  isFreelancerPreview = false,
+  freelancerName,
+  freelancerDisplayName,
+}: ReviewClientShellProps) {
+  const isImage = mimeType.startsWith("image/");
+
+  const [status, setStatus] = useState<Status>(initialStatus);
+  const [comments, setComments] = useState<CommentData[]>(initialComments);
+
+  // Build pin number map for comment system
+  const pinnedComments = comments.filter(
+    (c) => c.xPosition !== null && c.yPosition !== null,
+  );
+  const pinnedCommentNumbers: Record<string, number> = {};
+  pinnedComments.forEach((c, i) => {
+    pinnedCommentNumbers[c.id] = i + 1;
+  });
+
+  return (
+    <div className="min-h-screen bg-[#06060f] flex flex-col">
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 md:px-8 border-b border-white/[0.06] bg-[#06060f]/90 backdrop-blur-sm">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-sm">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <span className="text-sm font-semibold">
+            <span className="text-white">Approve</span>
+            <span className="gradient-text">Flow</span>
+          </span>
+        </Link>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-xs font-semibold text-white/70 truncate max-w-[160px]">
+              {projectName}
+            </span>
+            <span className="text-[11px] text-white/35">
+              Client: {clientName}
+            </span>
+          </div>
+          <Badge variant={statusVariant[status]} dot size="sm">
+            {statusLabel[status]}
+          </Badge>
+        </div>
+      </header>
+
+      {/* ── Body ────────────────────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
+        {/* Main preview */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+          {/* Humanized intro — shown to clients */}
+          {!isFreelancerPreview && freelancerDisplayName && (
+            <p className="text-sm text-white/50 mb-5">
+              <span className="font-medium text-white/80">
+                {freelancerDisplayName}
+              </span>
+              {" shared "}
+              <span className="font-medium text-white/80">
+                &ldquo;{projectName}&rdquo;
+              </span>
+              {" for your review"}
+            </p>
+          )}
+          <div className="flex items-center gap-2.5 mb-5">
+            <span className="text-xs font-mono text-white/40 bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 rounded-md">
+              v{versionNumber}
+            </span>
+            {label && <span className="text-xs text-white/50">{label}</span>}
+            <span className="text-xs text-white/30 truncate ml-auto">
+              {fileName}
+            </span>
+          </div>
+
+          {isImage ? (
+            <ImageWithComments
+              signedUrl={signedUrl}
+              fileName={fileName}
+              comments={comments}
+              token={token}
+              onCommentAdded={(c) => setComments((prev) => [...prev, c])}
+            />
+          ) : (
+            <FilePreview
+              signedUrl={signedUrl}
+              mimeType={mimeType}
+              fileName={fileName}
+              allowDownload={allowDownload}
+            />
+          )}
+        </main>
+
+        {/* ── Sidebar ─────────────────────────────────────────────────────── */}
+        <aside
+          className={cn(
+            "w-full lg:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.06]",
+            "bg-[#080814] overflow-y-auto flex flex-col",
+          )}
+        >
+          <div className="flex flex-col gap-6 p-5">
+            {/* Approval — client only */}
+            {!isFreelancerPreview && (
+              <>
+                <ApprovalPanel
+                  token={token}
+                  status={status}
+                  onStatusChange={setStatus}
+                />
+                <hr className="border-white/[0.06]" />
+              </>
+            )}
+
+            {/* Freelancer preview banner */}
+            {isFreelancerPreview && (
+              <div className="flex items-center gap-2.5 rounded-xl bg-violet-600/10 border border-violet-500/20 px-3.5 py-3">
+                <div className="w-2 h-2 rounded-full bg-violet-400 shrink-0" />
+                <p className="text-xs text-violet-300/80 leading-snug">
+                  <span className="font-semibold text-violet-300">
+                    Preview mode
+                  </span>
+                  {" — "}client sees this link, you can reply to their comments
+                  below.
+                </p>
+              </div>
+            )}
+
+            {/* Comments */}
+            <CommentSystem
+              token={token}
+              initialComments={comments}
+              pinnedComments={pinnedCommentNumbers}
+              mode={isFreelancerPreview ? "freelancer" : "client"}
+              freelancerName={freelancerName ?? undefined}
+            />
+
+            {/* Version history */}
+            {allDeliveries.length > 1 && (
+              <>
+                <hr className="border-white/[0.06]" />
+                <VersionSwitcher
+                  deliveries={allDeliveries}
+                  currentToken={token}
+                />
+              </>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      {/* ── Viral footer ────────────────────────────────────────────────────── */}
+      <footer className="shrink-0 py-2.5 text-center border-t border-white/[0.04]">
+        <p className="text-[11px] text-white/20">
+          Review powered by{" "}
+          <a
+            href="https://approveflow.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-violet-400/50 hover:text-violet-400 transition-colors"
+          >
+            ApproveFlow
+          </a>
+        </p>
+      </footer>
+    </div>
+  );
+}

@@ -1,0 +1,64 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+const commentSchema = z.object({
+  authorName: z.string().min(1).max(100),
+  authorEmail: z.string().email().optional().or(z.literal("")),
+  authorType: z.enum(["CLIENT", "FREELANCER"]).optional().default("CLIENT"),
+  content: z.string().min(1).max(2000),
+  // Normalized image coordinates (0–1). null = general comment
+  xPosition: z.number().min(0).max(1).optional().nullable(),
+  yPosition: z.number().min(0).max(1).optional().nullable(),
+});
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ token: string }> },
+) {
+  const { token } = await params;
+
+  const delivery = await prisma.delivery.findUnique({
+    where: { reviewToken: token },
+    select: { id: true, expiresAt: true },
+  });
+
+  if (!delivery) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (delivery.expiresAt && delivery.expiresAt < new Date()) {
+    return NextResponse.json({ error: "Link expired" }, { status: 410 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const parsed = commentSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+      { status: 400 },
+    );
+  }
+
+  const comment = await prisma.comment.create({
+    data: {
+      deliveryId: delivery.id,
+      authorType: parsed.data.authorType,
+      authorName: parsed.data.authorName,
+      authorEmail: parsed.data.authorEmail || null,
+      content: parsed.data.content,
+      xPosition: parsed.data.xPosition ?? null,
+      yPosition: parsed.data.yPosition ?? null,
+    },
+  });
+
+  return NextResponse.json({
+    id: comment.id,
+    authorType: comment.authorType,
+    authorName: comment.authorName,
+    content: comment.content,
+    xPosition: comment.xPosition,
+    yPosition: comment.yPosition,
+    createdAt: comment.createdAt.toISOString(),
+  });
+}
