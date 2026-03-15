@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
   try {
     const result = await createMPCheckout({
       payerEmail: session.user.email,
+      payerName: session.user.name ?? undefined,
       planCode: parsed.data.planCode,
       userId: session.user.id,
       // MP redirects here after checkout — we handle status display via query param

@@ -18,6 +18,8 @@ function getAccessToken(): string {
 
 export interface CreatePreapprovalParams {
   payerEmail: string;
+  /** Full name of the payer — split into first/last for MP's anti-fraud engine. */
+  payerName?: string;
   planCode: "pro" | "studio";
   userId: string;
   /** Where MP redirects after the user completes / cancels checkout. */
@@ -43,8 +45,16 @@ export interface MPPreapprovalResponse {
 // ─── Plan config ──────────────────────────────────────────────────────────────
 
 const PLAN_CONFIG = {
-  pro: { amount: 49.9, reason: "ApproveFlow Pro" },
-  studio: { amount: 99.9, reason: "ApproveFlow Studio" },
+  pro: {
+    amount: 49.9,
+    reason: "ApproveFlow Pro",
+    descriptor: "APPROVEFLOW PRO",
+  },
+  studio: {
+    amount: 99.9,
+    reason: "ApproveFlow Studio",
+    descriptor: "APPROVEFLOW STUDIO",
+  },
 } as const;
 
 // ─── API calls ────────────────────────────────────────────────────────────────
@@ -61,8 +71,21 @@ export async function createMPCheckout(
   const token = getAccessToken();
   const config = PLAN_CONFIG[params.planCode];
 
-  const payload = {
+  // Build payer object with name parts for better approval rates
+  const nameParts = (params.payerName ?? "").trim().split(/\s+/);
+  const payerFirstName = nameParts[0] ?? "";
+  const payerLastName = nameParts.slice(1).join(" ") || payerFirstName;
+
+  // Webhook notification URL — MP will POST status changes here
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+  const notificationUrl = appUrl
+    ? `${appUrl}/api/billing/webhook/mercadopago`
+    : undefined;
+
+  const payload: Record<string, unknown> = {
     reason: config.reason,
+    // Soft descriptor shown on the cardholder's statement (reduces chargebacks)
+    statement_descriptor: config.descriptor,
     external_reference: `${params.userId}:${params.planCode}`,
     payer_email: params.payerEmail,
     back_url: params.backUrl,
@@ -73,6 +96,17 @@ export async function createMPCheckout(
       currency_id: "BRL",
     },
   };
+
+  // Add payer name fields when available (improves fraud detection)
+  if (payerFirstName) {
+    payload.payer_first_name = payerFirstName;
+    payload.payer_last_name = payerLastName;
+  }
+
+  // Add notification URL when app URL is configured
+  if (notificationUrl) {
+    payload.notification_url = notificationUrl;
+  }
 
   const res = await fetch(`${MP_BASE_URL}/preapproval`, {
     method: "POST",
@@ -85,7 +119,9 @@ export async function createMPCheckout(
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "Unknown error");
-    throw new Error(`Mercado Pago checkout creation failed (${res.status}): ${errText}`);
+    throw new Error(
+      `Mercado Pago checkout creation failed (${res.status}): ${errText}`,
+    );
   }
 
   const data = (await res.json()) as MPPreapprovalResponse;

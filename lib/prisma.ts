@@ -1,4 +1,3 @@
-import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
@@ -9,10 +8,10 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   // Prisma 7 uses the Wasm "client" engine which requires a driver adapter.
-  const pool = new Pool({
+  // PrismaPg accepts a connection string directly (no separate pg.Pool needed).
+  const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL,
   });
-  const adapter = new PrismaPg(pool);
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
