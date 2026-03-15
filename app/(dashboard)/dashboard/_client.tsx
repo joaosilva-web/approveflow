@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import ProjectCard from "@/components/dashboard/ProjectCard";
 import NewProjectModal from "@/components/dashboard/NewProjectModal";
 import { Button } from "@/components/ui/Button";
@@ -43,11 +44,18 @@ function StatCard({
 export default function DashboardPageClient({
   stats,
   projects,
+  subscription,
 }: {
   stats: Stats;
   projects: ProjectData[];
+  subscription?: { planCode: string; maxProjects: number | null; projectCount: number };
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+
+  const atLimit =
+    subscription?.maxProjects !== null &&
+    subscription !== undefined &&
+    subscription.projectCount >= (subscription.maxProjects ?? Infinity);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-8">
@@ -107,6 +115,27 @@ export default function DashboardPageClient({
           color="text-red-400"
         />
       </div>
+
+      {/* Plan limit banner */}
+      {atLimit && (
+        <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-yellow-500/[0.06] border border-yellow-500/20">
+          <div>
+            <p className="text-sm font-semibold text-yellow-400">
+              Project limit reached
+            </p>
+            <p className="text-xs text-white/50 mt-0.5">
+              You&apos;ve used all {subscription?.maxProjects} project slots on
+              the Free plan.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/billing"
+            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-violet-600 hover:bg-violet-500 transition-colors"
+          >
+            Upgrade to Pro
+          </Link>
+        </div>
+      )}
 
       {/* Projects grid */}
       {projects.length > 0 ? (

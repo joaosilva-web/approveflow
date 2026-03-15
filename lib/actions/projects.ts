@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { canCreateProject } from "@/lib/billing/limits";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -27,8 +28,16 @@ async function requireAuth() {
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
 
-export async function createProject(formData: FormData) {
+export async function createProject(
+  formData: FormData,
+): Promise<{ error?: string; upgrade?: boolean } | void> {
   const userId = await requireAuth();
+
+  // Enforce plan-based project limit
+  const limitCheck = await canCreateProject(userId);
+  if (!limitCheck.allowed) {
+    return { error: limitCheck.reason, upgrade: true };
+  }
 
   const raw = {
     name: formData.get("name"),

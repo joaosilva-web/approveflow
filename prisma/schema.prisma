@@ -22,9 +22,10 @@ model User {
     createdAt     DateTime  @default(now())
     updatedAt     DateTime  @updatedAt
 
-    accounts Account[]
-    sessions Session[]
-    projects Project[]
+    accounts     Account[]
+    sessions     Session[]
+    projects     Project[]
+    subscription Subscription?
 }
 
 model Account {
@@ -154,6 +155,62 @@ enum DeliveryStatus {
 enum AuthorType {
     CLIENT
     FREELANCER
+}
+
+// ─── Billing ─────────────────────────────────────────────────────────────────
+
+enum SubscriptionStatus {
+    ACTIVE
+    PENDING
+    PAST_DUE
+    CANCELLED
+    INACTIVE
+}
+
+/// Static plan definitions. Seeded once; never deleted.
+model Plan {
+    id          String @id @default(cuid())
+    code        String @unique // "free" | "pro" | "studio"
+    name        String
+    priceBrl    Float  @default(0)
+    interval    String @default("monthly")
+    maxProjects Int? // null = unlimited
+    active      Boolean  @default(true)
+    createdAt   DateTime @default(now())
+
+    subscriptions Subscription[]
+}
+
+/// One subscription record per user at all times.
+model Subscription {
+    id                     String             @id @default(cuid())
+    userId                 String             @unique
+    planId                 String
+    status                 SubscriptionStatus @default(ACTIVE)
+    /// "mercadopago" or null for free
+    provider               String?
+    /// MP preapproval id — unique constraint for idempotent upserts
+    providerSubscriptionId String?            @unique
+    providerCustomerId     String?
+    currentPeriodStart     DateTime?
+    currentPeriodEnd       DateTime?
+    cancelAtPeriodEnd      Boolean            @default(false)
+    createdAt              DateTime           @default(now())
+    updatedAt              DateTime           @updatedAt
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    plan Plan @relation(fields: [planId], references: [id])
+}
+
+/// Immutable log of every billing webhook / event received.
+model BillingEvent {
+    id          String   @id @default(cuid())
+    userId      String?
+    provider    String
+    eventType   String
+    externalId  String?
+    payloadJson Json
+    createdAt   DateTime @default(now())
 }
 
 // ─── Guest (anonymous) uploads ───────────────────────────────────────────────

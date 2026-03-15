@@ -2,6 +2,7 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getSubscriptionInfo } from "@/lib/billing/subscription";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -17,25 +18,34 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const projects = await prisma.project.findMany({
-    where: { userId: session.user.id },
-    orderBy: { updatedAt: "desc" },
-    include: {
-      deliveries: {
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          status: true,
-          createdAt: true,
-          views: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            select: { createdAt: true },
+  const [projects, subscriptionInfo] = await Promise.all([
+    prisma.project.findMany({
+      where: { userId: session.user.id },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        deliveries: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            status: true,
+            createdAt: true,
+            views: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { createdAt: true },
+            },
           },
         },
       },
-    },
-  });
+    }),
+    getSubscriptionInfo(session.user.id),
+  ]);
+
+  const subscription = {
+    planCode: subscriptionInfo.planCode,
+    maxProjects: subscriptionInfo.maxProjects,
+    projectCount: subscriptionInfo.projectCount,
+  };
 
   const totalProjects = projects.length;
   const totalPending = projects.reduce(
@@ -75,6 +85,7 @@ export default async function DashboardPage() {
     <DashboardPageClient
       stats={{ totalProjects, totalPending, totalApproved, totalChanges }}
       projects={projectData}
+      subscription={subscription}
     />
   );
 }
