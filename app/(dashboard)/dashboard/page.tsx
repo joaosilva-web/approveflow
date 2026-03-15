@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getSubscriptionInfo } from "@/lib/billing/subscription";
-import type { Prisma } from "@prisma/client";
 import type { Metadata } from "next";
 import DashboardPageClient from "@/app/(dashboard)/dashboard/_client";
 
@@ -20,18 +19,14 @@ type DeliveryRow = {
   views: { createdAt: Date }[];
 };
 
-type ProjectRow = Prisma.ProjectGetPayload<{
-  include: {
-    deliveries: {
-      select: {
-        id: true;
-        status: true;
-        createdAt: true;
-        views: { select: { createdAt: true } };
-      };
-    };
-  };
-}>;
+type ProjectRow = {
+  id: string;
+  name: string;
+  clientName: string | null;
+  clientEmail: string | null;
+  updatedAt: Date;
+  deliveries: DeliveryRow[];
+};
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -87,8 +82,8 @@ export default async function DashboardPage() {
   const projectData = projects.map((p: ProjectRow) => ({
     id: p.id,
     name: p.name,
-    clientName: p.clientName,
-    clientEmail: p.clientEmail,
+    clientName: p.clientName ?? "",
+    clientEmail: p.clientEmail ?? "",
     totalDeliveries: p.deliveries.length,
     latestStatus: ((p.deliveries as DeliveryRow[])[0]?.status ?? null) as
       | "PENDING"
