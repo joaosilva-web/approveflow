@@ -48,7 +48,11 @@ export default function DashboardPageClient({
 }: {
   stats: Stats;
   projects: ProjectData[];
-  subscription?: { planCode: string; maxProjects: number | null; projectCount: number };
+  subscription?: {
+    planCode: string;
+    maxProjects: number | null;
+    projectCount: number;
+  };
 }) {
   const [modalOpen, setModalOpen] = useState(false);
 

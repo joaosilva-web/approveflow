@@ -49,15 +49,15 @@ export default async function DashboardPage() {
 
   const totalProjects = projects.length;
   const totalPending = projects.reduce(
-    (n, p) => n + p.deliveries.filter((d) => d.status === "PENDING").length,
+    (n: number, p) => n + p.deliveries.filter((d) => d.status === "PENDING").length,
     0,
   );
   const totalApproved = projects.reduce(
-    (n, p) => n + p.deliveries.filter((d) => d.status === "APPROVED").length,
+    (n: number, p) => n + p.deliveries.filter((d) => d.status === "APPROVED").length,
     0,
   );
   const totalChanges = projects.reduce(
-    (n, p) =>
+    (n: number, p) =>
       n + p.deliveries.filter((d) => d.status === "CHANGES_REQUESTED").length,
     0,
   );

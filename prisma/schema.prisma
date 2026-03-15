@@ -169,11 +169,11 @@ enum SubscriptionStatus {
 
 /// Static plan definitions. Seeded once; never deleted.
 model Plan {
-    id          String @id @default(cuid())
-    code        String @unique // "free" | "pro" | "studio"
+    id          String   @id @default(cuid())
+    code        String   @unique // "free" | "pro" | "studio"
     name        String
-    priceBrl    Float  @default(0)
-    interval    String @default("monthly")
+    priceBrl    Float    @default(0)
+    interval    String   @default("monthly")
     maxProjects Int? // null = unlimited
     active      Boolean  @default(true)
     createdAt   DateTime @default(now())

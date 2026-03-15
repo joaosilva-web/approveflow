@@ -380,9 +380,7 @@ export default function BillingPageClient({
                   </Link>
                 ) : (
                   <button
-                    onClick={() =>
-                      handleUpgrade(plan.code as "pro" | "studio")
-                    }
+                    onClick={() => handleUpgrade(plan.code as "pro" | "studio")}
                     disabled={loadingPlan !== null}
                     className={`w-full rounded-xl py-2.5 text-sm font-semibold transition-colors ${
                       isPro

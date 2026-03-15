@@ -58,7 +58,8 @@ export async function POST(req: NextRequest) {
   }
 
   const eventType = (payload.type as string) ?? "";
-  const dataId = ((payload.data as Record<string, unknown>)?.id as string) ?? "";
+  const dataId =
+    ((payload.data as Record<string, unknown>)?.id as string) ?? "";
 
   // ── Signature verification ──────────────────────────────────────────────────
   const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
@@ -144,9 +145,7 @@ export async function POST(req: NextRequest) {
           }
         : {}),
       // When cancelled, ensure the flag is cleared
-      ...(internalStatus === "CANCELLED"
-        ? { cancelAtPeriodEnd: false }
-        : {}),
+      ...(internalStatus === "CANCELLED" ? { cancelAtPeriodEnd: false } : {}),
     },
   });
 
