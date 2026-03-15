@@ -48,19 +48,16 @@ export default async function DashboardPage() {
   };
 
   const totalProjects = projects.length;
-  const totalPending = projects.reduce(
-    (n: number, p) => n + p.deliveries.filter((d) => d.status === "PENDING").length,
-    0,
-  );
-  const totalApproved = projects.reduce(
-    (n: number, p) => n + p.deliveries.filter((d) => d.status === "APPROVED").length,
-    0,
-  );
-  const totalChanges = projects.reduce(
-    (n: number, p) =>
-      n + p.deliveries.filter((d) => d.status === "CHANGES_REQUESTED").length,
-    0,
-  );
+  let totalPending = 0;
+  let totalApproved = 0;
+  let totalChanges = 0;
+  for (const p of projects) {
+    totalPending += p.deliveries.filter((d) => d.status === "PENDING").length;
+    totalApproved += p.deliveries.filter((d) => d.status === "APPROVED").length;
+    totalChanges += p.deliveries.filter(
+      (d) => d.status === "CHANGES_REQUESTED",
+    ).length;
+  }
 
   const projectData = projects.map((p) => ({
     id: p.id,
