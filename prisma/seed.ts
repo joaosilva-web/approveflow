@@ -29,7 +29,7 @@ async function main() {
     {
       code: "pro",
       name: "Pro",
-      priceBrl: 49.9,
+      priceBrl: 29.9,
       interval: "monthly",
       maxProjects: null,
       active: true,
@@ -37,7 +37,7 @@ async function main() {
     {
       code: "studio",
       name: "Studio",
-      priceBrl: 99.9,
+      priceBrl: 59.9,
       interval: "monthly",
       maxProjects: null,
       active: true,

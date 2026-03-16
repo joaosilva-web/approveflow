@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { supabaseClient } from "@/lib/supabase-browser";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import NewDeliveryModal from "@/components/dashboard/NewDeliveryModal";
@@ -101,14 +102,34 @@ function ShareButtons({ token }: { token: string }) {
       >
         {copiedLink ? (
           <>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <polyline points="20 6 9 17 4 12" />
             </svg>
             Copied!
           </>
         ) : (
           <>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
               <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
             </svg>
@@ -142,8 +163,80 @@ export default function ProjectDetailClient({
   clientEmail,
   deliveries: initialDeliveries,
 }: ProjectDetailClientProps) {
-  const [deliveries] = useState(initialDeliveries);
+  const [liveDeliveries, setLiveDeliveries] = useState(initialDeliveries);
   const [uploadOpen, setUploadOpen] = useState(false);
+
+  // ─── Supabase Realtime ────────────────────────────────────────────────────
+  useEffect(() => {
+    const refetch = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/deliveries`);
+        if (!res.ok) return;
+        const data: DeliveryRow[] = await res.json();
+        // Preserve Date objects
+        setLiveDeliveries(
+          data.map((d) => ({
+            ...d,
+            createdAt: new Date(d.createdAt),
+            lastViewedAt: d.lastViewedAt ? new Date(d.lastViewedAt) : null,
+          })),
+        );
+      } catch {
+        // silently ignore
+      }
+    };
+
+    const channel = supabaseClient
+      .channel(`project-detail-${projectId}`)
+      // Status changes live on Delivery rows
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "Delivery" },
+        (payload) => {
+          const row = (
+            payload.eventType === "DELETE" ? payload.old : payload.new
+          ) as {
+            projectId: string;
+          };
+          if (row.projectId === projectId) refetch();
+        },
+      )
+      // View inserts → viewCount + lastViewedAt
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "View" },
+        (payload) => {
+          const { deliveryId } = payload.new as { deliveryId: string };
+          const belongs = liveDeliveries.some((d) => d.id === deliveryId);
+          if (belongs) refetch();
+        },
+      )
+      // Comment inserts/deletes → commentCount
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "Comment" },
+        (payload) => {
+          const { deliveryId } = payload.new as { deliveryId: string };
+          const belongs = liveDeliveries.some((d) => d.id === deliveryId);
+          if (belongs) refetch();
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "Comment" },
+        (payload) => {
+          const { deliveryId } = payload.old as { deliveryId: string };
+          const belongs = liveDeliveries.some((d) => d.id === deliveryId);
+          if (belongs) refetch();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabaseClient.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8 flex flex-col gap-8">
@@ -207,13 +300,14 @@ export default function ProjectDetailClient({
       </div>
 
       {/* Deliveries */}
-      {deliveries.length > 0 ? (
+      {liveDeliveries.length > 0 ? (
         <div className="flex flex-col gap-3">
           <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider">
-            {deliveries.length} version{deliveries.length !== 1 ? "s" : ""}
+            {liveDeliveries.length} version
+            {liveDeliveries.length !== 1 ? "s" : ""}
           </h2>
           <div className="flex flex-col gap-2">
-            {deliveries.map((d) => (
+            {liveDeliveries.map((d) => (
               <div
                 key={d.id}
                 className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.10] transition-colors"
@@ -289,7 +383,9 @@ export default function ProjectDetailClient({
                       👀 {timeAgo(d.lastViewedAt)}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-white/20 italic">Not viewed</span>
+                    <span className="text-[10px] text-white/20 italic">
+                      Not viewed
+                    </span>
                   )}
 
                   <ShareButtons token={d.reviewToken} />

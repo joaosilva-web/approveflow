@@ -28,7 +28,7 @@ export const PLANS: Record<string, PlanDefinition> = {
   pro: {
     code: "pro",
     name: "Pro",
-    priceBrl: 49.9,
+    priceBrl: 29.9,
     maxProjects: null,
     features: [
       "Unlimited active projects",
@@ -41,7 +41,7 @@ export const PLANS: Record<string, PlanDefinition> = {
   studio: {
     code: "studio",
     name: "Studio",
-    priceBrl: 99.9,
+    priceBrl: 59.9,
     maxProjects: null,
     features: [
       "Everything in Pro",

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import ProjectCard from "@/components/dashboard/ProjectCard";
 import NewProjectModal from "@/components/dashboard/NewProjectModal";
 import { Button } from "@/components/ui/Button";
+import { supabaseClient } from "@/lib/supabase-browser";
 
 interface Stats {
   totalProjects: number;
@@ -55,6 +56,116 @@ export default function DashboardPageClient({
   };
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "PENDING" | "APPROVED" | "CHANGES_REQUESTED"
+  >("ALL");
+  const [liveProjects, setLiveProjects] = useState<ProjectData[]>(projects);
+
+  // ─── Supabase Realtime ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const fetchAndUpdateProject = async (projectId: string) => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}`);
+        if (!res.ok) return;
+        const fresh: ProjectData = await res.json();
+        const updated = {
+          ...fresh,
+          updatedAt: new Date(fresh.updatedAt),
+          lastViewedAt: fresh.lastViewedAt
+            ? new Date(fresh.lastViewedAt)
+            : null,
+        };
+        setLiveProjects((prev) => {
+          const exists = prev.some((p) => p.id === updated.id);
+          if (exists) {
+            return prev.map((p) => (p.id === updated.id ? updated : p));
+          }
+          return [updated, ...prev];
+        });
+      } catch {
+        // silently ignore — next event will catch it
+      }
+    };
+
+    const channel = supabaseClient
+      .channel("projects-realtime")
+      // Project row changes (name, clientName, etc.)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "Project" },
+        async (payload) => {
+          if (payload.eventType === "DELETE") {
+            const deletedId = (payload.old as { id: string }).id;
+            setLiveProjects((prev) => prev.filter((p) => p.id !== deletedId));
+            return;
+          }
+          const projectId = (payload.new as { id: string }).id;
+          await fetchAndUpdateProject(projectId);
+        },
+      )
+      // Delivery changes — status (PENDING/APPROVED/CHANGES_REQUESTED) lives here
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "Delivery" },
+        async (payload) => {
+          const row = (
+            payload.eventType === "DELETE" ? payload.old : payload.new
+          ) as {
+            projectId: string;
+          };
+          if (row.projectId) {
+            await fetchAndUpdateProject(row.projectId);
+          }
+        },
+      )
+      // View inserts — "client viewed X ago" lives here
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "View" },
+        async (payload) => {
+          const { deliveryId } = payload.new as { deliveryId: string };
+          try {
+            const res = await fetch(`/api/projects/by-delivery/${deliveryId}`);
+            if (!res.ok) return;
+            const { projectId } = await res.json();
+            if (projectId) await fetchAndUpdateProject(projectId);
+          } catch {
+            // silently ignore
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabaseClient.removeChannel(channel);
+    };
+  }, []);
+
+  // ─── Sorting priority ───────────────────────────────────────────────────────
+  const STATUS_PRIORITY: Record<string, number> = {
+    PENDING: 1,
+    CHANGES_REQUESTED: 2,
+    APPROVED: 3,
+  };
+
+  const filteredProjects = liveProjects
+    .filter((p) => {
+      const q = search.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        (p.clientName ?? "").toLowerCase().includes(q);
+      const matchesStatus =
+        statusFilter === "ALL" || p.latestStatus === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      const pa = STATUS_PRIORITY[a.latestStatus ?? ""] ?? 4;
+      const pb = STATUS_PRIORITY[b.latestStatus ?? ""] ?? 4;
+      if (pa !== pb) return pa - pb;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
 
   const atLimit =
     subscription?.maxProjects !== null &&
@@ -120,6 +231,56 @@ export default function DashboardPageClient({
         />
       </div>
 
+      {/* Search + Status filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search projects or clients..."
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white placeholder-white/30 focus:outline-none focus:border-violet-500/60 focus:bg-white/[0.06] transition-colors"
+          />
+        </div>
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+          {(
+            [
+              { key: "ALL", label: "All" },
+              { key: "PENDING", label: "Pending" },
+              { key: "APPROVED", label: "Approved" },
+              { key: "CHANGES_REQUESTED", label: "Changes" },
+            ] as const
+          ).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setStatusFilter(key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                statusFilter === key
+                  ? "bg-violet-600 text-white"
+                  : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Plan limit banner */}
       {atLimit && (
         <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-yellow-500/[0.06] border border-yellow-500/20">
@@ -142,11 +303,20 @@ export default function DashboardPageClient({
       )}
 
       {/* Projects grid */}
-      {projects.length > 0 ? (
+      {filteredProjects.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((p) => (
+          {filteredProjects.map((p) => (
             <ProjectCard key={p.id} {...p} />
           ))}
+        </div>
+      ) : liveProjects.length > 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+          <p className="text-sm font-semibold text-white/50">
+            No results found
+          </p>
+          <p className="text-xs text-white/30">
+            Try a different project or client name
+          </p>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
