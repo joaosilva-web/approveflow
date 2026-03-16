@@ -76,24 +76,4 @@ export async function getSubscriptionInfo(
   };
 }
 
-// ─── Status mapping ───────────────────────────────────────────────────────────
 
-/**
- * Maps a Mercado Pago preapproval status string to our internal status.
- */
-export function mapMPStatusToInternal(
-  mpStatus: string,
-): SubscriptionStatusValue {
-  switch (mpStatus) {
-    case "authorized":
-      return "ACTIVE";
-    case "pending":
-      return "PENDING";
-    case "paused":
-      return "PAST_DUE";
-    case "cancelled":
-      return "CANCELLED";
-    default:
-      return "INACTIVE";
-  }
-}

@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getSubscriptionInfo } from "@/lib/billing/subscription";
-import { PLANS, TEST_PLAN } from "@/lib/billing/plans";
+import { PLANS } from "@/lib/billing/plans";
 import BillingPageClient from "./_client";
 import type { Metadata } from "next";
 
@@ -27,7 +27,6 @@ export default async function BillingPage({ searchParams }: PageProps) {
         PLANS.free,
         PLANS.pro,
         PLANS.studio,
-        ...(process.env.NEXT_PUBLIC_MP_TEST_MODE === "true" ? [TEST_PLAN] : []),
       ]}
       statusParam={status}
       userEmail={session.user.email ?? ""}

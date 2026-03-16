@@ -1,19 +1,19 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { createMPCheckout } from "@/lib/billing/providers/mercadopago";
+import { createStripeCheckout } from "@/lib/billing/providers/stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const schema = z.object({
-  planCode: z.enum(["pro", "studio", "test"]),
+  planCode: z.enum(["pro", "studio"]),
 });
 
 /**
  * POST /api/billing/create-checkout
  * Body: { planCode: "pro" | "studio" }
  *
- * Creates a Mercado Pago subscription checkout and returns the redirect URL.
- * Also upserts the subscription record to PENDING status so we can track it.
+ * Creates a Stripe Checkout Session and returns the redirect URL.
+ * The subscription is upserted as PENDING; the webhook marks it ACTIVE.
  */
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -34,36 +34,34 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
     "http://localhost:3000";
 
-  // Create the MP checkout
-  let checkoutUrl: string;
-  let subscriptionId: string;
-
-  try {
-    const result = await createMPCheckout({
-      payerEmail: session.user.email,
-      payerName: session.user.name ?? undefined,
-      planCode: parsed.data.planCode,
-      userId: session.user.id,
-      // MP redirects here after checkout — we handle status display via query param
-      backUrl: `${appUrl}/dashboard/billing?status=pending`,
-    });
-    checkoutUrl = result.checkoutUrl;
-    subscriptionId = result.subscriptionId;
-  } catch (err) {
-    console.error("[billing/create-checkout] Mercado Pago error:", err);
-    return NextResponse.json(
-      { error: "Failed to create checkout. Please try again." },
-      { status: 502 },
-    );
-  }
-
-  // Resolve the target plan ID
+  // Resolve the target plan ID first so we fail fast if plan is missing
   const targetPlan = await prisma.plan.findUnique({
     where: { code: parsed.data.planCode },
     select: { id: true },
   });
   if (!targetPlan) {
     return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+  }
+
+  let checkoutUrl: string;
+  let sessionId: string;
+
+  try {
+    const result = await createStripeCheckout({
+      payerEmail: session.user.email,
+      planCode: parsed.data.planCode,
+      userId: session.user.id,
+      successUrl: `${appUrl}/dashboard/billing?status=pending`,
+      cancelUrl: `${appUrl}/dashboard/billing?status=cancelled`,
+    });
+    checkoutUrl = result.checkoutUrl;
+    sessionId = result.sessionId;
+  } catch (err) {
+    console.error("[billing/create-checkout] Stripe error:", err);
+    return NextResponse.json(
+      { error: "Failed to create checkout. Please try again." },
+      { status: 502 },
+    );
   }
 
   // Upsert subscription as PENDING while awaiting webhook confirmation.
@@ -73,16 +71,16 @@ export async function POST(req: NextRequest) {
     update: {
       planId: targetPlan.id,
       status: "PENDING",
-      provider: "mercadopago",
-      providerSubscriptionId: subscriptionId,
+      provider: "stripe",
+      providerSubscriptionId: sessionId,
       cancelAtPeriodEnd: false,
     },
     create: {
       userId: session.user.id,
       planId: targetPlan.id,
       status: "PENDING",
-      provider: "mercadopago",
-      providerSubscriptionId: subscriptionId,
+      provider: "stripe",
+      providerSubscriptionId: sessionId,
     },
   });
 
