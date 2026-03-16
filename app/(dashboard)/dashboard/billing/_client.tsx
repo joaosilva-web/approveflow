@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { SubscriptionInfo } from "@/lib/billing/subscription";
 import type { PlanDefinition } from "@/lib/billing/plans";
@@ -154,6 +155,37 @@ export default function BillingPageClient({
   >(null);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // ── Pending-payment polling ─────────────────────────────────────────────────
+  // If the user returns from Stripe with ?status=pending, poll until the webhook
+  // updates the subscription to ACTIVE, then flip the banner to "success".
+  const router = useRouter();
+  const pollCountRef = useRef(0);
+  const initialStatus =
+    statusParam === "pending" && subscription.subscriptionStatus === "ACTIVE"
+      ? "success"
+      : (statusParam ?? "");
+  const [displayStatus, setDisplayStatus] = useState(initialStatus);
+
+  useEffect(() => {
+    if (displayStatus !== "pending") return;
+    const MAX_POLLS = 20; // ~60 s
+    const id = setInterval(() => {
+      pollCountRef.current += 1;
+      if (pollCountRef.current >= MAX_POLLS) {
+        clearInterval(id);
+        return;
+      }
+      router.refresh();
+    }, 3000);
+    return () => clearInterval(id);
+  }, [displayStatus, router]);
+
+  useEffect(() => {
+    if (displayStatus === "pending" && subscription.subscriptionStatus === "ACTIVE") {
+      setDisplayStatus("success");
+    }
+  }, [subscription.subscriptionStatus, displayStatus]);
+
   // ── Checkout handler ────────────────────────────────────────────────────────
   const handleUpgrade = async (planCode: "pro" | "studio" | "test") => {
     setLoadingPlan(planCode);
@@ -207,7 +239,7 @@ export default function BillingPageClient({
       </div>
 
       {/* ── Status banner ───────────────────────────────────────────────────── */}
-      {statusParam && <StatusBanner status={statusParam} />}
+      {displayStatus && <StatusBanner status={displayStatus} />}
 
       {/* ── API error ───────────────────────────────────────────────────────── */}
       {apiError && (
