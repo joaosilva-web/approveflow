@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { SubscriptionInfo } from "@/lib/billing/subscription";
 import type { PlanDefinition } from "@/lib/billing/plans";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -153,6 +154,7 @@ export default function BillingPageClient({
     "pro" | "studio" | "test" | null
   >(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
   // ── Pending-payment polling ─────────────────────────────────────────────────
@@ -190,13 +192,9 @@ export default function BillingPageClient({
   }, [subscription.subscriptionStatus, displayStatus]);
 
   // ── Downgrade / cancel handler ──────────────────────────────────────────────
-  const handleCancel = async () => {
-    if (
-      !confirm(
-        "Your plan will stay active until the end of the billing period, then revert to Free. Continue?",
-      )
-    )
-      return;
+  const handleCancel = () => setShowCancelDialog(true);
+
+  const confirmCancel = async () => {
     setCancelLoading(true);
     setApiError(null);
     try {
@@ -205,6 +203,7 @@ export default function BillingPageClient({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to cancel.");
+      setShowCancelDialog(false);
       router.refresh();
     } catch (e) {
       setApiError(
@@ -257,6 +256,18 @@ export default function BillingPageClient({
     : null;
 
   return (
+    <>
+      <ConfirmDialog
+        open={showCancelDialog}
+        title="Downgrade to Free?"
+        description="Your plan will stay active until the end of the billing period, then revert to Free. This action cannot be undone."
+        confirmLabel="Yes, downgrade"
+        cancelLabel="Keep plan"
+        destructive
+        loading={cancelLoading}
+        onConfirm={confirmCancel}
+        onCancel={() => setShowCancelDialog(false)}
+      />
     <div className="px-6 py-10 max-w-5xl mx-auto space-y-10">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div>
@@ -490,5 +501,6 @@ export default function BillingPageClient({
         </div>
       </section>
     </div>
+    </>
   );
 }
