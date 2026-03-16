@@ -76,7 +76,13 @@ export default function GuestReviewShell({
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 md:px-8 border-b border-white/[0.06] bg-[#06060f]/90 backdrop-blur-sm">
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo.png" alt="" width={24} height={24} className="shrink-0" />
+          <Image
+            src="/logo.png"
+            alt=""
+            width={24}
+            height={24}
+            className="shrink-0"
+          />
           <span className="text-sm font-semibold">
             <span className="text-white">Approve</span>
             <span className="text-violet-400">Flow</span>

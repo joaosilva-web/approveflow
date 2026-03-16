@@ -151,7 +151,13 @@ export default function LoginPage() {
     <div className="w-full max-w-sm flex flex-col gap-8">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2.5 justify-center">
-        <Image src="/logo.png" alt="" width={32} height={32} className="shrink-0" />
+        <Image
+          src="/logo.png"
+          alt=""
+          width={32}
+          height={32}
+          className="shrink-0"
+        />
         <span className="text-lg font-bold tracking-tight">
           <span className="text-white">Approve</span>
           <span className="gradient-text">Flow</span>

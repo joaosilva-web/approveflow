@@ -19,6 +19,15 @@ export const metadata: Metadata = {
     "design approval",
     "document approval",
   ],
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png" }],
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "ApproveFlow — File Approvals Without the Chaos",
     description:

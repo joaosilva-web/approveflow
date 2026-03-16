@@ -42,7 +42,13 @@ export default function ToolLandingPagePT({
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo.png" alt="" width={24} height={24} className="shrink-0" />
+          <Image
+            src="/logo.png"
+            alt=""
+            width={24}
+            height={24}
+            className="shrink-0"
+          />
           <span className="text-sm font-semibold">
             <span className="text-white">Approve</span>
             <span className="text-violet-400">Flow</span>

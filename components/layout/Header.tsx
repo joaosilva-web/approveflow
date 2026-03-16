@@ -16,7 +16,13 @@ function Logo() {
       className="flex items-center gap-2 group focus-visible:outline-none"
       aria-label="ApproveFlow home"
     >
-      <Image src="/logo.png" alt="" width={32} height={32} className="shrink-0" />
+      <Image
+        src="/logo.png"
+        alt=""
+        width={32}
+        height={32}
+        className="shrink-0"
+      />
       {/* Wordmark */}
       <span className="text-[15px] font-semibold tracking-tight">
         <span className="text-white">Approve</span>

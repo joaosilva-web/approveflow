@@ -40,7 +40,13 @@ const footerLinks = [
 function FooterLogo() {
   return (
     <Link href="/" className="flex items-center gap-2 group w-fit">
-      <Image src="/logo.png" alt="" width={28} height={28} className="shrink-0" />
+      <Image
+        src="/logo.png"
+        alt=""
+        width={28}
+        height={28}
+        className="shrink-0"
+      />
       <span className="text-sm font-semibold tracking-tight">
         <span className="text-white">Approve</span>
         <span className="gradient-text">Flow</span>
