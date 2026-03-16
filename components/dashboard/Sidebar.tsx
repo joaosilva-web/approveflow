@@ -8,34 +8,19 @@ import { cn } from "@/lib/utils";
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
-const navItems = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    exact: true,
-    icon: (
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect x="3" y="3" width="7" height="7" />
-        <rect x="14" y="3" width="7" height="7" />
-        <rect x="14" y="14" width="7" height="7" />
-        <rect x="3" y="14" width="7" height="7" />
-      </svg>
-    ),
-  },
+type NavItem = {
+  label: string;
+  href: string;
+  isActive: (pathname: string) => boolean;
+  icon: React.ReactNode;
+};
+
+const navItems: NavItem[] = [
   {
     label: "Projects",
     href: "/dashboard",
-    exact: false,
+    // Active on the main dashboard page OR inside any /dashboard/projects/* sub-route
+    isActive: (p) => p === "/dashboard" || p.startsWith("/dashboard/projects"),
     icon: (
       <svg
         width="16"
@@ -55,7 +40,7 @@ const navItems = [
   {
     label: "Billing",
     href: "/dashboard/billing",
-    exact: false,
+    isActive: (p) => p.startsWith("/dashboard/billing"),
     icon: (
       <svg
         width="16"
@@ -73,7 +58,7 @@ const navItems = [
       </svg>
     ),
   },
-] as const;
+];
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 
@@ -120,10 +105,8 @@ export default function Sidebar({ userName, userEmail }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 px-3 py-2" aria-label="Dashboard navigation">
         <ul className="flex flex-col gap-0.5 list-none" role="list">
-          {navItems.map(({ label, href, exact, icon }) => {
-            const isActive = exact
-              ? pathname === href
-              : pathname.startsWith(href);
+          {navItems.map(({ label, href, isActive: checkActive, icon }) => {
+            const active = checkActive(pathname);
 
             return (
               <li key={label}>
@@ -132,16 +115,16 @@ export default function Sidebar({ userName, userEmail }: SidebarProps) {
                   className={cn(
                     "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60",
-                    isActive
+                    active
                       ? "bg-violet-500/[0.12] text-violet-300 border border-violet-500/20"
                       : "text-white/55 hover:text-white/90 hover:bg-white/[0.05]",
                   )}
-                  aria-current={isActive ? "page" : undefined}
+                  aria-current={active ? "page" : undefined}
                 >
                   <span
                     className={cn(
                       "shrink-0 transition-colors",
-                      isActive
+                      active
                         ? "text-violet-400"
                         : "text-white/40 group-hover:text-white/70",
                     )}

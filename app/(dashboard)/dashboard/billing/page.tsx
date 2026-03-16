@@ -23,11 +23,7 @@ export default async function BillingPage({ searchParams }: PageProps) {
   return (
     <BillingPageClient
       subscription={subscription}
-      plans={[
-        PLANS.free,
-        PLANS.pro,
-        PLANS.studio,
-      ]}
+      plans={[PLANS.free, PLANS.pro, PLANS.studio]}
       statusParam={status}
       userEmail={session.user.email ?? ""}
     />
