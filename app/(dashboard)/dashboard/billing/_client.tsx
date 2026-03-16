@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import type { SubscriptionInfo } from "@/lib/billing/subscription";
 import type { PlanDefinition } from "@/lib/billing/plans";
 
@@ -153,6 +152,7 @@ export default function BillingPageClient({
   const [loadingPlan, setLoadingPlan] = useState<
     "pro" | "studio" | "test" | null
   >(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
   // ── Pending-payment polling ─────────────────────────────────────────────────
@@ -181,10 +181,39 @@ export default function BillingPageClient({
   }, [displayStatus, router]);
 
   useEffect(() => {
-    if (displayStatus === "pending" && subscription.subscriptionStatus === "ACTIVE") {
+    if (
+      displayStatus === "pending" &&
+      subscription.subscriptionStatus === "ACTIVE"
+    ) {
       setDisplayStatus("success");
     }
   }, [subscription.subscriptionStatus, displayStatus]);
+
+  // ── Downgrade / cancel handler ──────────────────────────────────────────────
+  const handleCancel = async () => {
+    if (
+      !confirm(
+        "Your plan will stay active until the end of the billing period, then revert to Free. Continue?",
+      )
+    )
+      return;
+    setCancelLoading(true);
+    setApiError(null);
+    try {
+      const res = await fetch("/api/billing/cancel-subscription", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to cancel.");
+      router.refresh();
+    } catch (e) {
+      setApiError(
+        e instanceof Error ? e.message : "Failed to cancel. Please try again.",
+      );
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   // ── Checkout handler ────────────────────────────────────────────────────────
   const handleUpgrade = async (planCode: "pro" | "studio" | "test") => {
@@ -411,12 +440,17 @@ export default function BillingPageClient({
                     Current plan
                   </button>
                 ) : plan.code === "free" ? (
-                  <Link
-                    href="/dashboard/billing"
-                    className="w-full rounded-xl py-2.5 text-sm font-semibold text-center text-violet-400 border border-violet-500/30 hover:bg-violet-500/10 transition-colors block"
+                  <button
+                    onClick={handleCancel}
+                    disabled={cancelLoading || subscription.cancelAtPeriodEnd}
+                    className="w-full rounded-xl py-2.5 text-sm font-semibold text-center text-violet-400 border border-violet-500/30 hover:bg-violet-500/10 transition-colors disabled:opacity-50 disabled:cursor-default"
                   >
-                    Downgrade
-                  </Link>
+                    {cancelLoading
+                      ? "Cancelling…"
+                      : subscription.cancelAtPeriodEnd
+                        ? "Cancels at period end"
+                        : "Downgrade"}
+                  </button>
                 ) : (
                   <button
                     onClick={() =>

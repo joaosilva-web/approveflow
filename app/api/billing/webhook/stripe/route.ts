@@ -21,7 +21,10 @@ export async function POST(req: NextRequest) {
 
   if (!webhookSecret) {
     console.error("[webhook/stripe] STRIPE_WEBHOOK_SECRET is not configured");
-    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Webhook not configured" },
+      { status: 500 },
+    );
   }
 
   const rawBody = await req.text();
@@ -88,11 +91,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const stripeSubscriptionId = session.subscription as string | null;
 
   if (!userId || !planCode || !stripeSubscriptionId) {
-    console.warn("[webhook/stripe] checkout.session.completed missing metadata", {
-      userId,
-      planCode,
-      stripeSubscriptionId,
-    });
+    console.warn(
+      "[webhook/stripe] checkout.session.completed missing metadata",
+      {
+        userId,
+        planCode,
+        stripeSubscriptionId,
+      },
+    );
     return;
   }
 
@@ -129,7 +135,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
   const userId = sub.metadata?.userId;
   if (!userId) {
-    console.warn("[webhook/stripe] subscription.updated missing userId metadata");
+    console.warn(
+      "[webhook/stripe] subscription.updated missing userId metadata",
+    );
     return;
   }
 
@@ -140,42 +148,52 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
     ? new Date(subAny.current_period_end * 1000)
     : undefined;
 
-  await prisma.subscription.update({
-    where: { userId },
-    data: {
-      status: internalStatus,
-      providerSubscriptionId: sub.id,
-      cancelAtPeriodEnd: sub.cancel_at_period_end,
-      ...(periodEnd ? { currentPeriodEnd: periodEnd } : {}),
-      ...(internalStatus === "ACTIVE" && subAny.current_period_start
-        ? { currentPeriodStart: new Date(subAny.current_period_start * 1000) }
-        : {}),
-    },
-  }).catch((err) => {
-    // Subscription row may not exist yet if webhook fires before checkout handler
-    console.warn("[webhook/stripe] subscription.update failed (may be race):", err);
-  });
+  await prisma.subscription
+    .update({
+      where: { userId },
+      data: {
+        status: internalStatus,
+        providerSubscriptionId: sub.id,
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        ...(periodEnd ? { currentPeriodEnd: periodEnd } : {}),
+        ...(internalStatus === "ACTIVE" && subAny.current_period_start
+          ? { currentPeriodStart: new Date(subAny.current_period_start * 1000) }
+          : {}),
+      },
+    })
+    .catch((err) => {
+      // Subscription row may not exist yet if webhook fires before checkout handler
+      console.warn(
+        "[webhook/stripe] subscription.update failed (may be race):",
+        err,
+      );
+    });
 }
 
 async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
   const userId = sub.metadata?.userId;
   if (!userId) return;
 
-  await prisma.subscription.update({
-    where: { userId },
-    data: {
-      status: "CANCELLED",
-      cancelAtPeriodEnd: false,
-    },
-  }).catch(() => {
-    // Row may not exist
-  });
+  await prisma.subscription
+    .update({
+      where: { userId },
+      data: {
+        status: "CANCELLED",
+        cancelAtPeriodEnd: false,
+      },
+    })
+    .catch(() => {
+      // Row may not exist
+    });
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const invoiceAny = invoice as any;
-  const subId = typeof invoiceAny.subscription === "string" ? invoiceAny.subscription : null;
+  const subId =
+    typeof invoiceAny.subscription === "string"
+      ? invoiceAny.subscription
+      : null;
   if (!subId) return;
 
   await prisma.subscription.updateMany({

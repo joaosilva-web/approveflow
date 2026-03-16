@@ -75,5 +75,3 @@ export async function getSubscriptionInfo(
     priceBrl: planDef.priceBrl,
   };
 }
-
-

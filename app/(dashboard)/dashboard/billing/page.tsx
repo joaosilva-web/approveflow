@@ -27,7 +27,9 @@ export default async function BillingPage({ searchParams }: PageProps) {
         PLANS.free,
         PLANS.pro,
         PLANS.studio,
-        ...(process.env.NEXT_PUBLIC_STRIPE_TEST_MODE === "true" ? [TEST_PLAN] : []),
+        ...(process.env.NEXT_PUBLIC_STRIPE_TEST_MODE === "true"
+          ? [TEST_PLAN]
+          : []),
       ]}
       statusParam={status}
       userEmail={session.user.email ?? ""}

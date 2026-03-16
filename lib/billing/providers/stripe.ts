@@ -41,7 +41,9 @@ export async function createStripeCheckout(
   const stripe = getStripe();
   const priceId = STRIPE_PRICE_IDS[params.planCode];
   if (!priceId) {
-    throw new Error(`No Stripe price ID configured for plan: ${params.planCode}`);
+    throw new Error(
+      `No Stripe price ID configured for plan: ${params.planCode}`,
+    );
   }
 
   const session = await stripe.checkout.sessions.create({
