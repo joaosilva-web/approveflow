@@ -56,7 +56,7 @@ const PLAN_CONFIG = {
     descriptor: "APPROVEFLOW STUDIO",
   },
   test: {
-    amount: 0.5,
+    amount: 1.0,
     reason: "ApproveFlow Teste",
     descriptor: "APPROVEFLOW TESTE",
   },

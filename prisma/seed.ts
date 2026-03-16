@@ -42,6 +42,14 @@ async function main() {
       maxProjects: null,
       active: true,
     },
+    {
+      code: "test",
+      name: "Test (R$1,00)",
+      priceBrl: 1.0,
+      interval: "monthly",
+      maxProjects: null,
+      active: true,
+    },
   ];
 
   for (const plan of plans) {

@@ -57,7 +57,7 @@ export const PLANS: Record<string, PlanDefinition> = {
 export const TEST_PLAN: PlanDefinition = {
   code: "test",
   name: "Test (R$0,50)",
-  priceBrl: 0.5,
+  priceBrl: 1.0,
   maxProjects: null,
   features: ["Payment flow test", "Same as Pro during testing"],
   description: "Internal test — do not share",

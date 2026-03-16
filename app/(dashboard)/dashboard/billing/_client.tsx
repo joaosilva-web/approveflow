@@ -149,7 +149,9 @@ export default function BillingPageClient({
   statusParam,
   userEmail,
 }: Props) {
-  const [loadingPlan, setLoadingPlan] = useState<"pro" | "studio" | "test" | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<
+    "pro" | "studio" | "test" | null
+  >(null);
   const [apiError, setApiError] = useState<string | null>(null);
 
   // ── Checkout handler ────────────────────────────────────────────────────────
@@ -385,7 +387,9 @@ export default function BillingPageClient({
                   </Link>
                 ) : (
                   <button
-                    onClick={() => handleUpgrade(plan.code as "pro" | "studio" | "test")}
+                    onClick={() =>
+                      handleUpgrade(plan.code as "pro" | "studio" | "test")
+                    }
                     disabled={loadingPlan !== null}
                     className={`w-full rounded-xl py-2.5 text-sm font-semibold transition-colors ${
                       isPro
