@@ -15,13 +15,14 @@ function getStripe(): Stripe {
 export const STRIPE_PRICE_IDS: Record<string, string> = {
   pro: process.env.STRIPE_PRICE_PRO ?? "",
   studio: process.env.STRIPE_PRICE_STUDIO ?? "",
+  test: process.env.STRIPE_PRICE_TEST ?? "",
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CreateCheckoutParams {
   payerEmail: string;
-  planCode: "pro" | "studio";
+  planCode: "pro" | "studio" | "test";
   userId: string;
   successUrl: string;
   cancelUrl: string;
