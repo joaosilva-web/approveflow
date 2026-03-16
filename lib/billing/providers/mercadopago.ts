@@ -20,7 +20,7 @@ export interface CreatePreapprovalParams {
   payerEmail: string;
   /** Full name of the payer — split into first/last for MP's anti-fraud engine. */
   payerName?: string;
-  planCode: "pro" | "studio";
+  planCode: "pro" | "studio" | "test";
   userId: string;
   /** Where MP redirects after the user completes / cancels checkout. */
   backUrl: string;
@@ -55,6 +55,11 @@ const PLAN_CONFIG = {
     reason: "ApproveFlow Studio",
     descriptor: "APPROVEFLOW STUDIO",
   },
+  test: {
+    amount: 0.5,
+    reason: "ApproveFlow Teste",
+    descriptor: "APPROVEFLOW TESTE",
+  },
 } as const;
 
 // ─── API calls ────────────────────────────────────────────────────────────────
@@ -76,6 +81,11 @@ export async function createMPCheckout(
   const payerFirstName = nameParts[0] ?? "";
   const payerLastName = nameParts.slice(1).join(" ") || payerFirstName;
 
+  // When testing with MP test accounts, override the payer email so the
+  // collector (test seller token) and payer are both test users.
+  const payerEmail =
+    process.env.MERCADO_PAGO_TEST_PAYER_EMAIL ?? params.payerEmail;
+
   // Webhook notification URL — MP will POST status changes here
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
   const notificationUrl = appUrl
@@ -87,7 +97,7 @@ export async function createMPCheckout(
     // Soft descriptor shown on the cardholder's statement (reduces chargebacks)
     statement_descriptor: config.descriptor,
     external_reference: `${params.userId}:${params.planCode}`,
-    payer_email: params.payerEmail,
+    payer_email: payerEmail,
     back_url: params.backUrl,
     auto_recurring: {
       frequency: 1,

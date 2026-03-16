@@ -53,5 +53,15 @@ export const PLANS: Record<string, PlanDefinition> = {
   },
 };
 
+// Test plan — only visible when NEXT_PUBLIC_MP_TEST_MODE=true
+export const TEST_PLAN: PlanDefinition = {
+  code: "test",
+  name: "Test (R$0,50)",
+  priceBrl: 0.5,
+  maxProjects: null,
+  features: ["Payment flow test", "Same as Pro during testing"],
+  description: "Internal test — do not share",
+};
+
 export const FREE_PLAN_CODE = "free";
 export const FREE_PROJECT_LIMIT = 3;

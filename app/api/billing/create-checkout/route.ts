@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const schema = z.object({
-  planCode: z.enum(["pro", "studio"]),
+  planCode: z.enum(["pro", "studio", "test"]),
 });
 
 /**

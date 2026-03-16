@@ -149,11 +149,11 @@ export default function BillingPageClient({
   statusParam,
   userEmail,
 }: Props) {
-  const [loadingPlan, setLoadingPlan] = useState<"pro" | "studio" | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<"pro" | "studio" | "test" | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
 
   // ── Checkout handler ────────────────────────────────────────────────────────
-  const handleUpgrade = async (planCode: "pro" | "studio") => {
+  const handleUpgrade = async (planCode: "pro" | "studio" | "test") => {
     setLoadingPlan(planCode);
     setApiError(null);
     try {
@@ -298,6 +298,11 @@ export default function BillingPageClient({
                     : "border-white/[0.08] bg-white/[0.02]"
                 }`}
               >
+                {plan.code === "test" && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-yellow-600 px-3 py-0.5 text-xs font-semibold text-white">
+                    🧪 Test mode
+                  </span>
+                )}
                 {isPro && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-violet-600 px-3 py-0.5 text-xs font-semibold text-white">
                     <svg
@@ -380,7 +385,7 @@ export default function BillingPageClient({
                   </Link>
                 ) : (
                   <button
-                    onClick={() => handleUpgrade(plan.code as "pro" | "studio")}
+                    onClick={() => handleUpgrade(plan.code as "pro" | "studio" | "test")}
                     disabled={loadingPlan !== null}
                     className={`w-full rounded-xl py-2.5 text-sm font-semibold transition-colors ${
                       isPro
