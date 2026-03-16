@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 
@@ -39,21 +40,7 @@ const footerLinks = [
 function FooterLogo() {
   return (
     <Link href="/" className="flex items-center gap-2 group w-fit">
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-900/30">
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </div>
+      <Image src="/logo.png" alt="" width={28} height={28} className="shrink-0" />
       <span className="text-sm font-semibold tracking-tight">
         <span className="text-white">Approve</span>
         <span className="gradient-text">Flow</span>

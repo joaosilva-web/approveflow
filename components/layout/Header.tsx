@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -15,22 +16,7 @@ function Logo() {
       className="flex items-center gap-2 group focus-visible:outline-none"
       aria-label="ApproveFlow home"
     >
-      {/* Icon mark */}
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-900/40 group-hover:shadow-violet-900/60 transition-shadow duration-300">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </div>
+      <Image src="/logo.png" alt="" width={32} height={32} className="shrink-0" />
       {/* Wordmark */}
       <span className="text-[15px] font-semibold tracking-tight">
         <span className="text-white">Approve</span>

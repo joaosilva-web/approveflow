@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -65,21 +66,7 @@ const navItems: NavItem[] = [
 function SidebarLogo() {
   return (
     <Link href="/dashboard" className="flex items-center gap-2.5 px-4 py-5">
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-900/40">
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </div>
+      <Image src="/logo.png" alt="" width={28} height={28} className="shrink-0" />
       <span className="text-sm font-semibold tracking-tight">
         <span className="text-white">Approve</span>
         <span className="gradient-text">Flow</span>

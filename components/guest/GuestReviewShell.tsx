@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import ApprovalPanel from "@/components/review/ApprovalPanel";
@@ -75,21 +76,7 @@ export default function GuestReviewShell({
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 md:px-8 border-b border-white/[0.06] bg-[#06060f]/90 backdrop-blur-sm">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-sm">
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
+          <Image src="/logo.png" alt="" width={24} height={24} className="shrink-0" />
           <span className="text-sm font-semibold">
             <span className="text-white">Approve</span>
             <span className="text-violet-400">Flow</span>
