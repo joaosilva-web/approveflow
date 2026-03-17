@@ -1,7 +1,46 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
+
+// ─── Copy ─────────────────────────────────────────────────────────────────────
+
+const copy = {
+  pt: {
+    badge: "Em beta — gratuito para sempre",
+    h1a: "Aprovações de arquivos",
+    h1highlight: "sem",
+    h1b: "a bagunça",
+    p: "Envie arquivos para clientes e receba aprovações organizadas — sem threads de WhatsApp, sem e-mails confusos. Revisões limpas e rastreáveis com um único link.",
+    cta1: "Começar grátis",
+    cta2: "Ver como funciona",
+    social: "freelancers já usando",
+    trust: [
+      "Sem cartão de crédito",
+      "Plano gratuito para sempre",
+      "Cliente não precisa criar conta",
+    ],
+  },
+  en: {
+    badge: "Currently in beta — free forever",
+    h1a: "File approvals",
+    h1highlight: "without",
+    h1b: "the chaos",
+    p: "Send files to clients and get structured approvals — no WhatsApp threads, no confusing email chains. Just clean, trackable reviews with a single link.",
+    cta1: "Start for free",
+    cta2: "See how it works",
+    social: "freelancers already using it",
+    trust: [
+      "No credit card required",
+      "Free forever plan",
+      "No client login needed",
+    ],
+  },
+} as const;
+
+type Lang = "pt" | "en";
 
 // ─── App mockup card ──────────────────────────────────────────────────────────
 
@@ -202,6 +241,9 @@ function AvatarStack() {
 // ─── Hero section ─────────────────────────────────────────────────────────────
 
 export default function Hero() {
+  const [lang, setLang] = useState<Lang>("pt");
+  const t = copy[lang];
+
   return (
     <section
       className="relative min-h-screen flex items-center overflow-hidden pt-20"
@@ -223,29 +265,49 @@ export default function Hero() {
         <div className="grid lg:grid-cols-2 gap-16 xl:gap-24 items-center py-24 lg:py-32">
           {/* ── Left: copy ───────────────────────────────────────────────── */}
           <div className="flex flex-col">
-            <Badge variant="brand" dot className="mb-7 w-fit">
-              Currently in beta — free forever
-            </Badge>
+            {/* Badge row + lang toggle */}
+            <div className="flex items-center gap-3 mb-7">
+              <Badge variant="brand" dot className="w-fit">
+                {t.badge}
+              </Badge>
+
+              {/* Language toggle */}
+              <div className="flex items-center rounded-lg border border-white/[0.10] bg-white/[0.04] p-0.5 gap-0.5">
+                {(["pt", "en"] as Lang[]).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => setLang(l)}
+                    className={
+                      lang === l
+                        ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-violet-600 text-white transition-all"
+                        : "px-2.5 py-1 rounded-md text-[11px] font-medium text-white/40 hover:text-white/70 transition-all"
+                    }
+                    aria-pressed={lang === l}
+                    aria-label={l === "pt" ? "Português" : "English"}
+                  >
+                    {l.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <h1
               id="hero-headline"
               className="text-[2.8rem] sm:text-6xl lg:text-[4rem] xl:text-[4.5rem] font-extrabold tracking-tight leading-[1.08] text-white text-balance mb-6"
             >
-              File approvals <span className="gradient-text">without</span>
+              {t.h1a} <span className="gradient-text">{t.h1highlight}</span>
               <br />
-              the chaos
+              {t.h1b}
             </h1>
 
             <p className="text-lg sm:text-xl text-white/55 leading-relaxed mb-10 max-w-[520px]">
-              Send files to clients and get structured approvals — no WhatsApp
-              threads, no confusing email chains. Just clean, trackable reviews
-              with a single link.
+              {t.p}
             </p>
 
             {/* CTAs */}
             <div className="flex flex-wrap gap-3.5">
               <Button size="lg" variant="primary" href="/login">
-                Start for free
+                {t.cta1}
                 <svg
                   width="16"
                   height="16"
@@ -263,7 +325,7 @@ export default function Hero() {
                 </svg>
               </Button>
               <Button size="lg" variant="ghost" href="#how-it-works">
-                See how it works
+                {t.cta2}
               </Button>
             </div>
 
@@ -272,17 +334,13 @@ export default function Hero() {
               <AvatarStack />
               <p className="text-sm text-white/45">
                 <span className="text-white/75 font-semibold">500+</span>{" "}
-                freelancers already using it
+                {t.social}
               </p>
             </div>
 
             {/* Trust badges */}
             <div className="flex flex-wrap items-center gap-5 mt-8 pt-8 border-t border-white/[0.06]">
-              {[
-                "No credit card required",
-                "Free forever plan",
-                "No client login needed",
-              ].map((text) => (
+              {t.trust.map((text) => (
                 <div
                   key={text}
                   className="flex items-center gap-1.5 text-xs text-white/40"
