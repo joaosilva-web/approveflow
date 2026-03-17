@@ -244,7 +244,7 @@ export default function Hero() {
 
             {/* CTAs */}
             <div className="flex flex-wrap gap-3.5">
-              <Button size="lg" variant="primary">
+              <Button size="lg" variant="primary" href="/login">
                 Start for free
                 <svg
                   width="16"
@@ -262,7 +262,7 @@ export default function Hero() {
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </Button>
-              <Button size="lg" variant="ghost">
+              <Button size="lg" variant="ghost" href="#how-it-works">
                 See how it works
               </Button>
             </div>

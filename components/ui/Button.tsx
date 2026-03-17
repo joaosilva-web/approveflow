@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -15,6 +16,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  href?: string;
 }
 
 // ─── Variant & size maps ──────────────────────────────────────────────────────
@@ -93,29 +95,27 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       children,
       disabled,
+      href,
       ...props
     },
     ref,
   ) => {
-    return (
-      <button
-        ref={ref}
-        disabled={disabled || loading}
-        className={cn(
-          "inline-flex items-center justify-center font-medium",
-          "transition-all duration-200 cursor-pointer select-none",
-          "focus-visible:outline-none focus-visible:ring-2",
-          "focus-visible:ring-violet-500/60 focus-visible:ring-offset-2",
-          "focus-visible:ring-offset-[#06060f]",
-          "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
-          "active:scale-[0.97]",
-          variantClasses[variant],
-          sizeClasses[size],
-          fullWidth && "w-full",
-          className,
-        )}
-        {...props}
-      >
+    const classes = cn(
+      "inline-flex items-center justify-center font-medium",
+      "transition-all duration-200 cursor-pointer select-none",
+      "focus-visible:outline-none focus-visible:ring-2",
+      "focus-visible:ring-violet-500/60 focus-visible:ring-offset-2",
+      "focus-visible:ring-offset-[#06060f]",
+      "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
+      "active:scale-[0.97]",
+      variantClasses[variant],
+      sizeClasses[size],
+      fullWidth && "w-full",
+      className,
+    );
+
+    const inner = (
+      <>
         {loading ? (
           <Spinner size={spinnerSizes[size]} />
         ) : (
@@ -123,6 +123,25 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         {children}
         {!loading && rightIcon && <span className="shrink-0">{rightIcon}</span>}
+      </>
+    );
+
+    if (href) {
+      return (
+        <Link href={href} className={classes}>
+          {inner}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        ref={ref}
+        disabled={disabled || loading}
+        className={classes}
+        {...props}
+      >
+        {inner}
       </button>
     );
   },

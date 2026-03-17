@@ -63,7 +63,7 @@ export default function CTA() {
 
             {/* CTAs */}
             <div className="flex flex-wrap items-center justify-center gap-3.5 mt-2">
-              <Button size="lg" variant="primary">
+              <Button size="lg" variant="primary" href="/login">
                 Create your first project
                 <svg
                   width="16"
@@ -81,7 +81,7 @@ export default function CTA() {
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </Button>
-              <Button size="lg" variant="ghost">
+              <Button size="lg" variant="ghost" href="#how-it-works">
                 View live demo
               </Button>
             </div>

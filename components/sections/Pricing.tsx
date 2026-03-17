@@ -144,6 +144,7 @@ function PlanCard({ plan }: { plan: Plan }) {
       <Button
         variant={plan.highlight ? "primary" : "secondary"}
         fullWidth
+        href="/login"
         className="mb-7"
       >
         {plan.cta}

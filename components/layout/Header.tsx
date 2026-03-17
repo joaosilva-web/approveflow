@@ -142,7 +142,7 @@ export default function Header() {
             >
               Sign in
             </Link>
-            <Button size="sm" variant="primary">
+            <Button size="sm" variant="primary" href="/login">
               Get started free
             </Button>
           </div>
