@@ -88,7 +88,8 @@ export async function sendNewReviewEmail(opts: {
           labelProject: "Project",
           labelVersion: "Version",
           cta: "Review &amp; Approve",
-          footer: "No account needed — this link opens directly in your browser.",
+          footer:
+            "No account needed — this link opens directly in your browser.",
           textCta: "Open review link:",
           textFooter: "No account needed — this link opens directly.",
         };

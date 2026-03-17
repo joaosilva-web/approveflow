@@ -58,6 +58,43 @@ const statusLabel: Record<Status, string> = {
   CHANGES_REQUESTED: "Changes requested",
 };
 
+// ─── Download helper (blob fetch bypasses cross-origin anchor restriction) ───
+
+function DownloadFileButton({ url, fileName }: { url: string; fileName: string }) {
+  const [loading, setLoading] = React.useState(false);
+
+  async function handleDownload() {
+    setLoading(true);
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleDownload}
+      disabled={loading}
+      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/[0.06] border border-white/[0.10] text-white/70 hover:bg-white/[0.10] hover:text-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
+      {loading ? "Downloading..." : "Download"}
+    </button>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ReviewClientShell({
@@ -170,28 +207,7 @@ export default function ReviewClientShell({
               />
               {allowDownload && (
                 <div className="flex justify-center mt-4">
-                  <a
-                    href={signedUrl}
-                    download={fileName}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/[0.06] border border-white/[0.10] text-white/70 hover:bg-white/[0.10] hover:text-white/90 transition-colors"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                      <polyline points="7 10 12 15 17 10" />
-                      <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                    Download
-                  </a>
+                  <DownloadFileButton url={signedUrl} fileName={fileName} />
                 </div>
               )}
             </>

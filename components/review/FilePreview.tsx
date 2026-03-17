@@ -11,15 +11,34 @@ interface FilePreviewProps {
 }
 
 function DownloadButton({ url, fileName }: { url: string; fileName: string }) {
+  const [loading, setLoading] = React.useState(false);
+
+  async function handleDownload() {
+    setLoading(true);
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <a
-      href={url}
-      download={fileName}
+    <button
+      onClick={handleDownload}
+      disabled={loading}
       className={cn(
         "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium",
         "bg-white/[0.06] border border-white/[0.10] text-white/70",
         "hover:bg-white/[0.10] hover:text-white/90 transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
       )}
     >
       <svg
@@ -37,8 +56,8 @@ function DownloadButton({ url, fileName }: { url: string; fileName: string }) {
         <polyline points="7 10 12 15 17 10" />
         <line x1="12" y1="15" x2="12" y2="3" />
       </svg>
-      Download
-    </a>
+      {loading ? "Downloading..." : "Download"}
+    </button>
   );
 }
 
