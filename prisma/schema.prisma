@@ -19,6 +19,7 @@ model User {
     emailVerified DateTime?
     image         String?
     password      String? // hashed — null for OAuth users
+    locale        String    @default("pt") // "pt" or "en" — detected from browser
     createdAt     DateTime  @default(now())
     updatedAt     DateTime  @updatedAt
 

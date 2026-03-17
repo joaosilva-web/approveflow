@@ -5,6 +5,8 @@ const FROM = process.env.RESEND_FROM ?? "ApproveFlow <noreply@approveflow.app>";
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "https://approveflow-two.vercel.app";
 
+type Locale = "pt" | "en";
+
 // ─── Shared HTML wrapper (proper email structure improves deliverability) ─────
 
 function htmlWrapper(body: string) {
@@ -57,41 +59,70 @@ export async function sendNewReviewEmail(opts: {
   reviewToken: string;
   versionNumber: number;
   label: string | null;
+  locale?: Locale;
 }) {
+  const locale = opts.locale ?? "pt";
   const url = `${BASE_URL}/review/${opts.reviewToken}`;
   const versionLabel = opts.label
-    ? `Version ${opts.versionNumber} — ${opts.label}`
-    : `Version ${opts.versionNumber}`;
+    ? `${locale === "pt" ? "Versão" : "Version"} ${opts.versionNumber} — ${opts.label}`
+    : `${locale === "pt" ? "Versão" : "Version"} ${opts.versionNumber}`;
+
+  const t =
+    locale === "pt"
+      ? {
+          subject: `Novo arquivo pronto para revisão — ${opts.projectName}`,
+          greeting: `Olá ${opts.clientName},`,
+          intro: "Um novo arquivo está pronto para a sua revisão.",
+          labelProject: "Projeto",
+          labelVersion: "Versão",
+          cta: "Revisar &amp; Aprovar",
+          footer:
+            "Sem necessidade de conta — este link abre diretamente no seu navegador.",
+          textCta: "Abrir link de revisão:",
+          textFooter: "Sem necessidade de conta — este link abre diretamente.",
+        }
+      : {
+          subject: `New file ready for your review — ${opts.projectName}`,
+          greeting: `Hi ${opts.clientName},`,
+          intro: "A new file is ready for your review.",
+          labelProject: "Project",
+          labelVersion: "Version",
+          cta: "Review &amp; Approve",
+          footer: "No account needed — this link opens directly in your browser.",
+          textCta: "Open review link:",
+          textFooter: "No account needed — this link opens directly.",
+        };
 
   const body = `
-    <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111">Hi ${opts.clientName},</p>
-    <p style="margin:4px 0 24px;font-size:15px;color:#555">A new file is ready for your review.</p>
+    <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111">${t.greeting}</p>
+    <p style="margin:4px 0 24px;font-size:15px;color:#555">${t.intro}</p>
 
     <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin-bottom:28px">
       <tr>
-        <td style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;color:#888;width:90px">Project</td>
+        <td style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;color:#888;width:90px">${t.labelProject}</td>
         <td style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;font-weight:600;color:#111">${opts.projectName}</td>
       </tr>
       <tr>
-        <td style="padding:8px 0;font-size:13px;color:#888">Version</td>
+        <td style="padding:8px 0;font-size:13px;color:#888">${t.labelVersion}</td>
         <td style="padding:8px 0;font-size:13px;color:#333">${versionLabel}</td>
       </tr>
     </table>
 
     <a href="${url}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.01em">
-      Review &amp; Approve
+      ${t.cta}
     </a>
 
-    <p style="margin:28px 0 0;font-size:12px;color:#9ca3af">
-      No account needed — this link opens directly in your browser.
-    </p>`;
+    <p style="margin:28px 0 0;font-size:12px;color:#9ca3af">${t.footer}</p>`;
 
-  const text = `Hi ${opts.clientName},\n\nA new file is ready for your review.\n\nProject: ${opts.projectName}\nVersion: ${versionLabel}\n\nOpen review link:\n${url}\n\nNo account needed — this link opens directly.\n\n— ApproveFlow`;
+  const text =
+    locale === "pt"
+      ? `Olá ${opts.clientName},\n\nUm novo arquivo está pronto para a sua revisão.\n\nProjeto: ${opts.projectName}\nVersão: ${versionLabel}\n\n${t.textCta}\n${url}\n\n${t.textFooter}\n\n— ApproveFlow`
+      : `Hi ${opts.clientName},\n\nA new file is ready for your review.\n\nProject: ${opts.projectName}\nVersion: ${versionLabel}\n\n${t.textCta}\n${url}\n\n${t.textFooter}\n\n— ApproveFlow`;
 
   await resend.emails.send({
     from: FROM,
     to: opts.to,
-    subject: `New file ready for your review — ${opts.projectName}`,
+    subject: t.subject,
     html: htmlWrapper(body),
     text,
     headers: UNSUBSCRIBE_HEADERS,
@@ -106,25 +137,43 @@ export async function sendApprovalEmail(opts: {
   clientName: string;
   signerName: string;
   deliveryId: string;
+  locale?: Locale;
 }) {
-  const body = `
-    <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111">Delivery approved</p>
-    <p style="margin:4px 0 24px;font-size:15px;color:#555">
-      <strong>${opts.signerName}</strong> approved the delivery for <strong>${opts.projectName}</strong>.
-    </p>
-    <p style="margin:0 0 28px;font-size:14px;color:#555">Log in to your dashboard to see the approval details and download the signed record.</p>
-    <a href="${BASE_URL}/dashboard" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px;font-weight:600">
-      Go to Dashboard
-    </a>`;
+  const locale = opts.locale ?? "pt";
 
-  const text = `Delivery approved\n\n${opts.signerName} approved the delivery for ${opts.projectName}.\n\nView details:\n${BASE_URL}/dashboard\n\n— ApproveFlow`;
+  const t =
+    locale === "pt"
+      ? {
+          subject: `${opts.projectName} foi aprovado por ${opts.signerName}`,
+          title: "Entrega aprovada",
+          body: `<strong>${opts.signerName}</strong> aprovou a entrega de <strong>${opts.projectName}</strong>.`,
+          sub: "Acesse seu painel para ver os detalhes da aprovação.",
+          cta: "Ir para o Painel",
+          text: `Entrega aprovada\n\n${opts.signerName} aprovou a entrega de ${opts.projectName}.\n\nVer detalhes:\n${BASE_URL}/dashboard\n\n— ApproveFlow`,
+        }
+      : {
+          subject: `${opts.projectName} was approved by ${opts.signerName}`,
+          title: "Delivery approved",
+          body: `<strong>${opts.signerName}</strong> approved the delivery for <strong>${opts.projectName}</strong>.`,
+          sub: "Log in to your dashboard to see the approval details.",
+          cta: "Go to Dashboard",
+          text: `Delivery approved\n\n${opts.signerName} approved the delivery for ${opts.projectName}.\n\nView details:\n${BASE_URL}/dashboard\n\n— ApproveFlow`,
+        };
+
+  const body = `
+    <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111">${t.title}</p>
+    <p style="margin:4px 0 24px;font-size:15px;color:#555">${t.body}</p>
+    <p style="margin:0 0 28px;font-size:14px;color:#555">${t.sub}</p>
+    <a href="${BASE_URL}/dashboard" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px;font-weight:600">
+      ${t.cta}
+    </a>`;
 
   await resend.emails.send({
     from: FROM,
     to: opts.to,
-    subject: `${opts.projectName} was approved by ${opts.signerName}`,
+    subject: t.subject,
     html: htmlWrapper(body),
-    text,
+    text: t.text,
     headers: UNSUBSCRIBE_HEADERS,
   });
 }
@@ -136,27 +185,44 @@ export async function sendChangesRequestedEmail(opts: {
   projectName: string;
   clientName: string;
   reviewToken: string;
+  locale?: Locale;
 }) {
+  const locale = opts.locale ?? "pt";
   const url = `${BASE_URL}/review/${opts.reviewToken}?preview=1`;
 
-  const body = `
-    <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111">Changes requested</p>
-    <p style="margin:4px 0 24px;font-size:15px;color:#555">
-      Your client requested changes on <strong>${opts.projectName}</strong>.
-    </p>
-    <p style="margin:0 0 28px;font-size:14px;color:#555">Review the comments and upload a new version when ready.</p>
-    <a href="${url}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px;font-weight:600">
-      View Comments
-    </a>`;
+  const t =
+    locale === "pt"
+      ? {
+          subject: `Alterações solicitadas em ${opts.projectName}`,
+          title: "Alterações solicitadas",
+          body: `Seu cliente solicitou alterações em <strong>${opts.projectName}</strong>.`,
+          sub: "Revise os comentários e envie uma nova versão quando estiver pronto.",
+          cta: "Ver Comentários",
+          text: `Alterações solicitadas\n\nSeu cliente solicitou alterações em ${opts.projectName}.\n\nVer comentários:\n${url}\n\n— ApproveFlow`,
+        }
+      : {
+          subject: `Changes requested on ${opts.projectName}`,
+          title: "Changes requested",
+          body: `Your client requested changes on <strong>${opts.projectName}</strong>.`,
+          sub: "Review the comments and upload a new version when ready.",
+          cta: "View Comments",
+          text: `Changes requested\n\nYour client requested changes on ${opts.projectName}.\n\nView comments:\n${url}\n\n— ApproveFlow`,
+        };
 
-  const text = `Changes requested\n\nYour client requested changes on ${opts.projectName}.\n\nView comments:\n${url}\n\n— ApproveFlow`;
+  const body = `
+    <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111">${t.title}</p>
+    <p style="margin:4px 0 24px;font-size:15px;color:#555">${t.body}</p>
+    <p style="margin:0 0 28px;font-size:14px;color:#555">${t.sub}</p>
+    <a href="${url}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px;font-weight:600">
+      ${t.cta}
+    </a>`;
 
   await resend.emails.send({
     from: FROM,
     to: opts.to,
-    subject: `Changes requested on ${opts.projectName}`,
+    subject: t.subject,
     html: htmlWrapper(body),
-    text,
+    text: t.text,
     headers: UNSUBSCRIBE_HEADERS,
   });
 }

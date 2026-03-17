@@ -25,7 +25,7 @@ export async function POST(
         select: {
           name: true,
           clientName: true,
-          user: { select: { email: true } },
+          user: { select: { email: true, locale: true } },
         },
       },
     },
@@ -87,6 +87,7 @@ export async function POST(
       clientName: delivery.project.clientName,
       signerName: parsed.data.signerName,
       deliveryId: delivery.id,
+      locale: (delivery.project.user?.locale as "pt" | "en") ?? "pt",
     }).catch(console.error);
   }
 
