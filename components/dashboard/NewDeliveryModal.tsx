@@ -36,7 +36,7 @@ function ReviewLinkBox({ token }: { token: string }) {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-white/70">
-        Share this link with your client. No account needed to review.
+        Compartilhe este link com seu cliente. Sem necessidade de conta.
       </p>
       <div className="flex items-center gap-2 p-3 bg-white/[0.04] border border-white/[0.08] rounded-xl">
         <span className="flex-1 text-xs text-violet-300 font-mono truncate">
@@ -51,7 +51,7 @@ function ReviewLinkBox({ token }: { token: string }) {
               : "bg-white/[0.06] text-white/70 border border-white/[0.10] hover:bg-white/[0.10]",
           )}
         >
-          {copied ? "Copied!" : "Copy"}
+          {copied ? "Copiado!" : "Copiar"}
         </button>
       </div>
     </div>
@@ -139,7 +139,7 @@ export default function NewDeliveryModal({
         setStep("done");
         onSuccess(result.reviewToken!);
       } catch (e) {
-        setErrorMsg(e instanceof Error ? e.message : "Upload failed");
+        setErrorMsg(e instanceof Error ? e.message : "Falha no envio");
         setStep("error");
       }
     });
@@ -149,15 +149,15 @@ export default function NewDeliveryModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Upload new version"
-      description="Upload a file and get a secure review link to share with your client."
+      title="Enviar nova versão"
+      description="Envie um arquivo e obtenha um link de revisão seguro para compartilhar com seu cliente."
       size="md"
       closeOnOverlayClick={step !== "uploading"}
       footer={
         step === "upload" ? (
           <div className="flex justify-end gap-3">
             <Button variant="ghost" size="sm" onClick={handleClose}>
-              Cancel
+              Cancelar
             </Button>
             <Button
               variant="primary"
@@ -166,12 +166,12 @@ export default function NewDeliveryModal({
               loading={isPending}
               onClick={handleUpload}
             >
-              Upload & get link
+              Enviar e obter link
             </Button>
           </div>
         ) : step === "done" ? (
           <Button variant="primary" fullWidth onClick={handleClose}>
-            Done
+            Concluído
           </Button>
         ) : null
       }
@@ -185,25 +185,25 @@ export default function NewDeliveryModal({
           />
 
           <Input
-            label="Version label (optional)"
-            placeholder="e.g. Color adjustments, Final version…"
+            label="Rótulo da versão (opcional)"
+            placeholder="Ex.: Ajustes de cor, Versão final…"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            hint="Shown in the client's version history"
+            hint="Exibido no histórico de versões do cliente"
           />
 
           <Input
             type="password"
-            label="Link password (optional)"
-            placeholder="Leave blank for no password"
+            label="Senha do link (opcional)"
+            placeholder="Deixar em branco para sem senha"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            hint="Client must enter this password to view the file"
+            hint="O cliente deve inserir esta senha para ver o arquivo"
           />
 
           <label className="flex items-center justify-between cursor-pointer">
             <span className="text-sm text-white/70">
-              Allow client to download
+              Permitir download pelo cliente
             </span>
             <button
               type="button"
@@ -266,7 +266,7 @@ export default function NewDeliveryModal({
               {progress}%
             </span>
           </div>
-          <p className="text-sm text-white/60">Uploading your file…</p>
+          <p className="text-sm text-white/60">Enviando seu arquivo…</p>
         </div>
       )}
 
@@ -291,10 +291,10 @@ export default function NewDeliveryModal({
             </div>
             <div>
               <p className="text-sm font-semibold text-emerald-400">
-                Upload complete!
+                Envio concluído!
               </p>
               <p className="text-xs text-white/50 mt-0.5">
-                Your review link is ready
+                Seu link de revisão está pronto
               </p>
             </div>
           </div>
@@ -325,7 +325,7 @@ export default function NewDeliveryModal({
             </div>
             <div>
               <p className="text-sm font-semibold text-red-400">
-                Upload failed
+                Falha no envio
               </p>
               <p className="text-xs text-white/50 mt-0.5">{errorMsg}</p>
             </div>
@@ -338,7 +338,7 @@ export default function NewDeliveryModal({
               setErrorMsg("");
             }}
           >
-            Try again
+            Tentar novamente
           </Button>
         </div>
       )}

@@ -177,9 +177,9 @@ export default function DashboardPageClient({
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Projects</h1>
+          <h1 className="text-2xl font-bold text-white">Projetos</h1>
           <p className="text-sm text-white/40 mt-0.5">
-            Manage your client deliveries and review links
+            Gerencie suas entregas e links de revisão
           </p>
         </div>
         <Button
@@ -203,29 +203,29 @@ export default function DashboardPageClient({
             </svg>
           }
         >
-          New project
+          Novo projeto
         </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
-          label="Total projects"
+          label="Total de projetos"
           value={stats.totalProjects}
           color="text-white/80"
         />
         <StatCard
-          label="Pending review"
+          label="Aguardando revisão"
           value={stats.totalPending}
           color="text-yellow-400"
         />
         <StatCard
-          label="Approved"
+          label="Aprovados"
           value={stats.totalApproved}
           color="text-emerald-400"
         />
         <StatCard
-          label="Changes req."
+          label="Alterações sol."
           value={stats.totalChanges}
           color="text-red-400"
         />
@@ -253,17 +253,17 @@ export default function DashboardPageClient({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search projects or clients..."
+            placeholder="Buscar projetos ou clientes..."
             className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white placeholder-white/30 focus:outline-none focus:border-violet-500/60 focus:bg-white/[0.06] transition-colors"
           />
         </div>
         <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08]">
           {(
             [
-              { key: "ALL", label: "All" },
-              { key: "PENDING", label: "Pending" },
-              { key: "APPROVED", label: "Approved" },
-              { key: "CHANGES_REQUESTED", label: "Changes" },
+              { key: "ALL", label: "Todos" },
+              { key: "PENDING", label: "Pendente" },
+              { key: "APPROVED", label: "Aprovado" },
+              { key: "CHANGES_REQUESTED", label: "Alterações" },
             ] as const
           ).map(({ key, label }) => (
             <button
@@ -286,18 +286,17 @@ export default function DashboardPageClient({
         <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-yellow-500/[0.06] border border-yellow-500/20">
           <div>
             <p className="text-sm font-semibold text-yellow-400">
-              Project limit reached
+              Limite de projetos atingido
             </p>
             <p className="text-xs text-white/50 mt-0.5">
-              You&apos;ve used all {subscription?.maxProjects} project slots on
-              the Free plan.
+              Você usou todos os {subscription?.maxProjects} projetos do plano Free.
             </p>
           </div>
           <Link
             href="/dashboard/billing"
             className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-violet-600 hover:bg-violet-500 transition-colors"
           >
-            Upgrade to Pro
+            Fazer upgrade para Pro
           </Link>
         </div>
       )}
@@ -312,10 +311,10 @@ export default function DashboardPageClient({
       ) : liveProjects.length > 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
           <p className="text-sm font-semibold text-white/50">
-            No results found
+            Nenhum resultado encontrado
           </p>
           <p className="text-xs text-white/30">
-            Try a different project or client name
+            Tente outro nome de projeto ou cliente
           </p>
         </div>
       ) : (
@@ -338,10 +337,10 @@ export default function DashboardPageClient({
           </div>
           <div>
             <p className="text-sm font-semibold text-white/60">
-              No projects yet
+              Nenhum projeto ainda
             </p>
             <p className="text-xs text-white/30 mt-1">
-              Create your first project to get started
+              Crie seu primeiro projeto para começar
             </p>
           </div>
           <Button
@@ -349,7 +348,7 @@ export default function DashboardPageClient({
             size="sm"
             onClick={() => setModalOpen(true)}
           >
-            Create project
+            Criar projeto
           </Button>
         </div>
       )}

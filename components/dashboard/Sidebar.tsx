@@ -18,7 +18,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    label: "Projects",
+    label: "Projetos",
     href: "/dashboard",
     // Active on the main dashboard page OR inside any /dashboard/projects/* sub-route
     isActive: (p) => p === "/dashboard" || p.startsWith("/dashboard/projects"),
@@ -39,7 +39,7 @@ const navItems: NavItem[] = [
     ),
   },
   {
-    label: "Billing",
+    label: "Faturamento",
     href: "/dashboard/billing",
     isActive: (p) => p.startsWith("/dashboard/billing"),
     icon: (

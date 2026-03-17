@@ -20,9 +20,9 @@ interface ProjectCardProps {
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
 const statusLabel: Record<string, string> = {
-  PENDING: "Pending",
-  APPROVED: "Approved",
-  CHANGES_REQUESTED: "Changes requested",
+  PENDING: "Pendente",
+  APPROVED: "Aprovado",
+  CHANGES_REQUESTED: "Alterações solicitadas",
 };
 
 const statusVariant: Record<string, BadgeVariant> = {
@@ -33,13 +33,13 @@ const statusVariant: Record<string, BadgeVariant> = {
 
 function timeAgo(date: Date): string {
   const secs = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (secs < 60) return "just now";
+  if (secs < 60) return "agora mesmo";
   const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return `${mins}m atrás`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return `${hrs}h atrás`;
   const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+  return `${days}d atrás`;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ export default function ProjectCard({
   lastViewedAt,
 }: ProjectCardProps) {
   const variant = latestStatus ? statusVariant[latestStatus] : "default";
-  const label = latestStatus ? statusLabel[latestStatus] : "No deliveries";
+  const label = latestStatus ? statusLabel[latestStatus] : "Sem entregas";
 
   return (
     <Link
@@ -74,7 +74,7 @@ export default function ProjectCard({
             {name}
           </h3>
           <p className="text-xs text-white/45 mt-0.5 truncate">
-            Client: {clientName}
+            Cliente: {clientName}
           </p>
         </div>
         <Badge variant={variant} dot size="sm">
@@ -100,16 +100,16 @@ export default function ProjectCard({
               <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
               <polyline points="13 2 13 9 20 9" />
             </svg>
-            {totalDeliveries} version{totalDeliveries !== 1 ? "s" : ""}
+            {totalDeliveries} versão{totalDeliveries !== 1 ? "es" : ""}
           </div>
           <span className="text-[10px] text-white/25">{timeAgo(updatedAt)}</span>
         </div>
         {lastViewedAt ? (
           <span className="text-[10px] text-violet-400/60">
-            👀 Client viewed {timeAgo(lastViewedAt)}
+            👀 Cliente viu {timeAgo(lastViewedAt)}
           </span>
         ) : (
-          <span className="text-[10px] text-white/20">👀 Not yet viewed</span>
+          <span className="text-[10px] text-white/20">👀 Ainda não visualizado</span>
         )}
       </div>
     </Link>

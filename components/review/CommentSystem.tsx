@@ -35,12 +35,12 @@ interface CommentSystemProps {
 
 function timeAgo(dateStr: string): string {
   const secs = Math.floor((Date.now() - Date.parse(dateStr)) / 1000);
-  if (secs < 60) return "just now";
+  if (secs < 60) return "agora mesmo";
   const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return `${mins}m atrás`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  if (hrs < 24) return `${hrs}h atrás`;
+  return `${Math.floor(hrs / 24)}d atrás`;
 }
 
 // ─── Comment bubble ───────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ export default function CommentSystem({
 
   const submit = () => {
     if (!content.trim()) {
-      setFormError("Comment cannot be empty");
+      setFormError("O comentário não pode ser vazio");
       return;
     }
     setFormError("");
@@ -132,7 +132,7 @@ export default function CommentSystem({
         setContent("");
       } else {
         const data = await res.json().catch(() => ({}));
-        setFormError(data.error ?? "Failed to post comment");
+        setFormError(data.error ?? "Falha ao publicar comentário");
       }
     });
   };
@@ -140,7 +140,7 @@ export default function CommentSystem({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-xs text-white/50 uppercase tracking-wider font-semibold">
-        Comments{comments.length > 0 ? ` (${comments.length})` : ""}
+        Comentários{comments.length > 0 ? ` (${comments.length})` : ""}
       </p>
 
       {/* Comment list */}
@@ -156,7 +156,7 @@ export default function CommentSystem({
         </div>
       ) : (
         <p className="text-sm text-white/30 text-center py-4">
-          No comments yet
+          Nenhum comentário ainda
         </p>
       )}
 
@@ -168,7 +168,7 @@ export default function CommentSystem({
               {freelancerName[0]?.toUpperCase() ?? "F"}
             </div>
             <span className="text-xs text-white/50">
-              Replying as{" "}
+              Respondendo como{" "}
               <span className="text-white/80 font-medium">
                 {freelancerName}
               </span>
@@ -176,8 +176,8 @@ export default function CommentSystem({
           </div>
         ) : (
           <Input
-            label="Your name (optional)"
-            placeholder="Jane Smith"
+            label="Seu nome (opcional)"
+            placeholder="Jane Silva"
             value={authorName}
             onChange={(e) => setAuthorName(e.target.value)}
             fullWidth
@@ -186,23 +186,23 @@ export default function CommentSystem({
         {/* Quick reactions — client only */}
         {!isFreelancer && (
           <div className="flex flex-col gap-1.5">
-            <p className="text-[11px] text-white/35">Quick reactions</p>
+            <p className="text-[11px] text-white/35">Reações rápidas</p>
             <div className="flex flex-wrap gap-1.5">
               {[
                 {
                   emoji: "\uD83D\uDC4D",
-                  label: "Looks good",
-                  text: "Looks good!",
+                  label: "Ficou ótimo",
+                  text: "Ficou ótimo!",
                 },
                 {
                   emoji: "\uD83D\uDD01",
-                  label: "Needs changes",
-                  text: "Needs adjustments: ",
+                  label: "Precisa de ajustes",
+                  text: "Precisa de ajustes: ",
                 },
                 {
                   emoji: "\u274C",
-                  label: "Not ready",
-                  text: "This version is not ready because: ",
+                  label: "Não está pronto",
+                  text: "Esta versão não está pronta porque: ",
                 },
               ].map((r) => (
                 <button
@@ -225,11 +225,11 @@ export default function CommentSystem({
           </div>
         )}
         <Textarea
-          label={isFreelancer ? "Your reply" : "Add a comment"}
+          label={isFreelancer ? "Sua resposta" : "Adicionar comentário"}
           placeholder={
             isFreelancer
-              ? "Reply to the client…"
-              : "Leave a note for the freelancer…"
+              ? "Responder ao cliente…"
+              : "Deixar uma nota para o freelancer…"
           }
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -249,7 +249,7 @@ export default function CommentSystem({
           loading={isPending}
           disabled={!content.trim()}
         >
-          {isFreelancer ? "Send reply" : "Post comment"}
+          {isFreelancer ? "Enviar resposta" : "Publicar comentário"}
         </Button>
       </div>
     </div>

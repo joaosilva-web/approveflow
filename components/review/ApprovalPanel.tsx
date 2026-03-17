@@ -46,9 +46,9 @@ function StatusBanner({ status }: { status: Status }) {
           </svg>
         </div>
         <div>
-          <p className="text-sm font-semibold text-emerald-400">Approved</p>
+          <p className="text-sm font-semibold text-emerald-400">Aprovado</p>
           <p className="text-xs text-white/50 mt-0.5">
-            This version has been approved
+            Esta versão foi aprovada
           </p>
         </div>
       </div>
@@ -76,10 +76,10 @@ function StatusBanner({ status }: { status: Status }) {
         </div>
         <div>
           <p className="text-sm font-semibold text-yellow-400">
-            Changes requested
+            Alterações solicitadas
           </p>
           <p className="text-xs text-white/50 mt-0.5">
-            The reviewer has requested changes
+            O revisor solicitou alterações
           </p>
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function ApprovalPanel({
 
   const handleApprove = () => {
     if (!signerName.trim()) {
-      setFormError("Your name is required");
+      setFormError("Seu nome é obrigatório");
       return;
     }
     setFormError("");
@@ -192,14 +192,14 @@ export default function ApprovalPanel({
         onStatusChange("APPROVED");
       } else {
         const data = await res.json().catch(() => ({}));
-        setFormError(data.error ?? "Something went wrong");
+        setFormError(data.error ?? "Algo deu errado");
       }
     });
   };
 
   const handleRequestChanges = () => {
     if (!signerName.trim()) {
-      setFormError("Your name is required");
+      setFormError("Seu nome é obrigatório");
       return;
     }
     setFormError("");
@@ -219,7 +219,7 @@ export default function ApprovalPanel({
         onStatusChange("CHANGES_REQUESTED");
       } else {
         const data = await res.json().catch(() => ({}));
-        setFormError(data.error ?? "Something went wrong");
+        setFormError(data.error ?? "Algo deu errado");
       }
     });
   };
@@ -254,7 +254,7 @@ export default function ApprovalPanel({
       {panel === "idle" && (
         <div className="flex flex-col gap-3">
           <p className="text-xs text-white/50 uppercase tracking-wider font-semibold">
-            Review decision
+            Decisão de revisão
           </p>
           <Button
             variant="primary"
@@ -276,7 +276,7 @@ export default function ApprovalPanel({
               </svg>
             }
           >
-            Approve this version
+            Aprovar esta versão
           </Button>
           <Button
             variant="outline"
@@ -299,7 +299,7 @@ export default function ApprovalPanel({
               </svg>
             }
           >
-            Request changes
+            Solicitar alterações
           </Button>
         </div>
       )}
@@ -308,20 +308,20 @@ export default function ApprovalPanel({
       {panel === "approving" && (
         <div className="flex flex-col gap-4 p-4 bg-emerald-500/[0.05] border border-emerald-500/20 rounded-xl">
           <p className="text-sm font-semibold text-emerald-400">
-            Confirm approval
+            Confirmar aprovação
           </p>
           <Input
-            label="Your name"
-            placeholder="Jane Smith"
+            label="Seu nome"
+            placeholder="Jane Silva"
             value={signerName}
             onChange={(e) => setSignerName(e.target.value)}
             fullWidth
             required
           />
           <Input
-            label="Email (optional)"
+            label="E-mail (opcional)"
             type="email"
-            placeholder="jane@company.com"
+            placeholder="jane@empresa.com"
             value={signerEmail}
             onChange={(e) => setSignerEmail(e.target.value)}
             fullWidth
@@ -340,7 +340,7 @@ export default function ApprovalPanel({
                 setFormError("");
               }}
             >
-              Cancel
+              Cancelar
             </Button>
             <Button
               variant="primary"
@@ -348,7 +348,7 @@ export default function ApprovalPanel({
               onClick={handleApprove}
               loading={isPending}
             >
-              Confirm approval
+              Confirmar aprovação
             </Button>
           </div>
         </div>
@@ -358,19 +358,19 @@ export default function ApprovalPanel({
       {panel === "requesting" && (
         <div className="flex flex-col gap-4 p-4 bg-yellow-500/[0.05] border border-yellow-500/20 rounded-xl">
           <p className="text-sm font-semibold text-yellow-400">
-            Request changes
+            Solicitar alterações
           </p>
           <Input
-            label="Your name"
-            placeholder="Jane Smith"
+            label="Seu nome"
+            placeholder="Jane Silva"
             value={signerName}
             onChange={(e) => setSignerName(e.target.value)}
             fullWidth
             required
           />
           <Textarea
-            label="Note (optional)"
-            placeholder="Describe the changes you'd like…"
+            label="Nota (opcional)"
+            placeholder="Descreva as alterações que gostaria…"
             value={changeNote}
             onChange={(e) => setChangeNote(e.target.value)}
             rows={3}
@@ -391,7 +391,7 @@ export default function ApprovalPanel({
                 setFormError("");
               }}
             >
-              Cancel
+              Cancelar
             </Button>
             <Button
               variant="outline"
@@ -399,7 +399,7 @@ export default function ApprovalPanel({
               onClick={handleRequestChanges}
               loading={isPending}
             >
-              Send request
+              Enviar solicitação
             </Button>
           </div>
         </div>
@@ -431,10 +431,10 @@ export default function ApprovalPanel({
             </div>
             <div>
               <p className="text-base font-bold text-emerald-400">
-                🎉 Version approved!
+                🎉 Versão aprovada!
               </p>
               <p className="text-xs text-white/45 mt-1">
-                The freelancer has been notified.
+                O freelancer foi notificado.
               </p>
             </div>
           </div>
@@ -443,8 +443,8 @@ export default function ApprovalPanel({
           {!messageSent ? (
             <div className="flex flex-col gap-2">
               <Textarea
-                label="Leave an optional message"
-                placeholder="Looking great! Thanks for the quick turnaround…"
+                label="Deixar uma mensagem opcional"
+                placeholder="Ficou lindo! Obrigada pela entrega rápida…"
                 value={approvalMessage}
                 onChange={(e) => setApprovalMessage(e.target.value)}
                 rows={2}
@@ -458,13 +458,13 @@ export default function ApprovalPanel({
                   onClick={sendApprovalMessage}
                   loading={sendingMessage}
                 >
-                  Send message
+                  Enviar mensagem
                 </Button>
               )}
             </div>
           ) : (
             <p className="text-xs text-emerald-400/60 text-center">
-              ✓ Message sent to the freelancer
+              ✓ Mensagem enviada ao freelancer
             </p>
           )}
         </div>

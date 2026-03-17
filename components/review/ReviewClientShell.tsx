@@ -53,14 +53,20 @@ const statusVariant: Record<Status, BadgeVariant> = {
 };
 
 const statusLabel: Record<Status, string> = {
-  PENDING: "Awaiting review",
-  APPROVED: "Approved",
-  CHANGES_REQUESTED: "Changes requested",
+  PENDING: "Aguardando revisão",
+  APPROVED: "Aprovado",
+  CHANGES_REQUESTED: "Alterações solicitadas",
 };
 
 // ─── Download helper (blob fetch bypasses cross-origin anchor restriction) ───
 
-function DownloadFileButton({ url, fileName }: { url: string; fileName: string }) {
+function DownloadFileButton({
+  url,
+  fileName,
+}: {
+  url: string;
+  fileName: string;
+}) {
   const [loading, setLoading] = React.useState(false);
 
   async function handleDownload() {
@@ -85,12 +91,22 @@ function DownloadFileButton({ url, fileName }: { url: string; fileName: string }
       disabled={loading}
       className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/[0.06] border border-white/[0.10] text-white/70 hover:bg-white/[0.10] hover:text-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
         <polyline points="7 10 12 15 17 10" />
         <line x1="12" y1="15" x2="12" y2="3" />
       </svg>
-      {loading ? "Downloading..." : "Download"}
+      {loading ? "Baixando..." : "Download"}
     </button>
   );
 }
@@ -160,7 +176,7 @@ export default function ReviewClientShell({
               {projectName}
             </span>
             <span className="text-[11px] text-white/35">
-              Client: {clientName}
+              Cliente: {clientName}
             </span>
           </div>
           <Badge variant={statusVariant[status]} dot size="sm">
@@ -179,11 +195,11 @@ export default function ReviewClientShell({
               <span className="font-medium text-white/80">
                 {freelancerDisplayName}
               </span>
-              {" shared "}
+              {" compartilhou "}
               <span className="font-medium text-white/80">
                 &ldquo;{projectName}&rdquo;
               </span>
-              {" for your review"}
+              {" para sua revisão"}
             </p>
           )}
           <div className="flex items-center gap-2.5 mb-5">
@@ -247,10 +263,10 @@ export default function ReviewClientShell({
                 <div className="w-2 h-2 rounded-full bg-violet-400 shrink-0" />
                 <p className="text-xs text-violet-300/80 leading-snug">
                   <span className="font-semibold text-violet-300">
-                    Preview mode
+                    Modo visualização
                   </span>
-                  {" — "}client sees this link, you can reply to their comments
-                  below.
+                  {" — "}
+                  o cliente vê este link, você pode responder os comentários abaixo.
                 </p>
               </div>
             )}
@@ -281,7 +297,7 @@ export default function ReviewClientShell({
       {/* ── Viral footer ────────────────────────────────────────────────────── */}
       <footer className="shrink-0 py-2.5 text-center border-t border-white/[0.04]">
         <p className="text-[11px] text-white/20">
-          Review powered by{" "}
+          Revisão via{" "}
           <a
             href="https://approveflow.app"
             target="_blank"

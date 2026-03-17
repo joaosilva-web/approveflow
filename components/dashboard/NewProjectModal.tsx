@@ -39,13 +39,13 @@ export default function NewProjectModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="New project"
-      description="Create a new project to start delivering files to your client."
+      title="Novo projeto"
+      description="Crie um novo projeto para começar a enviar arquivos para seu cliente."
       size="sm"
       footer={
         <div className="flex justify-end gap-3">
           <Button variant="ghost" size="sm" type="button" onClick={onClose}>
-            Cancel
+            Cancelar
           </Button>
           <Button
             variant="primary"
@@ -54,7 +54,7 @@ export default function NewProjectModal({
             form="new-project-form"
             loading={isPending}
           >
-            Create project
+            Criar projeto
           </Button>
         </div>
       }
@@ -66,30 +66,30 @@ export default function NewProjectModal({
       >
         <Input
           name="name"
-          label="Project name"
-          placeholder="Brand guidelines, Website redesign…"
+          label="Nome do projeto"
+          placeholder="Identidade visual, Redesign do site…"
           required
           fullWidth
         />
         <Input
           name="clientName"
-          label="Client name"
-          placeholder="Acme Corp, John Doe…"
+          label="Nome do cliente"
+          placeholder="Empresa Ltda, João Silva…"
           required
           fullWidth
         />
         <Input
           name="clientEmail"
-          label="Client email (optional)"
+          label="E-mail do cliente (opcional)"
           type="email"
-          placeholder="client@company.com"
+          placeholder="cliente@empresa.com"
           fullWidth
-          hint="Used for optional email verification on the review link"
+          hint="Usado para notificações de revisão por e-mail"
         />
         <Textarea
           name="description"
-          label="Description (optional)"
-          placeholder="Brief notes about this project…"
+          label="Descrição (opcional)"
+          placeholder="Notas sobre este projeto…"
           rows={3}
           fullWidth
           resize="none"
@@ -104,7 +104,7 @@ export default function NewProjectModal({
                 href="/dashboard/billing"
                 className="text-xs text-violet-400 hover:text-violet-300 underline underline-offset-2"
               >
-                Upgrade to Pro &rarr;
+                Fazer upgrade para Pro &rarr;
               </Link>
             )}
           </div>
