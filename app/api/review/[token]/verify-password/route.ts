@@ -8,7 +8,8 @@ export async function POST(
 ) {
   const { token } = await params;
   const body = await request.json().catch(() => ({}));
-  const password: string = typeof body.password === "string" ? body.password : "";
+  const password: string =
+    typeof body.password === "string" ? body.password : "";
 
   if (!password) {
     return NextResponse.json({ error: "Password required" }, { status: 400 });

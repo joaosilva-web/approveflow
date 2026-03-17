@@ -118,12 +118,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
     const cookieStore = await cookies();
     const unlocked = cookieStore.get(`review_pw_${token}`)?.value === "1";
     if (!unlocked) {
-      return (
-        <PasswordGate
-          token={token}
-          projectName={delivery.project.name}
-        />
-      );
+      return <PasswordGate token={token} projectName={delivery.project.name} />;
     }
   }
 

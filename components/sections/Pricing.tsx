@@ -133,11 +133,7 @@ function getPlans(lang: Lang): Plan[] {
       price: "R$59",
       period: "/ month",
       description: "For teams and agencies managing client projects at scale.",
-      features: [
-        "Everything in Pro",
-        "200 GB storage",
-        "Dedicated support",
-      ],
+      features: ["Everything in Pro", "200 GB storage", "Dedicated support"],
       cta: "Get Studio",
       highlight: false,
     },

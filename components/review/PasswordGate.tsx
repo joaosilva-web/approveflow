@@ -10,7 +10,10 @@ interface PasswordGateProps {
   projectName: string;
 }
 
-export default function PasswordGate({ token, projectName }: PasswordGateProps) {
+export default function PasswordGate({
+  token,
+  projectName,
+}: PasswordGateProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -32,7 +35,11 @@ export default function PasswordGate({ token, projectName }: PasswordGateProps) 
         router.refresh();
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.error === "Incorrect password" ? "Incorrect password." : "Something went wrong. Try again.");
+        setError(
+          data.error === "Incorrect password"
+            ? "Incorrect password."
+            : "Something went wrong. Try again.",
+        );
       }
     });
   };
@@ -68,10 +75,12 @@ export default function PasswordGate({ token, projectName }: PasswordGateProps) 
         </div>
 
         <div className="text-center mb-8">
-          <h1 className="text-xl font-bold text-white mb-1">Password required</h1>
+          <h1 className="text-xl font-bold text-white mb-1">
+            Password required
+          </h1>
           <p className="text-sm text-white/50">
-            <span className="text-white/70">{projectName}</span> is password protected.
-            Enter the password to view the file.
+            <span className="text-white/70">{projectName}</span> is password
+            protected. Enter the password to view the file.
           </p>
         </div>
 
@@ -85,9 +94,7 @@ export default function PasswordGate({ token, projectName }: PasswordGateProps) 
             autoFocus
           />
 
-          {error && (
-            <p className="text-sm text-red-400 -mt-1">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-400 -mt-1">{error}</p>}
 
           <Button
             type="submit"
