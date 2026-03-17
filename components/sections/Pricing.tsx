@@ -1,8 +1,32 @@
+"use client";
+
 import React from "react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
+import { useLang, type Lang } from "@/lib/lang-context";
+
+// ─── Bilingual copy ───────────────────────────────────────────────────────────
+
+const copy = {
+  pt: {
+    badge: "Planos",
+    h2a: "Preços simples e ",
+    h2highlight: "transparentes",
+    p: "Comece grátis e cresça conforme precisar. Sem cobranças surpresa, sem taxas ocultas. Cancele quando quiser.",
+    footerNote:
+      "Todos os planos incluem criptografia SSL, armazenamento seguro de arquivos e SLA de 99,9% de uptime.",
+  },
+  en: {
+    badge: "Pricing",
+    h2a: "Simple, transparent ",
+    h2highlight: "pricing",
+    p: "Start free and scale as you grow. No surprise charges, no hidden fees. Cancel anytime.",
+    footerNote:
+      "All plans include SSL encryption, secure file storage, and 99.9% uptime SLA.",
+  },
+} as const;
 
 // ─── Plan data ────────────────────────────────────────────────────────────────
 
@@ -17,61 +41,121 @@ type Plan = {
   badge?: string;
 };
 
-const plans: Plan[] = [
-  {
-    name: "Free",
-    price: "R$0",
-    period: "forever",
-    description: "Perfect for getting started with one or two clients.",
-    features: [
-      "3 active projects",
-      "5 GB storage",
-      "Public review links",
-      "Approval flow",
-      "Version history (3 versions)",
-      "Email notifications",
-    ],
-    cta: "Start for free",
-    highlight: false,
-  },
-  {
-    name: "Pro",
-    price: "R$29",
-    period: "/ month",
-    description: "For active freelancers with multiple ongoing projects.",
-    features: [
-      "Unlimited projects",
-      "50 GB storage",
-      "Custom link expiration",
-      "Email verification for clients",
-      "Unlimited version history",
-      "Priority notifications",
-      "Activity tracking & logs",
-      "Password-protected links",
-    ],
-    cta: "Get Pro",
-    highlight: true,
-    badge: "Most Popular",
-  },
-  {
-    name: "Studio",
-    price: "R$59",
-    period: "/ month",
-    description: "For teams and agencies managing client projects at scale.",
-    features: [
-      "Everything in Pro",
-      "200 GB storage",
-      "Team collaboration",
-      "API access",
-      "Custom branding & white-label",
-      "Bulk project operations",
-      "Dedicated support",
-      "Invoice after approval",
-    ],
-    cta: "Get Studio",
-    highlight: false,
-  },
-];
+function getPlans(lang: Lang): Plan[] {
+  if (lang === "pt") {
+    return [
+      {
+        name: "Free",
+        price: "R$0",
+        period: "para sempre",
+        description: "Perfeito para começar com um ou dois clientes.",
+        features: [
+          "3 projetos ativos",
+          "5 GB de armazenamento",
+          "Links de revisão públicos",
+          "Fluxo de aprovação",
+          "Histórico de versões (3 versões)",
+          "Notificações por e-mail",
+        ],
+        cta: "Começar grátis",
+        highlight: false,
+      },
+      {
+        name: "Pro",
+        price: "R$29",
+        period: "/ mês",
+        description: "Para freelancers ativos com vários projetos em andamento.",
+        features: [
+          "Projetos ilimitados",
+          "50 GB de armazenamento",
+          "Expiração de link personalizada",
+          "Verificação de e-mail do cliente",
+          "Histórico de versões ilimitado",
+          "Notificações prioritárias",
+          "Rastreamento de atividade e logs",
+          "Links protegidos por senha",
+        ],
+        cta: "Assinar Pro",
+        highlight: true,
+        badge: "Mais Popular",
+      },
+      {
+        name: "Studio",
+        price: "R$59",
+        period: "/ mês",
+        description:
+          "Para equipes e agências que gerenciam projetos de clientes em escala.",
+        features: [
+          "Tudo do Pro",
+          "200 GB de armazenamento",
+          "Colaboração em equipe",
+          "Acesso à API",
+          "Marca própria e white-label",
+          "Operações em lote",
+          "Suporte dedicado",
+          "Fatura após aprovação",
+        ],
+        cta: "Assinar Studio",
+        highlight: false,
+      },
+    ];
+  }
+  return [
+    {
+      name: "Free",
+      price: "R$0",
+      period: "forever",
+      description: "Perfect for getting started with one or two clients.",
+      features: [
+        "3 active projects",
+        "5 GB storage",
+        "Public review links",
+        "Approval flow",
+        "Version history (3 versions)",
+        "Email notifications",
+      ],
+      cta: "Start for free",
+      highlight: false,
+    },
+    {
+      name: "Pro",
+      price: "R$29",
+      period: "/ month",
+      description: "For active freelancers with multiple ongoing projects.",
+      features: [
+        "Unlimited projects",
+        "50 GB storage",
+        "Custom link expiration",
+        "Email verification for clients",
+        "Unlimited version history",
+        "Priority notifications",
+        "Activity tracking & logs",
+        "Password-protected links",
+      ],
+      cta: "Get Pro",
+      highlight: true,
+      badge: "Most Popular",
+    },
+    {
+      name: "Studio",
+      price: "R$59",
+      period: "/ month",
+      description: "For teams and agencies managing client projects at scale.",
+      features: [
+        "Everything in Pro",
+        "200 GB storage",
+        "Team collaboration",
+        "API access",
+        "Custom branding & white-label",
+        "Bulk project operations",
+        "Dedicated support",
+        "Invoice after approval",
+      ],
+      cta: "Get Studio",
+      highlight: false,
+    },
+  ];
+}
 
 // ─── Check icon ───────────────────────────────────────────────────────────────
 
@@ -188,6 +272,10 @@ function PlanCard({ plan }: { plan: Plan }) {
 // ─── Section ──────────────────────────────────────────────────────────────────
 
 export default function Pricing() {
+  const { lang } = useLang();
+  const t = copy[lang];
+  const plans = getPlans(lang);
+
   return (
     <section
       id="pricing"
@@ -203,17 +291,16 @@ export default function Pricing() {
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 mb-14 lg:mb-18">
           <Badge variant="brand" dot>
-            Pricing
+            {t.badge}
           </Badge>
           <h2
             id="pricing-heading"
             className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight text-balance"
           >
-            Simple, transparent <span className="gradient-text">pricing</span>
+            {t.h2a}<span className="gradient-text">{t.h2highlight}</span>
           </h2>
           <p className="text-base sm:text-lg text-white/50 max-w-xl leading-relaxed">
-            Start free and scale as you grow. No surprise charges, no hidden
-            fees. Cancel anytime.
+            {t.p}
           </p>
         </div>
 
@@ -226,8 +313,7 @@ export default function Pricing() {
 
         {/* Footer note */}
         <p className="text-center text-sm text-white/30 mt-10">
-          All plans include SSL encryption, secure file storage, and 99.9%
-          uptime SLA.
+          {t.footerNote}
         </p>
       </Container>
     </section>

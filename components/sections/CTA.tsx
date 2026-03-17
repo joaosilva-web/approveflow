@@ -1,8 +1,34 @@
+"use client";
+
 import React from "react";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import { useLang } from "@/lib/lang-context";
+
+const copy = {
+  pt: {
+    eyebrow: "Comece hoje",
+    h2a: "Chega de correr atrás de aprovações.",
+    h2highlight: "Entregue com confiança.",
+    p: "Junte-se a centenas de freelancers que substituíram threads confusas de WhatsApp por fluxos de aprovação limpos e profissionais.",
+    cta1: "Criar meu primeiro projeto",
+    cta2: "Ver demonstração",
+    trust: "Plano gratuito disponível. Sem cartão de crédito.",
+  },
+  en: {
+    eyebrow: "Get started today",
+    h2a: "Stop chasing approvals.",
+    h2highlight: "Start delivering with confidence.",
+    p: "Join hundreds of freelancers who replaced messy WhatsApp threads with clean, professional approval workflows.",
+    cta1: "Create your first project",
+    cta2: "View live demo",
+    trust: "Free forever plan available. No credit card required.",
+  },
+} as const;
 
 export default function CTA() {
+  const { lang } = useLang();
+  const t = copy[lang];
   return (
     <section
       className="relative py-24 lg:py-32 overflow-hidden"
@@ -42,29 +68,28 @@ export default function CTA() {
           <div className="relative flex flex-col items-center text-center gap-6 px-6 py-20 lg:py-24">
             {/* Eyebrow */}
             <p className="text-xs font-semibold text-violet-400/80 uppercase tracking-[0.2em]">
-              Get started today
+              {t.eyebrow}
             </p>
 
             <h2
               id="cta-heading"
               className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white tracking-tight leading-tight text-balance max-w-3xl"
             >
-              Stop chasing approvals.
+              {t.h2a}
               <br />
               <span className="gradient-text">
-                Start delivering with confidence.
+                {t.h2highlight}
               </span>
             </h2>
 
             <p className="text-base sm:text-lg text-white/55 max-w-lg leading-relaxed">
-              Join hundreds of freelancers who replaced messy WhatsApp threads
-              with clean, professional approval workflows.
+              {t.p}
             </p>
 
             {/* CTAs */}
             <div className="flex flex-wrap items-center justify-center gap-3.5 mt-2">
               <Button size="lg" variant="primary" href="/login">
-                Create your first project
+                {t.cta1}
                 <svg
                   width="16"
                   height="16"
@@ -82,13 +107,13 @@ export default function CTA() {
                 </svg>
               </Button>
               <Button size="lg" variant="ghost" href="#how-it-works">
-                View live demo
+                {t.cta2}
               </Button>
             </div>
 
             {/* Trust line */}
             <p className="text-xs text-white/30 mt-1">
-              Free forever plan available. No credit card required.
+              {t.trust}
             </p>
           </div>
         </div>

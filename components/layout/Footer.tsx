@@ -1,39 +1,83 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
+import { useLang } from "@/lib/lang-context";
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+// ─── Bilingual data ───────────────────────────────────────────────────────────
 
-const footerLinks = [
-  {
-    heading: "Product",
-    links: [
-      { label: "Features", href: "#features" },
-      { label: "Pricing", href: "#pricing" },
-      { label: "How it works", href: "#how-it-works" },
-      { label: "Changelog", href: "/changelog" },
+const copy = {
+  pt: {
+    tagline: "Aprovações de arquivos sem a bagunça. Feito para freelancers.",
+    allRights: "Todos os direitos reservados.",
+    madeWith: "Feito com carinho para freelancers.",
+    columns: [
+      {
+        heading: "Produto",
+        links: [
+          { label: "Funcionalidades", href: "#features" },
+          { label: "Planos", href: "#pricing" },
+          { label: "Como funciona", href: "#how-it-works" },
+          { label: "Novidades", href: "/changelog" },
+        ],
+      },
+      {
+        heading: "Empresa",
+        links: [
+          { label: "Sobre", href: "/about" },
+          { label: "Blog", href: "/blog" },
+          { label: "Vagas", href: "/careers" },
+          { label: "Contato", href: "/contact" },
+        ],
+      },
+      {
+        heading: "Legal",
+        links: [
+          { label: "Política de Privacidade", href: "/privacy" },
+          { label: "Termos de Uso", href: "/terms" },
+          { label: "Segurança", href: "/security" },
+          { label: "Cookies", href: "/cookies" },
+        ],
+      },
     ],
   },
-  {
-    heading: "Company",
-    links: [
-      { label: "About", href: "/about" },
-      { label: "Blog", href: "/blog" },
-      { label: "Careers", href: "/careers" },
-      { label: "Contact", href: "/contact" },
+  en: {
+    tagline: "File approvals without the chaos. Built for freelancers.",
+    allRights: "All rights reserved.",
+    madeWith: "Made with care for freelancers everywhere.",
+    columns: [
+      {
+        heading: "Product",
+        links: [
+          { label: "Features", href: "#features" },
+          { label: "Pricing", href: "#pricing" },
+          { label: "How it works", href: "#how-it-works" },
+          { label: "Changelog", href: "/changelog" },
+        ],
+      },
+      {
+        heading: "Company",
+        links: [
+          { label: "About", href: "/about" },
+          { label: "Blog", href: "/blog" },
+          { label: "Careers", href: "/careers" },
+          { label: "Contact", href: "/contact" },
+        ],
+      },
+      {
+        heading: "Legal",
+        links: [
+          { label: "Privacy Policy", href: "/privacy" },
+          { label: "Terms of Service", href: "/terms" },
+          { label: "Security", href: "/security" },
+          { label: "Cookies", href: "/cookies" },
+        ],
+      },
     ],
   },
-  {
-    heading: "Legal",
-    links: [
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Security", href: "/security" },
-      { label: "Cookies", href: "/cookies" },
-    ],
-  },
-] as const;
+} as const;
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 
@@ -58,6 +102,9 @@ function FooterLogo() {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Footer() {
+  const { lang } = useLang();
+  const t = copy[lang];
+
   return (
     <footer className="border-t border-white/[0.06] py-16 mt-8">
       <Container>
@@ -66,7 +113,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1 flex flex-col gap-4">
             <FooterLogo />
             <p className="text-sm text-white/45 leading-relaxed max-w-[200px]">
-              File approvals without the chaos. Built for freelancers.
+              {t.tagline}
             </p>
             {/* Social links */}
             <div className="flex items-center gap-3 mt-1">
@@ -109,7 +156,7 @@ export default function Footer() {
           </div>
 
           {/* Link columns */}
-          {footerLinks.map(({ heading, links }) => (
+          {t.columns.map(({ heading, links }) => (
             <div key={heading} className="flex flex-col gap-4">
               <h3 className="text-xs font-semibold text-white/30 uppercase tracking-widest">
                 {heading}
@@ -133,10 +180,10 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-14 pt-8 border-t border-white/[0.05] flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-white/30">
-            © {new Date().getFullYear()} ApproveFlow. All rights reserved.
+            © {new Date().getFullYear()} ApproveFlow. {t.allRights}
           </p>
           <p className="text-xs text-white/25">
-            Made with care for freelancers everywhere.
+            {t.madeWith}
           </p>
         </div>
       </Container>

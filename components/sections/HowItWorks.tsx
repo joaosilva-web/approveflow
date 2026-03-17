@@ -1,15 +1,68 @@
+"use client";
+
 import React from "react";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
+import { useLang } from "@/lib/lang-context";
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+// ─── Bilingual copy ───────────────────────────────────────────────────────────
 
-const steps = [
+const copy = {
+  pt: {
+    badge: "Como funciona",
+    h2a: "Três etapas para ",
+    h2highlight: "aprovações sem bagunça",
+    p: "Do upload à aprovação em minutos. Sem configuração para o cliente — ele só clica, revisa e responde.",
+    bottomNote: "O cliente nunca precisa criar uma conta. Jamais.",
+    steps: [
+      {
+        title: "Envie seu arquivo",
+        description:
+          "Arraste e solte imagens, PDFs, vídeos ou qualquer documento. O ApproveFlow armazena com segurança e gera um link de revisão na hora.",
+      },
+      {
+        title: "Cliente revisa online",
+        description:
+          "Compartilhe o link seguro por e-mail ou mensagem. Sem cadastro, sem instalação. O cliente abre o link e visualiza o arquivo em qualquer dispositivo.",
+      },
+      {
+        title: "Aprova ou pede alterações",
+        description:
+          "O cliente clica em Aprovar ou deixa um feedback. Você é notificado na hora. Tudo registrado com data e hora para o seu histórico.",
+      },
+    ],
+  },
+  en: {
+    badge: "How it works",
+    h2a: "Three steps to ",
+    h2highlight: "clean approvals",
+    p: "From upload to approval in minutes. No setup required for your client — they just click, review, and respond.",
+    bottomNote: "Clients never need to create an account. Ever.",
+    steps: [
+      {
+        title: "Upload your file",
+        description:
+          "Drag and drop images, PDFs, videos, or any document. ApproveFlow stores it securely and generates a shareable review link instantly.",
+      },
+      {
+        title: "Client reviews online",
+        description:
+          "Share the secure link by email or message. No accounts, no installs. The client opens the link and sees your file on any device.",
+      },
+      {
+        title: "Approve or request changes",
+        description:
+          "Client clicks Approve or leaves feedback. You get notified instantly. Every interaction is logged with timestamps for your records.",
+      },
+    ],
+  },
+} as const;
+
+// ─── Step meta (icons / colors — language-agnostic) ───────────────────────────
+
+const stepMeta = [
   {
     number: "01",
-    title: "Upload your file",
-    description:
-      "Drag and drop images, PDFs, videos, or any document. ApproveFlow stores it securely and generates a shareable review link instantly.",
     icon: (
       <svg
         width="22"
@@ -32,9 +85,6 @@ const steps = [
   },
   {
     number: "02",
-    title: "Client reviews online",
-    description:
-      "Share the secure link by email or message. No accounts, no installs. The client opens the link and sees your file on any device.",
     icon: (
       <svg
         width="22"
@@ -56,9 +106,6 @@ const steps = [
   },
   {
     number: "03",
-    title: "Approve or request changes",
-    description:
-      "Client clicks Approve or leaves feedback. You get notified instantly. Every interaction is logged with timestamps for your records.",
     icon: (
       <svg
         width="22"
@@ -83,10 +130,14 @@ const steps = [
 // ─── Step card ────────────────────────────────────────────────────────────────
 
 function StepCard({
-  step,
+  meta,
+  title,
+  description,
   index,
 }: {
-  step: (typeof steps)[number];
+  meta: (typeof stepMeta)[number];
+  title: string;
+  description: string;
   index: number;
 }) {
   return (
@@ -94,13 +145,13 @@ function StepCard({
       {/* Icon circle */}
       <div className="relative w-fit">
         <div
-          className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center shadow-lg text-white`}
+          className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${meta.color} flex items-center justify-center shadow-lg text-white`}
         >
-          {step.icon}
+          {meta.icon}
         </div>
         {/* Glow */}
         <div
-          className={`absolute inset-0 ${step.glow} rounded-2xl blur-xl -z-10`}
+          className={`absolute inset-0 ${meta.glow} rounded-2xl blur-xl -z-10`}
           aria-hidden="true"
         />
         {/* Step number badge */}
@@ -112,11 +163,11 @@ function StepCard({
       {/* Content */}
       <div className="flex flex-col gap-2">
         <p className="text-xs font-mono text-white/30 tracking-wider">
-          {step.number}
+          {meta.number}
         </p>
-        <h3 className="text-lg font-semibold text-white/90">{step.title}</h3>
+        <h3 className="text-lg font-semibold text-white/90">{title}</h3>
         <p className="text-sm text-white/50 leading-relaxed">
-          {step.description}
+          {description}
         </p>
       </div>
     </div>
@@ -126,6 +177,9 @@ function StepCard({
 // ─── Section ──────────────────────────────────────────────────────────────────
 
 export default function HowItWorks() {
+  const { lang } = useLang();
+  const t = copy[lang];
+
   return (
     <section
       id="how-it-works"
@@ -141,18 +195,17 @@ export default function HowItWorks() {
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 mb-16 lg:mb-20">
           <Badge variant="brand" dot>
-            How it works
+            {t.badge}
           </Badge>
           <h2
             id="how-it-works-heading"
             className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight text-balance"
           >
-            Three steps to{" "}
-            <span className="gradient-text">clean approvals</span>
+            {t.h2a}
+            <span className="gradient-text">{t.h2highlight}</span>
           </h2>
           <p className="text-base sm:text-lg text-white/50 max-w-xl leading-relaxed">
-            From upload to approval in minutes. No setup required for your
-            client — they just click, review, and respond.
+            {t.p}
           </p>
         </div>
 
@@ -168,14 +221,20 @@ export default function HowItWorks() {
             aria-hidden="true"
           />
 
-          {steps.map((step, i) => (
-            <StepCard key={step.number} step={step} index={i} />
+          {stepMeta.map((meta, i) => (
+            <StepCard
+              key={meta.number}
+              meta={meta}
+              title={t.steps[i].title}
+              description={t.steps[i].description}
+              index={i}
+            />
           ))}
         </div>
 
         {/* Bottom note */}
         <p className="text-center text-sm text-white/30 mt-14">
-          Clients never need to create an account. Ever.
+          {t.bottomNote}
         </p>
       </Container>
     </section>
