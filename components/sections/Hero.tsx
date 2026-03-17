@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
-import { useLang, type Lang } from "@/lib/lang-context";
+import { useLang } from "@/lib/lang-context";
 
 // ─── Copy ─────────────────────────────────────────────────────────────────────
 
