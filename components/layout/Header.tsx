@@ -6,6 +6,34 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import { useLang } from "@/lib/lang-context";
+
+// ─── Bilingual copy ───────────────────────────────────────────────────────────
+
+const copy = {
+  pt: {
+    navLinks: [
+      { label: "Funcionalidades", href: "#features" },
+      { label: "Como funciona", href: "#how-it-works" },
+      { label: "Planos", href: "#pricing" },
+    ],
+    signIn: "Entrar",
+    cta: "Começar grátis",
+    openMenu: "Abrir menu",
+    closeMenu: "Fechar menu",
+  },
+  en: {
+    navLinks: [
+      { label: "Features", href: "#features" },
+      { label: "How it works", href: "#how-it-works" },
+      { label: "Pricing", href: "#pricing" },
+    ],
+    signIn: "Sign in",
+    cta: "Get started free",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+  },
+} as const;
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 
@@ -31,14 +59,6 @@ function Logo() {
     </Link>
   );
 }
-
-// ─── Nav links ────────────────────────────────────────────────────────────────
-
-const navLinks = [
-  { label: "Features", href: "#features" },
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Pricing", href: "#pricing" },
-] as const;
 
 // ─── Mobile menu icon ─────────────────────────────────────────────────────────
 
@@ -73,6 +93,8 @@ function MenuIcon({ open }: { open: boolean }) {
 // ─── Header ───────────────────────────────────────────────────────────────────
 
 export default function Header() {
+  const { lang } = useLang();
+  const t = copy[lang];
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -113,7 +135,7 @@ export default function Header() {
             className="hidden md:flex items-center gap-1 list-none"
             role="list"
           >
-            {navLinks.map(({ label, href }) => (
+            {t.navLinks.map(({ label, href }) => (
               <li key={href}>
                 <Link
                   href={href}
@@ -140,10 +162,10 @@ export default function Header() {
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 rounded-lg",
               )}
             >
-              Sign in
+              {t.signIn}
             </Link>
             <Button size="sm" variant="primary" href="/login">
-              Get started free
+              {t.cta}
             </Button>
           </div>
 
@@ -157,7 +179,7 @@ export default function Header() {
             onClick={() => setMobileOpen((prev) => !prev)}
             aria-expanded={mobileOpen}
             aria-controls="mobile-menu"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-label={mobileOpen ? t.closeMenu : t.openMenu}
           >
             <MenuIcon open={mobileOpen} />
           </button>
@@ -176,7 +198,7 @@ export default function Header() {
       >
         <Container>
           <ul className="flex flex-col py-4 gap-1 list-none" role="list">
-            {navLinks.map(({ label, href }) => (
+            {t.navLinks.map(({ label, href }) => (
               <li key={href}>
                 <Link
                   href={href}
@@ -196,10 +218,10 @@ export default function Header() {
                 href="/login"
                 className="block px-3 py-2.5 text-sm text-white/60 rounded-xl hover:text-white hover:bg-white/[0.06] transition-colors"
               >
-                Sign in
+                {t.signIn}
               </Link>
-              <Button fullWidth variant="primary" size="md">
-                Get started free
+              <Button fullWidth variant="primary" size="md" href="/login">
+                {t.cta}
               </Button>
             </li>
           </ul>

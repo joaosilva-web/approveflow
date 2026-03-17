@@ -64,7 +64,8 @@ function getPlans(lang: Lang): Plan[] {
         name: "Pro",
         price: "R$29",
         period: "/ mês",
-        description: "Para freelancers ativos com vários projetos em andamento.",
+        description:
+          "Para freelancers ativos com vários projetos em andamento.",
         features: [
           "Projetos ilimitados",
           "50 GB de armazenamento",
@@ -297,7 +298,8 @@ export default function Pricing() {
             id="pricing-heading"
             className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight text-balance"
           >
-            {t.h2a}<span className="gradient-text">{t.h2highlight}</span>
+            {t.h2a}
+            <span className="gradient-text">{t.h2highlight}</span>
           </h2>
           <p className="text-base sm:text-lg text-white/50 max-w-xl leading-relaxed">
             {t.p}

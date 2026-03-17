@@ -240,9 +240,7 @@ function FeatureCard({
       {/* Content */}
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-semibold text-white/90">{title}</h3>
-        <p className="text-sm text-white/50 leading-relaxed">
-          {description}
-        </p>
+        <p className="text-sm text-white/50 leading-relaxed">{description}</p>
       </div>
 
       {/* Hover gradient accent line */}

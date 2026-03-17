@@ -182,9 +182,7 @@ export default function Footer() {
           <p className="text-xs text-white/30">
             © {new Date().getFullYear()} ApproveFlow. {t.allRights}
           </p>
-          <p className="text-xs text-white/25">
-            {t.madeWith}
-          </p>
+          <p className="text-xs text-white/25">{t.madeWith}</p>
         </div>
       </Container>
     </footer>

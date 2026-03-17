@@ -166,9 +166,7 @@ function StepCard({
           {meta.number}
         </p>
         <h3 className="text-lg font-semibold text-white/90">{title}</h3>
-        <p className="text-sm text-white/50 leading-relaxed">
-          {description}
-        </p>
+        <p className="text-sm text-white/50 leading-relaxed">{description}</p>
       </div>
     </div>
   );

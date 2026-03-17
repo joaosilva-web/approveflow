@@ -77,9 +77,7 @@ export default function CTA() {
             >
               {t.h2a}
               <br />
-              <span className="gradient-text">
-                {t.h2highlight}
-              </span>
+              <span className="gradient-text">{t.h2highlight}</span>
             </h2>
 
             <p className="text-base sm:text-lg text-white/55 max-w-lg leading-relaxed">
@@ -112,9 +110,7 @@ export default function CTA() {
             </div>
 
             {/* Trust line */}
-            <p className="text-xs text-white/30 mt-1">
-              {t.trust}
-            </p>
+            <p className="text-xs text-white/30 mt-1">{t.trust}</p>
           </div>
         </div>
       </Container>
