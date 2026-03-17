@@ -7,6 +7,8 @@ export interface PlanDefinition {
   name: string;
   priceBrl: number;
   maxProjects: number | null; // null = unlimited
+  maxVersionsPerProject: number | null; // null = unlimited
+  maxStorageBytes: number | null; // null = unlimited
   features: string[];
   description: string;
 }
@@ -17,6 +19,8 @@ export const PLANS: Record<string, PlanDefinition> = {
     name: "Free",
     priceBrl: 0,
     maxProjects: 3,
+    maxVersionsPerProject: 3,
+    maxStorageBytes: 5 * 1024 * 1024 * 1024, // 5 GB
     features: [
       "Up to 3 active projects",
       "Unlimited review links",
@@ -30,6 +34,8 @@ export const PLANS: Record<string, PlanDefinition> = {
     name: "Pro",
     priceBrl: 29.9,
     maxProjects: null,
+    maxVersionsPerProject: null,
+    maxStorageBytes: 50 * 1024 * 1024 * 1024, // 50 GB
     features: [
       "Unlimited active projects",
       "Everything in Free",
@@ -43,6 +49,8 @@ export const PLANS: Record<string, PlanDefinition> = {
     name: "Studio",
     priceBrl: 59.9,
     maxProjects: null,
+    maxVersionsPerProject: null,
+    maxStorageBytes: 200 * 1024 * 1024 * 1024, // 200 GB
     features: [
       "Everything in Pro",
       "Team members (coming soon)",

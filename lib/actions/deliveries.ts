@@ -6,6 +6,9 @@ import { getSignedUploadUrl, deleteFile } from "@/lib/supabase";
 import { generateReviewToken } from "@/lib/tokens";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
+import { canUploadVersion, canUploadFile } from "@/lib/billing/limits";
+import { sendNewReviewEmail } from "@/lib/email";
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -19,6 +22,7 @@ const createDeliverySchema = z.object({
   allowDownload: z.coerce.boolean().default(true),
   requiresEmail: z.coerce.boolean().default(false),
   expiresInDays: z.coerce.number().int().min(0).max(365).optional(),
+  password: z.string().max(100).optional(),
 });
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -31,6 +35,7 @@ export async function getUploadUrl(
   fileName: string,
   contentType: string,
   projectId: string,
+  fileSize: number,
 ): Promise<
   | { signedUrl: string; token: string; path: string; error?: never }
   | { error: string }
@@ -44,6 +49,14 @@ export async function getUploadUrl(
     select: { id: true },
   });
   if (!project) return { error: "Project not found" };
+
+  // Check version limit before issuing the upload URL
+  const versionCheck = await canUploadVersion(session.user.id, projectId);
+  if (!versionCheck.allowed) return { error: versionCheck.reason! };
+
+  // Check storage quota before issuing the upload URL
+  const storageCheck = await canUploadFile(session.user.id, fileSize);
+  if (!storageCheck.allowed) return { error: storageCheck.reason! };
 
   const ext = fileName.split(".").pop() ?? "bin";
   const ts = Date.now();
@@ -82,17 +95,30 @@ export async function createDelivery(
     allowDownload,
     requiresEmail,
     expiresInDays,
+    password,
   } = parsed.data;
 
   // Verify project ownership
   const project = await prisma.project.findFirst({
     where: { id: projectId, userId: session.user.id },
-    select: { id: true, _count: { select: { deliveries: true } } },
+    select: {
+      id: true,
+      name: true,
+      clientName: true,
+      clientEmail: true,
+      _count: { select: { deliveries: true } },
+    },
   });
   if (!project) return { error: "Project not found" };
 
+  // Check version limit
+  const versionCheck = await canUploadVersion(session.user.id, projectId);
+  if (!versionCheck.allowed) return { error: versionCheck.reason! };
+
   const versionNumber = project._count.deliveries + 1;
   const reviewToken = generateReviewToken();
+
+  const passwordHash = password ? await bcrypt.hash(password, 10) : null;
 
   let expiresAt: Date | null = null;
   if (expiresInDays && expiresInDays > 0) {
@@ -113,8 +139,21 @@ export async function createDelivery(
       allowDownload,
       requiresEmail,
       expiresAt,
+      password: passwordHash,
     },
   });
+
+  // Send email notification to client (fire & forget)
+  if (project.clientEmail) {
+    sendNewReviewEmail({
+      to: project.clientEmail,
+      projectName: project.name,
+      clientName: project.clientName,
+      reviewToken,
+      versionNumber,
+      label: label || null,
+    }).catch(console.error);
+  }
 
   revalidatePath(`/dashboard/projects/${projectId}`);
   return { reviewToken };

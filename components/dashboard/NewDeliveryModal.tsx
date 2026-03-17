@@ -69,6 +69,7 @@ export default function NewDeliveryModal({
   const [step, setStep] = useState<Step>("upload");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [label, setLabel] = useState("");
+  const [password, setPassword] = useState("");
   const [allowDownload, setAllowDownload] = useState(true);
   const [reviewToken, setReviewToken] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -80,6 +81,7 @@ export default function NewDeliveryModal({
     setStep("upload");
     setSelectedFile(null);
     setLabel("");
+    setPassword("");
     setAllowDownload(true);
     setReviewToken("");
     setErrorMsg("");
@@ -100,6 +102,7 @@ export default function NewDeliveryModal({
           selectedFile.name,
           selectedFile.type,
           projectId,
+          selectedFile.size,
         );
 
         if ("error" in urlResult) throw new Error(urlResult.error);
@@ -126,6 +129,7 @@ export default function NewDeliveryModal({
           fileSize: selectedFile.size,
           mimeType: selectedFile.type,
           allowDownload,
+          password: password.trim() || undefined,
         });
 
         if (result.error) throw new Error(result.error);
@@ -186,6 +190,15 @@ export default function NewDeliveryModal({
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             hint="Shown in the client's version history"
+          />
+
+          <Input
+            type="password"
+            label="Link password (optional)"
+            placeholder="Leave blank for no password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            hint="Client must enter this password to view the file"
           />
 
           <label className="flex items-center justify-between cursor-pointer">

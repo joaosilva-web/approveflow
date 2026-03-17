@@ -49,3 +49,60 @@ export async function canCreateProject(userId: string): Promise<LimitCheck> {
 
   return { allowed: true };
 }
+
+/**
+ * Returns true if the user may upload a new version to the given project.
+ */
+export async function canUploadVersion(
+  userId: string,
+  projectId: string,
+): Promise<LimitCheck> {
+  const planCode = await getUserPlanCode(userId);
+  const plan = PLANS[planCode] ?? PLANS.free;
+
+  if (plan.maxVersionsPerProject === null) return { allowed: true };
+
+  const versionCount = await prisma.delivery.count({ where: { projectId } });
+
+  if (versionCount >= plan.maxVersionsPerProject) {
+    return {
+      allowed: false,
+      upgrade: true,
+      reason: `Free plan allows up to ${plan.maxVersionsPerProject} versions per project. Upgrade to Pro for unlimited versions.`,
+    };
+  }
+
+  return { allowed: true };
+}
+
+/**
+ * Returns true if the user may upload a file of the given size without
+ * exceeding their plan's storage quota.
+ */
+export async function canUploadFile(
+  userId: string,
+  newFileSizeBytes: number,
+): Promise<LimitCheck> {
+  const planCode = await getUserPlanCode(userId);
+  const plan = PLANS[planCode] ?? PLANS.free;
+
+  if (plan.maxStorageBytes === null) return { allowed: true };
+
+  const used = await prisma.delivery.aggregate({
+    where: { project: { userId } },
+    _sum: { fileSize: true },
+  });
+
+  const usedBytes = used._sum.fileSize ?? 0;
+
+  if (usedBytes + newFileSizeBytes > plan.maxStorageBytes) {
+    const limitGb = Math.round(plan.maxStorageBytes / (1024 * 1024 * 1024));
+    return {
+      allowed: false,
+      upgrade: true,
+      reason: `Storage limit reached (${limitGb} GB). Upgrade your plan to continue uploading.`,
+    };
+  }
+
+  return { allowed: true };
+}

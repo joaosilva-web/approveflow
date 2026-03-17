@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendChangesRequestedEmail } from "@/lib/email";
 
 export async function POST(
   _request: NextRequest,
@@ -9,7 +10,19 @@ export async function POST(
 
   const delivery = await prisma.delivery.findUnique({
     where: { reviewToken: token },
-    select: { id: true, status: true, expiresAt: true },
+    select: {
+      id: true,
+      status: true,
+      expiresAt: true,
+      reviewToken: true,
+      project: {
+        select: {
+          name: true,
+          clientName: true,
+          user: { select: { email: true } },
+        },
+      },
+    },
   });
 
   if (!delivery) {
@@ -24,6 +37,17 @@ export async function POST(
     where: { id: delivery.id },
     data: { status: "CHANGES_REQUESTED" },
   });
+
+  // Notify freelancer (fire & forget)
+  const ownerEmail = delivery.project.user?.email;
+  if (ownerEmail) {
+    sendChangesRequestedEmail({
+      to: ownerEmail,
+      projectName: delivery.project.name,
+      clientName: delivery.project.clientName,
+      reviewToken: delivery.reviewToken,
+    }).catch(console.error);
+  }
 
   return NextResponse.json({ ok: true });
 }

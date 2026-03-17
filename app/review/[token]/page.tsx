@@ -1,10 +1,11 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { getSignedUrl } from "@/lib/supabase";
 import ReviewClientShell from "@/components/review/ReviewClientShell";
+import PasswordGate from "@/components/review/PasswordGate";
 import type { Metadata } from "next";
 import type { CommentData } from "@/components/review/CommentSystem";
 
@@ -110,6 +111,20 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
         </div>
       </div>
     );
+  }
+
+  // Check password protection (skip in freelancer preview mode)
+  if (delivery.password && !isFreelancerPreview) {
+    const cookieStore = await cookies();
+    const unlocked = cookieStore.get(`review_pw_${token}`)?.value === "1";
+    if (!unlocked) {
+      return (
+        <PasswordGate
+          token={token}
+          projectName={delivery.project.name}
+        />
+      );
+    }
   }
 
   // Record view (fire & forget — don't block page render)

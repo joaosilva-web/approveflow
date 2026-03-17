@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { sendApprovalEmail } from "@/lib/email";
 
 const approveSchema = z.object({
   signerName: z.string().min(1).max(100),
@@ -15,7 +16,19 @@ export async function POST(
 
   const delivery = await prisma.delivery.findUnique({
     where: { reviewToken: token },
-    select: { id: true, status: true, expiresAt: true },
+    select: {
+      id: true,
+      status: true,
+      expiresAt: true,
+      reviewToken: true,
+      project: {
+        select: {
+          name: true,
+          clientName: true,
+          user: { select: { email: true } },
+        },
+      },
+    },
   });
 
   if (!delivery) {
@@ -64,6 +77,18 @@ export async function POST(
       },
     }),
   ]);
+
+  // Notify freelancer (fire & forget)
+  const ownerEmail = delivery.project.user?.email;
+  if (ownerEmail) {
+    sendApprovalEmail({
+      to: ownerEmail,
+      projectName: delivery.project.name,
+      clientName: delivery.project.clientName,
+      signerName: parsed.data.signerName,
+      deliveryId: delivery.id,
+    }).catch(console.error);
+  }
 
   return NextResponse.json({ ok: true });
 }
