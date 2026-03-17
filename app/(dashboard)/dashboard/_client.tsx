@@ -289,7 +289,8 @@ export default function DashboardPageClient({
               Limite de projetos atingido
             </p>
             <p className="text-xs text-white/50 mt-0.5">
-              Você usou todos os {subscription?.maxProjects} projetos do plano Free.
+              Você usou todos os {subscription?.maxProjects} projetos do plano
+              Free.
             </p>
           </div>
           <Link

@@ -102,14 +102,18 @@ export default function ProjectCard({
             </svg>
             {totalDeliveries} versão{totalDeliveries !== 1 ? "es" : ""}
           </div>
-          <span className="text-[10px] text-white/25">{timeAgo(updatedAt)}</span>
+          <span className="text-[10px] text-white/25">
+            {timeAgo(updatedAt)}
+          </span>
         </div>
         {lastViewedAt ? (
           <span className="text-[10px] text-violet-400/60">
             👀 Cliente viu {timeAgo(lastViewedAt)}
           </span>
         ) : (
-          <span className="text-[10px] text-white/20">👀 Ainda não visualizado</span>
+          <span className="text-[10px] text-white/20">
+            👀 Ainda não visualizado
+          </span>
         )}
       </div>
     </Link>
