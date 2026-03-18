@@ -155,8 +155,8 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
-          {t.columns.map(({ heading, links }) => (
+          {/* Link columns — páginas ainda não disponíveis (em breve) */}
+          {/* {t.columns.map(({ heading, links }) => (
             <div key={heading} className="flex flex-col gap-4">
               <h3 className="text-xs font-semibold text-white/30 uppercase tracking-widest">
                 {heading}
@@ -174,7 +174,7 @@ export default function Footer() {
                 ))}
               </ul>
             </div>
-          ))}
+          ))} */}
         </div>
 
         {/* Bottom bar */}
@@ -182,7 +182,12 @@ export default function Footer() {
           <p className="text-xs text-white/30">
             © {new Date().getFullYear()} ApproveFlow. {t.allRights}
           </p>
-          <p className="text-xs text-white/25">{t.madeWith}</p>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-violet-300/70 border border-violet-500/25 bg-violet-500/[0.07] px-2.5 py-1 rounded-full">
+              🚧 {lang === "pt" ? "Em beta — muito mais em breve!" : "Beta — more coming soon!"}
+            </span>
+            <p className="text-xs text-white/25">{t.madeWith}</p>
+          </div>
         </div>
       </Container>
     </footer>
