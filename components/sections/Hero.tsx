@@ -334,7 +334,7 @@ export default function Hero() {
             <div className="flex items-center gap-4 mt-10">
               <AvatarStack />
               <p className="text-sm text-white/45">
-                <span className="text-white/75 font-semibold">500+</span>{" "}
+                <span className="text-white/75 font-semibold">10+</span>{" "}
                 {t.social}
               </p>
             </div>
