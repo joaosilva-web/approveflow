@@ -162,16 +162,16 @@ composition. **No business logic here.**
 Pages fetch data directly via Prisma (RSC), then pass it as props to
 `*PageClient.tsx` components for interactivity.
 
-| Path                                       | What it does                                   |
-| ------------------------------------------ | ---------------------------------------------- |
-| `app/(auth)/login/`                        | Login page                                     |
-| `app/(dashboard)/dashboard/`               | Main dashboard (projects list)                 |
-| `app/(dashboard)/dashboard/billing/`       | Billing / plan management                      |
-| `app/(dashboard)/dashboard/projects/[id]/` | Single project detail                          |
-| `app/review/[token]/`                      | Public review page (auth via token)            |
-| `app/guest-review/[token]/`                | Guest upload review page                       |
-| `app/api/`                                 | REST API routes (webhooks + public endpoints)  |
-| `app/(marketing)/`                         | Landing page + SEO tool pages                  |
+| Path                                       | What it does                                  |
+| ------------------------------------------ | --------------------------------------------- |
+| `app/(auth)/login/`                        | Login page                                    |
+| `app/(dashboard)/dashboard/`               | Main dashboard (projects list)                |
+| `app/(dashboard)/dashboard/billing/`       | Billing / plan management                     |
+| `app/(dashboard)/dashboard/projects/[id]/` | Single project detail                         |
+| `app/review/[token]/`                      | Public review page (auth via token)           |
+| `app/guest-review/[token]/`                | Guest upload review page                      |
+| `app/api/`                                 | REST API routes (webhooks + public endpoints) |
+| `app/(marketing)/`                         | Landing page + SEO tool pages                 |
 
 ### `*PageClient.tsx` pattern
 
@@ -207,9 +207,9 @@ Design-system primitives. No business logic.
 
 | Component           | Variants                                                            |
 | ------------------- | ------------------------------------------------------------------- |
-| `Button`            | `primary` \| `secondary` \| `ghost` \| `outline` \| `danger`       |
-| `Card`              | `default` \| `glass` \| `elevated` \| `outlined`                   |
-| `Badge`             | `default` \| `brand` \| `success` \| `warning` \| `error` \| `info`|
+| `Button`            | `primary` \| `secondary` \| `ghost` \| `outline` \| `danger`        |
+| `Card`              | `default` \| `glass` \| `elevated` \| `outlined`                    |
+| `Badge`             | `default` \| `brand` \| `success` \| `warning` \| `error` \| `info` |
 | `Modal`             | SSR-safe portal, controlled via `isOpen` prop                       |
 | `Input`, `Textarea` | Forwarded ref, error state                                          |
 
@@ -355,12 +355,12 @@ The authenticated shell wrapping all dashboard pages.
 
 ## Server Actions vs API Routes
 
-| Use Server Action when…                                    | Use API Route when…                                                   |
-| ---------------------------------------------------------- | --------------------------------------------------------------------- |
-| Mutating data from a form or button                        | Receiving external webhooks (Stripe, etc.)                            |
-| Simple CRUD with auth check                                | Endpoint called from real-time hooks or external services             |
-| You want automatic Next.js revalidation via `revalidatePath`| Public unauthenticated endpoint (e.g., `/api/review/[token]/view`)  |
-|                                                            | Client polling for live updates                                       |
+| Use Server Action when…                                      | Use API Route when…                                                |
+| ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Mutating data from a form or button                          | Receiving external webhooks (Stripe, etc.)                         |
+| Simple CRUD with auth check                                  | Endpoint called from real-time hooks or external services          |
+| You want automatic Next.js revalidation via `revalidatePath` | Public unauthenticated endpoint (e.g., `/api/review/[token]/view`) |
+|                                                              | Client polling for live updates                                    |
 
 **Rule of thumb:** Server Actions for authenticated user mutations.
 API routes for webhooks, public endpoints, and real-time polling.

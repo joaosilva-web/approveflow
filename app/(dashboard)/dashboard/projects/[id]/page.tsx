@@ -2,7 +2,7 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma/client";
-import ProjectDetailClient from "@/app/(dashboard)/dashboard/projects/[id]/ProjectDetailClient";
+import ProjectDetailPageClient from "@/app/(dashboard)/dashboard/projects/[id]/ProjectDetailPageClient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -53,7 +53,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }));
 
   return (
-    <ProjectDetailClient
+    <ProjectDetailPageClient
       projectId={id}
       projectName={project.name}
       clientName={project.clientName}
