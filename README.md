@@ -29,18 +29,18 @@ ApproveFlow é um SaaS para freelancers enviarem arquivos para clientes e recebe
 
 ## Stack
 
-| Camada | Tecnologia |
-|--------|------------|
-| Framework | Next.js 16 (App Router) + React 19 |
-| Linguagem | TypeScript |
-| Estilo | Tailwind CSS v4 |
-| Banco de dados | PostgreSQL via Supabase |
-| ORM | Prisma 7 |
-| Autenticação | NextAuth v5 (credentials + OAuth) |
-| Storage | Supabase Storage |
-| E-mail | Resend |
-| Pagamentos | Stripe |
-| Deploy | Vercel |
+| Camada         | Tecnologia                         |
+| -------------- | ---------------------------------- |
+| Framework      | Next.js 16 (App Router) + React 19 |
+| Linguagem      | TypeScript                         |
+| Estilo         | Tailwind CSS v4                    |
+| Banco de dados | PostgreSQL via Supabase            |
+| ORM            | Prisma 7                           |
+| Autenticação   | NextAuth v5 (credentials + OAuth)  |
+| Storage        | Supabase Storage                   |
+| E-mail         | Resend                             |
+| Pagamentos     | Stripe                             |
+| Deploy         | Vercel                             |
 
 ## Estrutura do projeto
 
@@ -124,11 +124,11 @@ RESEND_FROM=
 
 ## Planos
 
-| | Free | Pro |
-|---|---|---|
-| Projetos | 3 | Ilimitados |
-| Versões por projeto | 3 | Ilimitadas |
-| Storage | 5 GB | 50 GB |
+|                     | Free | Pro        |
+| ------------------- | ---- | ---------- |
+| Projetos            | 3    | Ilimitados |
+| Versões por projeto | 3    | Ilimitadas |
+| Storage             | 5 GB | 50 GB      |
 
 ## Scripts
 

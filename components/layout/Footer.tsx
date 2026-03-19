@@ -156,7 +156,10 @@ export default function Footer() {
           <FooterLogo />
           <div className="flex items-center gap-3">
             <span className="text-xs text-violet-300/70 border border-violet-500/25 bg-violet-500/[0.07] px-2.5 py-1 rounded-full">
-              🚧 {lang === "pt" ? "Em beta — muito mais em breve!" : "Beta — more coming soon!"}
+              🚧{" "}
+              {lang === "pt"
+                ? "Em beta — muito mais em breve!"
+                : "Beta — more coming soon!"}
             </span>
             <p className="text-xs text-white/25">
               © {new Date().getFullYear()} ApproveFlow

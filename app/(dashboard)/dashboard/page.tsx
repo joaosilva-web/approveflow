@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getSubscriptionInfo } from "@/lib/billing/subscription";
 import type { Metadata } from "next";
-import DashboardPageClient from "@/app/(dashboard)/dashboard/_client";
+import DashboardPageClient from "@/app/(dashboard)/dashboard/DashboardPageClient";
 
 export const metadata: Metadata = {
   title: "Projects — ApproveFlow",
