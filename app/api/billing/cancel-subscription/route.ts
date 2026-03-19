@@ -1,13 +1,7 @@
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+﻿import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma/client";
+import { cancelStripeSubscription } from "@/features/billing/providers/stripe";
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
-
-function getStripe(): Stripe {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
-  return new Stripe(key, { apiVersion: "2026-02-25.clover" });
-}
 
 /**
  * POST /api/billing/cancel-subscription
@@ -38,10 +32,7 @@ export async function POST() {
   }
 
   try {
-    const stripe = getStripe();
-    await stripe.subscriptions.update(sub.providerSubscriptionId, {
-      cancel_at_period_end: true,
-    });
+    await cancelStripeSubscription(sub.providerSubscriptionId);
 
     await prisma.subscription.update({
       where: { userId: session.user.id },

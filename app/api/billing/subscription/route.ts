@@ -1,5 +1,5 @@
-import { auth } from "@/auth";
-import { getSubscriptionInfo } from "@/lib/billing/subscription";
+﻿import { auth } from "@/auth";
+import { getSubscriptionInfo } from "@/features/billing/subscription";
 import { NextResponse } from "next/server";
 
 /**

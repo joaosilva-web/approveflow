@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/client";
 import ProjectDetailClient from "@/app/(dashboard)/dashboard/projects/[id]/ProjectDetailClient";
 import type { Metadata } from "next";
 

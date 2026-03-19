@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { uploadFile } from "@/lib/supabase";
+﻿import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma/client";
+import { uploadFile } from "@/lib/supabase/server";
 import { randomBytes } from "crypto";
 
 const MAX_SIZE = 20 * 1024 * 1024; // 20 MB

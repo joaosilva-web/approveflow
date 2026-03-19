@@ -1,6 +1,6 @@
-"use server";
+﻿"use server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/client";
 import { auth } from "@/auth";
 import { canCreateProject } from "@/features/billing/limits";
 import { revalidatePath } from "next/cache";

@@ -82,6 +82,18 @@ export function constructStripeEvent(
 }
 
 /**
+ * Schedules a subscription to cancel at the end of the current billing period.
+ */
+export async function cancelStripeSubscription(
+  providerSubscriptionId: string,
+): Promise<void> {
+  const stripe = getStripe();
+  await stripe.subscriptions.update(providerSubscriptionId, {
+    cancel_at_period_end: true,
+  });
+}
+
+/**
  * Maps a Stripe subscription status to our internal status.
  */
 export function mapStripeStatusToInternal(

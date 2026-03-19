@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+﻿import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma/client";
 import {
   constructStripeEvent,
   mapStripeStatusToInternal,
-} from "@/lib/billing/providers/stripe";
+} from "@/features/billing/providers/stripe";
 import type { Prisma } from "@prisma/client";
 import type Stripe from "stripe";
 

@@ -1,6 +1,6 @@
-"use server";
+﻿"use server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/client";
 import { signIn } from "@/auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";

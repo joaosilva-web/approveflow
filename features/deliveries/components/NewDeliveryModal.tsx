@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useTransition } from "react";
 import { Modal } from "@/components/ui/Modal";
@@ -9,7 +9,7 @@ import {
   getUploadUrl,
   createDelivery,
 } from "@/features/deliveries/actions/deliveries";
-import { supabaseClient } from "@/lib/supabase-browser";
+import { supabaseClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

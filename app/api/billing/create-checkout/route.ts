@@ -1,6 +1,6 @@
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { createStripeCheckout } from "@/lib/billing/providers/stripe";
+﻿import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma/client";
+import { createStripeCheckout } from "@/features/billing/providers/stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 

@@ -1,10 +1,10 @@
-import React from "react";
+﻿import React from "react";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { prisma } from "@/lib/prisma";
-import { getSignedUrl } from "@/lib/supabase";
-import GuestReviewShell from "@/components/guest/GuestReviewShell";
-import type { CommentData } from "@/components/review/CommentSystem";
+import { prisma } from "@/lib/prisma/client";
+import { getSignedUrl } from "@/lib/supabase/server";
+import GuestReviewShell from "@/features/guest-review/components/GuestReviewShell";
+import type { CommentData } from "@/features/review/components/CommentSystem";
 import type { Metadata } from "next";
 
 interface PageProps {

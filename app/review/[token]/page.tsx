@@ -1,13 +1,13 @@
-import React from "react";
+﻿import React from "react";
 import { notFound } from "next/navigation";
 import { headers, cookies } from "next/headers";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/client";
 import { auth } from "@/auth";
-import { getSignedUrl } from "@/lib/supabase";
-import ReviewClientShell from "@/components/review/ReviewClientShell";
-import PasswordGate from "@/components/review/PasswordGate";
+import { getSignedUrl } from "@/lib/supabase/server";
+import ReviewClientShell from "@/features/review/components/ReviewClientShell";
+import PasswordGate from "@/features/review/components/PasswordGate";
 import type { Metadata } from "next";
-import type { CommentData } from "@/components/review/CommentSystem";
+import type { CommentData } from "@/features/review/components/CommentSystem";
 
 interface PageProps {
   params: Promise<{ token: string }>;

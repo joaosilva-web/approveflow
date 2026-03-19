@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import ToolLandingPage from "@/components/seo/ToolLandingPage";
+﻿import type { Metadata } from "next";
+import ToolLandingPage from "@/features/marketing/components/ToolLandingPage";
 
 export const metadata: Metadata = {
   title: "Logo Feedback Tool — Share Logos for Client Review — ApproveFlow",

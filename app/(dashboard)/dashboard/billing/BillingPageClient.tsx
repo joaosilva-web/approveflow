@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { SubscriptionInfo } from "@/lib/billing/subscription";
-import type { PlanDefinition } from "@/lib/billing/plans";
+import type { SubscriptionInfo } from "@/features/billing/subscription";
+import type { PlanDefinition } from "@/features/billing/plans";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

@@ -1,8 +1,8 @@
-import React from "react";
+﻿import React from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { getSubscriptionInfo } from "@/lib/billing/subscription";
+import { prisma } from "@/lib/prisma/client";
+import { getSubscriptionInfo } from "@/features/billing/subscription";
 import type { Metadata } from "next";
 import DashboardPageClient from "@/app/(dashboard)/dashboard/DashboardPageClient";
 

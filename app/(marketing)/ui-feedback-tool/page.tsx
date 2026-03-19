@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import ToolLandingPage from "@/components/seo/ToolLandingPage";
+﻿import type { Metadata } from "next";
+import ToolLandingPage from "@/features/marketing/components/ToolLandingPage";
 
 export const metadata: Metadata = {
   title: "UI Feedback Tool — Get Design Feedback from Clients — ApproveFlow",

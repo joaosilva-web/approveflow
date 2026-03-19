@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import ProjectCard from "@/components/dashboard/ProjectCard";
-import NewProjectModal from "@/components/dashboard/NewProjectModal";
+import ProjectCard from "@/features/projects/components/ProjectCard";
+import NewProjectModal from "@/features/projects/components/NewProjectModal";
 import { Button } from "@/components/ui/Button";
-import { supabaseClient } from "@/lib/supabase-browser";
+import { supabaseClient } from "@/lib/supabase/browser";
 
 interface Stats {
   totalProjects: number;

@@ -1,7 +1,7 @@
-import { auth } from "@/auth";
+﻿import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { getSubscriptionInfo } from "@/lib/billing/subscription";
-import { PLANS } from "@/lib/billing/plans";
+import { getSubscriptionInfo } from "@/features/billing/subscription";
+import { PLANS } from "@/features/billing/plans";
 import BillingPageClient from "./BillingPageClient";
 import type { Metadata } from "next";
 

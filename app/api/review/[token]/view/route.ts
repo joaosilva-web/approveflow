@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getSignedUrl } from "@/lib/supabase";
+﻿import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma/client";
+import { getSignedUrl } from "@/lib/supabase/server";
 
 // Records a view and returns data needed by the review page (signed URL, etc.)
 export async function POST(

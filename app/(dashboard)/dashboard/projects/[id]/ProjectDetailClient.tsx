@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabaseClient } from "@/lib/supabase-browser";
+import { supabaseClient } from "@/lib/supabase/browser";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import NewDeliveryModal from "@/components/dashboard/NewDeliveryModal";
+import NewDeliveryModal from "@/features/deliveries/components/NewDeliveryModal";
 import { cn } from "@/lib/utils";
 import type { BadgeVariant } from "@/components/ui/Badge";
 

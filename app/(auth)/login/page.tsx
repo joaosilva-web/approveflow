@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { registerUser } from "@/lib/actions/auth";
+import { registerUser } from "@/features/auth/actions/auth";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";

@@ -1,8 +1,8 @@
-"use server";
+﻿"use server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/client";
 import { auth } from "@/auth";
-import { getSignedUploadUrl, deleteFile } from "@/lib/supabase";
+import { getSignedUploadUrl, deleteFile } from "@/lib/supabase/server";
 import { generateReviewToken } from "@/lib/tokens";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
