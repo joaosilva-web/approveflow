@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
   const origin =
     request.nextUrl.origin !== "null" ? request.nextUrl.origin : "";
-  const reviewUrl = `${origin}/r/${reviewToken}`;
+  const reviewUrl = `${origin}/guest-review/${reviewToken}`;
 
   return NextResponse.json({ reviewToken, claimToken, reviewUrl });
 }

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma/client";

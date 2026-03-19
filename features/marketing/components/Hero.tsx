@@ -74,7 +74,7 @@ function AppMockup() {
           </div>
           <div className="flex-1 text-center">
             <span className="text-[11px] text-white/35 font-mono">
-              review.approveflow.com/r/8f4K2jLm
+              review.approveflow.com/guest-review/8f4K2jLm
             </span>
           </div>
           <Badge variant="brand" size="sm">
