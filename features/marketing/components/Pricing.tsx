@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
-import { useLang, type Lang } from "@/lib/lang-context";
+import { useLang, type Lang } from "@/features/marketing/context/lang-context";
 
 // ─── Bilingual copy ───────────────────────────────────────────────────────────
 

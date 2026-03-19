@@ -3,7 +3,7 @@
 import React from "react";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
-import { useLang } from "@/lib/lang-context";
+import { useLang } from "@/features/marketing/context/lang-context";
 
 // ─── Bilingual copy ───────────────────────────────────────────────────────────
 

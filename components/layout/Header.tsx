@@ -6,7 +6,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { useLang } from "@/lib/lang-context";
+import { useLang } from "@/features/marketing/context/lang-context";
 
 // ─── Bilingual copy ───────────────────────────────────────────────────────────
 

@@ -1,14 +1,14 @@
 # ApproveFlow — Developer Onboarding
 
 Welcome to ApproveFlow. This guide explains how the project is organized,
-what each part does, and how to add new features correctly.
+what each part does, and how to add new code correctly.
 
 ---
 
 ## What is ApproveFlow?
 
 A SaaS for freelancers to send files to clients and collect approvals or
-change requests — all through a shareable link, without the client creating
+change requests — all through a shareable link, without the client needing
 an account.
 
 **Core flow:**
@@ -89,80 +89,150 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ## Project Structure Overview
 
 ```
-app/           → Next.js App Router — routing only, no business logic
-components/    → Shared UI components (design system + layout)
-features/      → Domain modules (to be built out — see architecture-migration.md)
-lib/           → Infrastructure clients (Prisma, Supabase, tokens, utils)
+app/           → Next.js App Router — routing, layouts, page composition only
+components/    → Shared, domain-agnostic UI (design system + marketing layout)
+features/      → ALL domain logic, components, and actions (one folder per domain)
+lib/           → Infrastructure only (Prisma, Supabase, token generation, utils)
 prisma/        → DB schema and migrations
 types/         → Global TypeScript types
 docs/          → Architecture and onboarding docs
 ```
 
-### The `app/` directory
+### The rule that matters most
 
-`app/` contains only **routing, layouts, and page composition**.
-Pages call server-side queries directly (Prisma), then pass data down to
-`*Client.tsx` components for interactivity.
+> **Business logic lives in `features/`.**
+> `app/` only routes. `components/` only generic UI. `lib/` only infrastructure.
 
-| Path                                       | What it does                             |
-| ------------------------------------------ | ---------------------------------------- |
-| `app/(auth)/login/`                        | Login page                               |
-| `app/(dashboard)/dashboard/`               | Main dashboard (projects list + stats)   |
-| `app/(dashboard)/dashboard/billing/`       | Billing / plan management                |
-| `app/(dashboard)/dashboard/projects/[id]/` | Single project detail                    |
-| `app/review/[token]/`                      | Public review page (no auth required)    |
-| `app/r/[token]/`                           | Short-link redirect to `/review/{token}` |
-| `app/api/`                                 | REST API routes (see below)              |
-| `app/page.tsx`                             | Landing page                             |
-| `app/client-approval-tool/`, `app/pt/*/`   | SEO landing pages                        |
+---
 
-### `*PageClient.tsx` files
+## `features/` — Domain Modules
 
-Pages that need client-side state use the pattern:
+Each domain is self-contained under `features/{domain}/`:
 
 ```
-page.tsx             ← async Server Component — fetches data, passes as props
-DashboardPageClient.tsx  ← "use client" — handles state, events, real-time
+features/
+  auth/
+    actions/auth.ts           ← registerUser() server action
+  billing/
+    plans.ts                  ← PLANS constant — source of truth for plan limits
+    limits.ts                 ← canCreateProject(), canUploadVersion(), etc.
+    subscription.ts           ← getSubscriptionInfo(userId)
+    providers/stripe.ts       ← Stripe client singleton
+  dashboard/
+    components/Sidebar.tsx    ← Authenticated app navigation
+  deliveries/
+    actions/deliveries.ts     ← getUploadUrl(), createDelivery()
+    components/
+      NewDeliveryModal.tsx
+      UploadZone.tsx
+  guest-review/
+    components/
+      GuestReviewShell.tsx    ← Review page for unauthenticated guests
+      GuestUploader.tsx       ← File upload widget for SEO/tool pages
+  marketing/
+    context/lang-context.tsx  ← pt/en language toggle context
+    components/
+      LandingPage.tsx         ← Home page composition
+      Hero.tsx, Features.tsx, HowItWorks.tsx, Pricing.tsx, CTA.tsx
+      ToolLandingPage.tsx     ← SEO tool page template (EN)
+      ToolLandingPagePT.tsx   ← SEO tool page template (PT)
+  projects/
+    actions/projects.ts       ← createProject(), updateProject(), deleteProject()
+    components/
+      ProjectCard.tsx
+      NewProjectModal.tsx
+  review/
+    components/
+      ReviewClientShell.tsx   ← Main review page shell
+      ApprovalPanel.tsx       ← Approve / Request Changes buttons
+      CommentSystem.tsx       ← Threaded comments
+      ImageWithComments.tsx   ← Pinned comments on images
+      PasswordGate.tsx        ← Password protection prompt
+      FilePreview.tsx         ← PDF / image / video viewer
+      VersionSwitcher.tsx     ← Switch between delivery versions
 ```
 
-The `page.tsx` never contains `useState` or `useEffect`.
-The `*Client.tsx` never does database queries.
+---
 
-### The `app/api/` directory
+## `app/` — Routing Only
 
-API routes are used for:
+`app/` is the Next.js App Router. It handles routing, auth guards, and page
+composition. **No business logic here.**
 
-- **Webhooks** (Stripe `POST /api/billing/webhook/stripe`)
-- **Actions that don't need a full page** (approve, comment, view tracking)
-- **Data endpoints for real-time updates** (`GET /api/projects/[id]`)
+Pages fetch data directly via Prisma (RSC), then pass it as props to
+`*PageClient.tsx` components for interactivity.
 
-See [When to use Server Actions vs API Routes](#server-actions-vs-api-routes).
+| Path                                       | What it does                                   |
+| ------------------------------------------ | ---------------------------------------------- |
+| `app/(auth)/login/`                        | Login page                                     |
+| `app/(dashboard)/dashboard/`               | Main dashboard (projects list)                 |
+| `app/(dashboard)/dashboard/billing/`       | Billing / plan management                      |
+| `app/(dashboard)/dashboard/projects/[id]/` | Single project detail                          |
+| `app/review/[token]/`                      | Public review page (auth via token)            |
+| `app/guest-review/[token]/`                | Guest upload review page                       |
+| `app/api/`                                 | REST API routes (webhooks + public endpoints)  |
+| `app/(marketing)/`                         | Landing page + SEO tool pages                  |
+
+### `*PageClient.tsx` pattern
+
+Pages that need client-side state use this split:
+
+```
+page.tsx                 ← async RSC — fetches data, renders server HTML
+DashboardPageClient.tsx  ← "use client" — state, events, real-time
+```
+
+Rule: `page.tsx` never has `useState`. `*PageClient.tsx` never queries the DB.
+
+### `app/api/` — when to use
+
+- **Webhooks** — `POST /api/billing/webhook/stripe`
+- **Public unauthenticated endpoints** — `/api/review/[token]/view`
+- **Real-time polling** — `GET /api/projects/[id]`
+- **Mutations from client components** — approve, comment, request-changes
+
+Use **Server Actions** (in `features/*/actions/`) for form-driven mutations
+from authenticated pages. See [Server Actions vs API Routes](#server-actions-vs-api-routes).
+
+---
+
+## `components/` — Generic UI Only
+
+Only truly domain-agnostic code belongs here. If it references a project entity,
+a route path like `/dashboard`, or a Prisma model — it belongs in `features/`.
 
 ### `components/ui/`
 
-Shared design-system components. These have **no business logic**.
+Design-system primitives. No business logic.
 
 | Component           | Variants                                                            |
 | ------------------- | ------------------------------------------------------------------- |
-| `Button`            | `primary` \| `secondary` \| `ghost` \| `outline` \| `danger`        |
-| `Card`              | `default` \| `glass` \| `elevated` \| `outlined`                    |
-| `Badge`             | `default` \| `brand` \| `success` \| `warning` \| `error` \| `info` |
+| `Button`            | `primary` \| `secondary` \| `ghost` \| `outline` \| `danger`       |
+| `Card`              | `default` \| `glass` \| `elevated` \| `outlined`                   |
+| `Badge`             | `default` \| `brand` \| `success` \| `warning` \| `error` \| `info`|
 | `Modal`             | SSR-safe portal, controlled via `isOpen` prop                       |
 | `Input`, `Textarea` | Forwarded ref, error state                                          |
 
 Import from the barrel: `import { Button, Card } from "@/components/ui"`.
 
-### `lib/`
+### `components/layout/`
 
-Infrastructure singletons only. Zero business logic.
+Marketing site layout — `Header.tsx` and `Footer.tsx`.
 
-| File                      | Exports                                             |
-| ------------------------- | --------------------------------------------------- |
-| `lib/prisma.ts`           | `prisma` — Prisma Client singleton                  |
-| `lib/supabase.ts`         | `getSignedUrl()`, server-side Supabase client       |
-| `lib/supabase-browser.ts` | `supabaseClient` — browser Supabase client          |
-| `lib/tokens.ts`           | `generateToken()` — cryptographically random tokens |
-| `lib/utils.ts`            | `cn()` — Tailwind class merge utility               |
+---
+
+## `lib/` — Infrastructure Only
+
+Pure infrastructure. No domain logic, no email templates, no plan definitions.
+
+| File                      | Exports                                                         |
+| ------------------------- | --------------------------------------------------------------- |
+| `lib/prisma/client.ts`    | `prisma` — Prisma Client singleton                              |
+| `lib/supabase/server.ts`  | `uploadFile()`, `getSignedUrl()`, `getSignedUploadUrl()`        |
+| `lib/supabase/browser.ts` | `supabaseClient` — browser Supabase client                      |
+| `lib/tokens.ts`           | `generateReviewToken()`, `generateOtpCode()` — crypto utilities |
+| `lib/utils.ts`            | `cn()` — Tailwind class merge utility                           |
+| `lib/email.ts`            | Resend client + transactional email helpers                     |
 
 ---
 
@@ -173,76 +243,84 @@ Infrastructure singletons only. Zero business logic.
 Authentication via NextAuth v5 + Prisma adapter.
 
 - Credentials provider (email + bcrypt password)
-- Session stored in DB (`Account`, `Session` tables)
-- `auth()` from `@/auth` gives you the current session in Server Components
+- Session persisted in DB (`Account`, `Session` tables)
+- `auth()` from `@/auth` — call in any Server Component to get the session
+- User registration: `features/auth/actions/auth.ts` → `registerUser()`
 
 ### billing
 
-Stripe subscriptions + plan limits.
+Stripe subscriptions + plan-based feature limits.
 
-- `lib/billing/plans.ts` is the **source of truth** for plan definitions (Free/Pro/Studio)
-- `lib/billing/limits.ts` has helpers to check if user is within limits
-- `lib/billing/subscription.ts` has `getSubscriptionInfo(userId)` — used in every dashboard page
-- Webhooks at `app/api/billing/webhook/stripe/route.ts` handle plan changes
+- `features/billing/plans.ts` — **source of truth** for plan definitions (Free/Pro/Studio)
+- `features/billing/limits.ts` — `canCreateProject()`, `canUploadVersion()`, `canUploadFile()`
+- `features/billing/subscription.ts` — `getSubscriptionInfo(userId)` used on every dashboard page
+- `features/billing/providers/stripe.ts` — Stripe SDK singleton
+- Webhook handler: `app/api/billing/webhook/stripe/route.ts`
 
-**Never hardcode plan limits in UI.** Always read from `PLANS` in `plans.ts`.
+**Never hardcode plan limits in UI.** Always read from `PLANS` in `features/billing/plans.ts`.
 
 ### projects
 
 A `Project` belongs to a `User` and has a `clientName` + optional `clientEmail`.
-Projects contain many `Delivery` items (versions).
+Each project holds multiple `Delivery` versions.
 
-- CRUD in `lib/actions/projects.ts` (Server Actions)
-- List/detail via Prisma in `app/(dashboard)/dashboard/page.tsx`
-- API at `app/api/projects/` for real-time data refreshes
+- CRUD: `features/projects/actions/projects.ts`
+- Components: `features/projects/components/`
+- API (real-time): `app/api/projects/`
 
 ### deliveries
 
-A `Delivery` is a single uploaded file = one version of a project.
+A `Delivery` is one uploaded file — one version of a project.
 Each delivery has a unique `reviewToken` that becomes the shareable link.
 
-- Creation in `lib/actions/deliveries.ts`
+- Actions: `features/deliveries/actions/deliveries.ts`
+- Components: `features/deliveries/components/`
 - Files stored in Supabase Storage bucket `deliveries`
 - Status: `PENDING` → `APPROVED` or `CHANGES_REQUESTED`
 
 ### review
 
 The public-facing review flow, accessed via `/review/{token}`.
-No authentication required — the token IS the authorization.
+No login required — the token IS the authorization.
 
-- `components/review/ReviewClientShell.tsx` — main shell (tabs, layout)
-- `components/review/ApprovalPanel.tsx` — approve / request-changes buttons
-- `components/review/CommentSystem.tsx` — thread comments
-- `components/review/ImageWithComments.tsx` — pinned comments on images
-- `components/review/PasswordGate.tsx` — password protection prompt
-- API routes under `app/api/review/[token]/`
+- All components: `features/review/components/`
+- API routes: `app/api/review/[token]/`
+- Entry point: `app/review/[token]/page.tsx`
 
 ### guest-review
 
-Guest = a client who isn't logged in but has a token.
-Guests can also upload files back to the freelancer.
+Unauthenticated guests (clients without an account) can upload files back.
 
-- `components/guest/GuestReviewShell.tsx` — review shell for non-logged users
-- `components/seo/GuestUploader.tsx` — upload widget embedded on SEO pages
-- API routes under `app/api/guest/`
+- Components: `features/guest-review/components/`
+- API routes: `app/api/guest/`
+- Entry point: `app/guest-review/[token]/page.tsx`
 
 ### marketing
 
-Landing page + SEO pages (EN + PT).
+Landing page + SEO tool pages (EN + PT bilingual).
 
-- Section components: `Hero`, `Features`, `HowItWorks`, `Pricing`, `CTA`
-- SEO page templates: `ToolLandingPage` (EN), `ToolLandingPagePT` (PT)
-- All stateless: no auth, no DB queries
+- All components: `features/marketing/components/`
+- Language context: `features/marketing/context/lang-context.tsx`
+- Entry point: `app/(marketing)/page.tsx`
+- SEO pages: `app/client-approval-tool/`, `app/pt/*/`, etc.
+
+### dashboard
+
+The authenticated shell wrapping all dashboard pages.
+
+- Sidebar navigation: `features/dashboard/components/Sidebar.tsx`
+- Layout: `app/(dashboard)/layout.tsx` (auth guard + Sidebar render)
 
 ---
 
-## Where to Add New Features
+## Where to Add New Code
 
 ### New dashboard page
 
-1. Create `app/(dashboard)/dashboard/my-feature/page.tsx` (async Server Component)
-2. Create `app/(dashboard)/dashboard/my-feature/MyFeaturePageClient.tsx` if client state is needed
-3. Add a nav link in `components/dashboard/Sidebar.tsx`
+1. Create `app/(dashboard)/dashboard/my-feature/page.tsx` (async RSC — data fetch)
+2. Create `app/(dashboard)/dashboard/my-feature/MyFeaturePageClient.tsx` if client state needed
+3. Add the nav link in `features/dashboard/components/Sidebar.tsx`
+4. Put any business logic in `features/my-feature/actions/` or `features/my-feature/components/`
 
 ### New API endpoint
 
@@ -252,70 +330,78 @@ Landing page + SEO pages (EN + PT).
 
 ### New Server Action
 
-1. Add to the relevant `lib/actions/*.ts` file (or create a new one)
-2. Mark with `"use server"` at the top
-3. Validate inputs — never trust client-side data
+1. Create `features/{domain}/actions/my-action.ts`
+2. Add `"use server"` at the top of the file
+3. Validate all inputs — never trust client data
 
-### New UI primitive
+### New UI primitive (no domain logic)
 
-1. Create in `components/ui/MyComponent.tsx`
-2. Export it from `components/ui/index.ts`
+1. Create `components/ui/MyComponent.tsx`
+2. Export from `components/ui/index.ts`
+
+### New domain-specific component
+
+1. Create `features/{domain}/components/MyComponent.tsx`
+2. Import it in the relevant page or shell component
 
 ### New billing plan
 
-1. Add the plan object to `PLANS` in `lib/billing/plans.ts`
-2. Add the corresponding `Plan` row in `prisma/seed.ts`
+1. Add the plan object to `PLANS` in `features/billing/plans.ts`
+2. Add the `Plan` row in `prisma/seed.ts`
 3. Run `npm run db:seed`
-4. Create the Stripe Price in the Stripe dashboard and set the env var
+4. Create the Stripe Price in the Stripe dashboard and set `STRIPE_*_PRICE_ID` env var
 
 ---
 
 ## Server Actions vs API Routes
 
-| Use Server Action when…                                             | Use API Route when…                                                   |
-| ------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Mutating data from a form or button in a Server or Client Component | Receiving external webhooks (Stripe, etc.)                            |
-| Simple CRUD with auth check                                         | Endpoint needs to be called from real-time hooks or external services |
-| You want automatic Next.js revalidation                             | Public endpoint (e.g., `/api/review/[token]/view`)                    |
-|                                                                     | Client needs to poll for updates (dashboard real-time refresh)        |
+| Use Server Action when…                                    | Use API Route when…                                                   |
+| ---------------------------------------------------------- | --------------------------------------------------------------------- |
+| Mutating data from a form or button                        | Receiving external webhooks (Stripe, etc.)                            |
+| Simple CRUD with auth check                                | Endpoint called from real-time hooks or external services             |
+| You want automatic Next.js revalidation via `revalidatePath`| Public unauthenticated endpoint (e.g., `/api/review/[token]/view`)  |
+|                                                            | Client polling for live updates                                       |
 
-**Rule of thumb:** Server Actions for user-triggered mutations.
-API routes for webhooks + public/unauthenticated endpoints.
+**Rule of thumb:** Server Actions for authenticated user mutations.
+API routes for webhooks, public endpoints, and real-time polling.
 
 ---
 
 ## Naming Conventions
 
-| What                   | Convention             | Example                      |
-| ---------------------- | ---------------------- | ---------------------------- |
-| Components             | PascalCase             | `ProjectCard.tsx`            |
-| Page client components | `{Page}PageClient.tsx` | `DashboardPageClient.tsx`    |
-| Server Actions files   | camelCase              | `projects.ts`                |
-| API route files        | always `route.ts`      | `app/api/projects/route.ts`  |
-| Hooks                  | `use` prefix           | `useProjectStatus.ts`        |
-| Types                  | PascalCase             | `ProjectData`, `DeliveryRow` |
-| Database models        | PascalCase (Prisma)    | `Project`, `Delivery`        |
-| CSS classes            | kebab-case Tailwind    | `text-white/40`              |
+| What                   | Convention             | Example                        |
+| ---------------------- | ---------------------- | ------------------------------ |
+| Components             | PascalCase             | `ProjectCard.tsx`              |
+| Page client components | `{Page}PageClient.tsx` | `DashboardPageClient.tsx`      |
+| Server action files    | camelCase              | `projects.ts`, `deliveries.ts` |
+| API route files        | always `route.ts`      | `app/api/projects/route.ts`    |
+| Hooks                  | `use` prefix           | `useProjectStatus.ts`          |
+| Types                  | PascalCase             | `ProjectData`, `DeliveryRow`   |
+| Database models        | PascalCase (Prisma)    | `Project`, `Delivery`          |
+| CSS classes            | kebab-case Tailwind    | `text-white/40`                |
 
 ---
 
 ## Database Schema Quick Reference
 
 ```
-User           → id, name, email, password, locale, subscription
+User           → id, name, email, password, locale
 Project        → id, name, clientName, clientEmail, userId
-Delivery       → id, projectId, reviewToken, status, versionNumber, fileName, fileUrl, allowDownload, password
-Comment        → id, deliveryId, content, authorName, x, y (pinned position)
-View           → id, deliveryId, createdAt (tracks when client viewed)
+Delivery       → id, projectId, reviewToken, status, versionNumber, fileName, filePath, mimeType
+Comment        → id, deliveryId, content, authorName, xPosition, yPosition
+View           → id, deliveryId, createdAt
+Approval       → id, deliveryId, userId, status
 Subscription   → id, userId, planCode, stripeCustomerId, stripeSubscriptionId, status
 Plan           → id, code, name, maxProjects, maxVersionsPerProject, maxStorageBytes
+GuestUpload    → id, reviewToken, claimToken, filePath, fileName, mimeType, status, expiresAt
+GuestComment   → id, guestUploadId, content, authorName, authorType, xPosition, yPosition
+GuestView      → id, guestUploadId, ipAddress, userAgent
 ```
 
 ---
 
 ## Useful Links
 
-- [Architecture Migration Plan](./architecture-migration.md) — full restructuring roadmap
-- [Prisma Studio](http://localhost:5555) (run `npx prisma studio`)
+- [Prisma Studio](http://localhost:5555) — run `npx prisma studio`
 - [Supabase Dashboard](https://supabase.com/dashboard) — file storage
 - [Stripe Dashboard](https://dashboard.stripe.com) — subscriptions

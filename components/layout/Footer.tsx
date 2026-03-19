@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
-import { useLang } from "@/lib/lang-context";
+import { useLang } from "@/features/marketing/context/lang-context";
 
 // ─── Bilingual data ───────────────────────────────────────────────────────────
 

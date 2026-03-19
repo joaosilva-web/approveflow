@@ -1,6 +1,6 @@
 "use client";
 
-import { LangProvider } from "@/lib/lang-context";
+import { LangProvider } from "@/features/marketing/context/lang-context";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Hero from "@/features/marketing/components/Hero";

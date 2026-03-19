@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { useLang } from "@/lib/lang-context";
+import { useLang } from "@/features/marketing/context/lang-context";
 
 const copy = {
   pt: {
