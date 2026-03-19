@@ -1,7 +1,2 @@
-import { createClient } from "@supabase/supabase-js";
-
-// Anon client â€” safe to use in browser (only public env vars)
-export const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+// Barrel re-export — canonical location is lib/supabase/browser.ts
+export * from "./supabase/browser";

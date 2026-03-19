@@ -1,2 +1,2 @@
-// Barrel re-export — canonical location is features/billing/plans.ts
+// Barrel re-export ï¿½ canonical location is features/billing/plans.ts
 export * from "@/features/billing/plans";
