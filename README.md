@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+  <img src="public/logo.png" alt="ApproveFlow" width="56" />
+  <h1>ApproveFlow</h1>
+  <p><strong>Aprovações de arquivos sem a bagunça. Feito para freelancers.</strong></p>
+  <p>
+    <a href="https://approveflow.app">approveflow.app</a> &bull;
+    Em beta 🚧
+  </p>
+</div>
 
-## Getting Started
+---
 
-First, run the development server:
+## O que é
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+ApproveFlow é um SaaS para freelancers enviarem arquivos para clientes e receberem aprovações ou pedidos de alteração — sem precisar de e-mail, WhatsApp ou planilha. O cliente acessa um link seguro, visualiza o arquivo, comenta e aprova (ou solicita alterações) com um clique.
+
+## Funcionalidades
+
+- **Links de revisão seguros** — cada versão entregue gera um link único com token, sem necessidade de login para o cliente
+- **Proteção por senha** — links opcionalmente protegidos por senha
+- **Download controlado** — freelancer decide se o cliente pode baixar o arquivo
+- **Comentários com pins** — clientes podem clicar em imagens para deixar comentários posicionais
+- **Reações rápidas** — "Ficou ótimo!", "Precisa de ajustes", "Não está pronto"
+- **Histórico de versões** — todas as versões de um projeto ficam acessíveis no link
+- **Tempo real** — dashboard atualiza automaticamente via Supabase Realtime ao receber aprovações/comentários
+- **Notificações por e-mail** — e-mails de aprovação e pedido de alteração em PT ou EN (detectado pelo navegador)
+- **Upload de convidados** — clientes podem enviar arquivos de volta sem criar conta
+- **Planos e cobrança** — integração com Stripe (Free / Pro)
+
+## Stack
+
+| Camada | Tecnologia |
+|--------|------------|
+| Framework | Next.js 16 (App Router) + React 19 |
+| Linguagem | TypeScript |
+| Estilo | Tailwind CSS v4 |
+| Banco de dados | PostgreSQL via Supabase |
+| ORM | Prisma 7 |
+| Autenticação | NextAuth v5 (credentials + OAuth) |
+| Storage | Supabase Storage |
+| E-mail | Resend |
+| Pagamentos | Stripe |
+| Deploy | Vercel |
+
+## Estrutura do projeto
+
+```
+app/
+  (auth)/           → Login
+  (dashboard)/      → Dashboard do freelancer (projetos, billing)
+  api/              → API routes (auth, billing, review, guest)
+  review/[token]/   → Página de revisão pública para o cliente
+  r/[token]/        → Redirect de link curto
+components/
+  dashboard/        → ProjectCard, NewProjectModal, NewDeliveryModal, Sidebar
+  review/           → ReviewClientShell, ApprovalPanel, CommentSystem, FilePreview
+  sections/         → Seções da landing page (Hero, Features, Pricing, etc.)
+  layout/           → Header, Footer
+  ui/               → Design system (Button, Input, Modal, Badge, Card…)
+lib/
+  actions/          → Server Actions (projects, deliveries, auth)
+  billing/          → Planos, limites, assinatura
+  email.ts          → Templates de e-mail PT/EN
+prisma/
+  schema.prisma     → Modelos: User, Project, Delivery, Comment, Subscription…
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Rodar localmente
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Pré-requisitos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js 20+
+- PostgreSQL (ou conta no Supabase)
+- Conta Stripe (para billing)
+- Conta Resend (para e-mails)
 
-## Learn More
+### Configuração
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# 1. Instalar dependências
+npm install
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 2. Copiar e preencher as variáveis de ambiente
+cp .env.example .env.local
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 3. Rodar as migrations do banco
+npx prisma migrate dev
 
-## Deploy on Vercel
+# 4. Popular o banco com os planos
+npm run db:seed
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 5. Iniciar o servidor de desenvolvimento
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Acesse [http://localhost:3000](http://localhost:3000).
+
+### Variáveis de ambiente necessárias
+
+```env
+# Banco
+DATABASE_URL=
+
+# Auth
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_BUCKET=deliveries
+
+# Stripe
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_PRO_PRICE_ID=
+
+# Resend
+RESEND_API_KEY=
+RESEND_FROM=
+```
+
+## Planos
+
+| | Free | Pro |
+|---|---|---|
+| Projetos | 3 | Ilimitados |
+| Versões por projeto | 3 | Ilimitadas |
+| Storage | 5 GB | 50 GB |
+
+## Scripts
+
+```bash
+npm run dev        # Servidor de desenvolvimento
+npm run build      # Build de produção
+npm run lint       # ESLint
+npm run db:seed    # Popular banco com planos
+npx tsc --noEmit   # Type check
+```
+
+---
+
+<p align="center">Feito com carinho para freelancers 💜</p>
