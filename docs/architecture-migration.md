@@ -8,14 +8,14 @@ It is a **living spec** — implement it incrementally, one domain at a time.
 
 ## Why restructure?
 
-| Problem (current) | Goal (target) |
-|---|---|
-| Business logic mixed with routing in `app/` | `app/` contains only routing, layouts and page composition |
-| Features split across `components/`, `lib/`, `app/api/` with no grouping | Each feature lives in `features/{domain}/` |
-| `_client.tsx` naming pattern obscures component purpose | Explicit names like `DashboardPageClient.tsx` |
-| `components/dashboard/`, `components/review/` grow unbounded | Domain directories own their components |
-| `lib/billing/` is flat — no distinction between infra and actions | Clear split: `plans.ts`, `limits.ts`, `providers/`, `actions/` |
-| SEO pages scattered at root level of `app/` | Grouped under `app/(marketing)/` |
+| Problem (current)                                                        | Goal (target)                                                  |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Business logic mixed with routing in `app/`                              | `app/` contains only routing, layouts and page composition     |
+| Features split across `components/`, `lib/`, `app/api/` with no grouping | Each feature lives in `features/{domain}/`                     |
+| `_client.tsx` naming pattern obscures component purpose                  | Explicit names like `DashboardPageClient.tsx`                  |
+| `components/dashboard/`, `components/review/` grow unbounded             | Domain directories own their components                        |
+| `lib/billing/` is flat — no distinction between infra and actions        | Clear split: `plans.ts`, `limits.ts`, `providers/`, `actions/` |
+| SEO pages scattered at root level of `app/`                              | Grouped under `app/(marketing)/`                               |
 
 ---
 
@@ -186,83 +186,83 @@ auth.ts                     ← stays at root (NextAuth requirement)
 
 ### Server Actions
 
-| Old path | New path |
-|---|---|
-| `lib/actions/auth.ts` | `features/auth/actions/auth.ts` |
-| `lib/actions/projects.ts` | `features/projects/actions/projects.ts` |
+| Old path                    | New path                                    |
+| --------------------------- | ------------------------------------------- |
+| `lib/actions/auth.ts`       | `features/auth/actions/auth.ts`             |
+| `lib/actions/projects.ts`   | `features/projects/actions/projects.ts`     |
 | `lib/actions/deliveries.ts` | `features/deliveries/actions/deliveries.ts` |
 
 ### Billing
 
-| Old path | New path |
-|---|---|
-| `lib/billing/plans.ts` | `features/billing/plans.ts` |
-| `lib/billing/limits.ts` | `features/billing/limits.ts` |
-| `lib/billing/subscription.ts` | `features/billing/subscription.ts` |
+| Old path                          | New path                               |
+| --------------------------------- | -------------------------------------- |
+| `lib/billing/plans.ts`            | `features/billing/plans.ts`            |
+| `lib/billing/limits.ts`           | `features/billing/limits.ts`           |
+| `lib/billing/subscription.ts`     | `features/billing/subscription.ts`     |
 | `lib/billing/providers/stripe.ts` | `features/billing/providers/stripe.ts` |
 
 ### Core lib
 
-| Old path | New path |
-|---|---|
-| `lib/prisma.ts` | `lib/prisma/client.ts` |
-| `lib/supabase.ts` | `lib/supabase/server.ts` |
+| Old path                  | New path                  |
+| ------------------------- | ------------------------- |
+| `lib/prisma.ts`           | `lib/prisma/client.ts`    |
+| `lib/supabase.ts`         | `lib/supabase/server.ts`  |
 | `lib/supabase-browser.ts` | `lib/supabase/browser.ts` |
-| `lib/tokens.ts` | `lib/tokens.ts` (stays) |
-| `lib/utils.ts` | `lib/utils.ts` (stays) |
+| `lib/tokens.ts`           | `lib/tokens.ts` (stays)   |
+| `lib/utils.ts`            | `lib/utils.ts` (stays)    |
 
 ### Dashboard / Projects components
 
-| Old path | New path |
-|---|---|
-| `components/dashboard/ProjectCard.tsx` | `features/projects/components/ProjectCard.tsx` |
-| `components/dashboard/NewProjectModal.tsx` | `features/projects/components/NewProjectModal.tsx` |
+| Old path                                    | New path                                              |
+| ------------------------------------------- | ----------------------------------------------------- |
+| `components/dashboard/ProjectCard.tsx`      | `features/projects/components/ProjectCard.tsx`        |
+| `components/dashboard/NewProjectModal.tsx`  | `features/projects/components/NewProjectModal.tsx`    |
 | `components/dashboard/NewDeliveryModal.tsx` | `features/deliveries/components/NewDeliveryModal.tsx` |
-| `components/dashboard/UploadZone.tsx` | `features/deliveries/components/UploadZone.tsx` |
-| `components/dashboard/Sidebar.tsx` | `components/dashboard/Sidebar.tsx` (stays) |
+| `components/dashboard/UploadZone.tsx`       | `features/deliveries/components/UploadZone.tsx`       |
+| `components/dashboard/Sidebar.tsx`          | `components/dashboard/Sidebar.tsx` (stays)            |
 
 ### Review components
 
-| Old path | New path |
-|---|---|
+| Old path                                  | New path                                           |
+| ----------------------------------------- | -------------------------------------------------- |
 | `components/review/ReviewClientShell.tsx` | `features/review/components/ReviewClientShell.tsx` |
-| `components/review/ApprovalPanel.tsx` | `features/review/components/ApprovalPanel.tsx` |
-| `components/review/CommentSystem.tsx` | `features/review/components/CommentSystem.tsx` |
-| `components/review/FilePreview.tsx` | `features/review/components/FilePreview.tsx` |
+| `components/review/ApprovalPanel.tsx`     | `features/review/components/ApprovalPanel.tsx`     |
+| `components/review/CommentSystem.tsx`     | `features/review/components/CommentSystem.tsx`     |
+| `components/review/FilePreview.tsx`       | `features/review/components/FilePreview.tsx`       |
 | `components/review/ImageWithComments.tsx` | `features/review/components/ImageWithComments.tsx` |
-| `components/review/VersionSwitcher.tsx` | `features/review/components/VersionSwitcher.tsx` |
-| `components/review/PasswordGate.tsx` | `features/review/components/PasswordGate.tsx` |
+| `components/review/VersionSwitcher.tsx`   | `features/review/components/VersionSwitcher.tsx`   |
+| `components/review/PasswordGate.tsx`      | `features/review/components/PasswordGate.tsx`      |
 
 ### Guest / SEO components
 
-| Old path | New path |
-|---|---|
+| Old path                                | New path                                                |
+| --------------------------------------- | ------------------------------------------------------- |
 | `components/guest/GuestReviewShell.tsx` | `features/guest-review/components/GuestReviewShell.tsx` |
-| `components/seo/GuestUploader.tsx` | `features/guest-review/components/GuestUploader.tsx` |
-| `components/seo/ToolLandingPage.tsx` | `features/marketing/components/ToolLandingPage.tsx` |
-| `components/seo/ToolLandingPagePT.tsx` | `features/marketing/components/ToolLandingPagePT.tsx` |
+| `components/seo/GuestUploader.tsx`      | `features/guest-review/components/GuestUploader.tsx`    |
+| `components/seo/ToolLandingPage.tsx`    | `features/marketing/components/ToolLandingPage.tsx`     |
+| `components/seo/ToolLandingPagePT.tsx`  | `features/marketing/components/ToolLandingPagePT.tsx`   |
 
 ### Landing page sections
 
-| Old path | New path |
-|---|---|
-| `components/sections/Hero.tsx` | `features/marketing/components/Hero.tsx` |
-| `components/sections/Features.tsx` | `features/marketing/components/Features.tsx` |
+| Old path                             | New path                                       |
+| ------------------------------------ | ---------------------------------------------- |
+| `components/sections/Hero.tsx`       | `features/marketing/components/Hero.tsx`       |
+| `components/sections/Features.tsx`   | `features/marketing/components/Features.tsx`   |
 | `components/sections/HowItWorks.tsx` | `features/marketing/components/HowItWorks.tsx` |
-| `components/sections/Pricing.tsx` | `features/marketing/components/Pricing.tsx` |
-| `components/sections/CTA.tsx` | `features/marketing/components/CTA.tsx` |
+| `components/sections/Pricing.tsx`    | `features/marketing/components/Pricing.tsx`    |
+| `components/sections/CTA.tsx`        | `features/marketing/components/CTA.tsx`        |
 
 ### App routing
 
-| Old path | New path |
-|---|---|
-| `app/page.tsx` (landing) | `app/(marketing)/page.tsx` |
+| Old path                            | New path                                        |
+| ----------------------------------- | ----------------------------------------------- |
+| `app/page.tsx` (landing)            | `app/(marketing)/page.tsx`                      |
 | `app/client-approval-tool/page.tsx` | `app/(marketing)/client-approval-tool/page.tsx` |
-| `app/design-review-tool/page.tsx` | `app/(marketing)/design-review-tool/page.tsx` |
-| `app/logo-feedback-tool/page.tsx` | `app/(marketing)/logo-feedback-tool/page.tsx` |
-| `app/ui-feedback-tool/page.tsx` | `app/(marketing)/ui-feedback-tool/page.tsx` |
-| `app/website-review-tool/page.tsx` | `app/(marketing)/website-review-tool/page.tsx` |
-| `app/pt/*/page.tsx` (10 pages) | `app/(marketing)/pt/*/page.tsx` |
+| `app/design-review-tool/page.tsx`   | `app/(marketing)/design-review-tool/page.tsx`   |
+| `app/logo-feedback-tool/page.tsx`   | `app/(marketing)/logo-feedback-tool/page.tsx`   |
+| `app/ui-feedback-tool/page.tsx`     | `app/(marketing)/ui-feedback-tool/page.tsx`     |
+| `app/website-review-tool/page.tsx`  | `app/(marketing)/website-review-tool/page.tsx`  |
+| `app/pt/*/page.tsx` (10 pages)      | `app/(marketing)/pt/*/page.tsx`                 |
 
 > **Note:** Moving pages into `(marketing)/` does NOT change URLs. Route groups
 > with parentheses are invisible to the URL. `/client-approval-tool` stays
@@ -357,6 +357,7 @@ grep -r "from \"@/lib/billing/limits\"" --include="*.ts" --include="*.tsx" .
 ```
 
 **On Windows (PowerShell):**
+
 ```powershell
 Get-ChildItem -Recurse -Include *.ts,*.tsx | Select-String "@/lib/billing"
 ```
@@ -366,10 +367,12 @@ Get-ChildItem -Recurse -Include *.ts,*.tsx | Select-String "@/lib/billing"
 ## Code Adjustments — What to Watch
 
 ### 1. `@/*` path alias
+
 The `tsconfig.json` maps `@/*` to the project root. All new paths under
 `features/` and `lib/*/` will work automatically — no tsconfig change needed.
 
 ### 2. `app/(marketing)/` route group
+
 When you move `app/page.tsx` (root landing page) into `app/(marketing)/page.tsx`,
 the root `app/layout.tsx` must remain at `app/layout.tsx` (not inside the group).
 The `(marketing)` group can have its own `layout.tsx` if you want to inject
@@ -377,13 +380,16 @@ The `(marketing)` group can have its own `layout.tsx` if you want to inject
 dashboard or review pages in the landing layout.
 
 ### 3. NextAuth files stay at root
+
 `auth.ts` and `auth.config.ts` must stay at the project root — NextAuth v5
 expects them there.
 
 ### 4. API routes stay in `app/api/`
+
 API routes don't move. The API surface doesn't change.
 
 ### 5. Circular dependency risk
+
 `features/billing` → imports from `lib/prisma` ✅ safe  
 `features/projects` → imports from `features/billing` ✅ safe  
 `features/billing` → must NOT import from `features/projects` ← watch this
