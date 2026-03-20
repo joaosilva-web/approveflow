@@ -192,6 +192,7 @@ export default function GuestReviewShell({
               initialComments={comments}
               pinnedComments={pinnedCommentNumbers}
               commentApiBase="/api/guest"
+              onCommentsChange={setComments}
             />
           </div>
         </aside>

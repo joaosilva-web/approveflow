@@ -271,6 +271,7 @@ export default function ReviewClientShell({
               pinnedComments={pinnedCommentNumbers}
               mode={isFreelancerPreview ? "freelancer" : "client"}
               freelancerName={freelancerName ?? undefined}
+              onCommentsChange={setComments}
             />
 
             {/* Version history */}

@@ -246,6 +246,10 @@ export default function ImageWithComments({
   const [allComments, setAllComments] = useState<CommentData[]>(comments);
   const [zoom, setZoom] = useState(1);
 
+  useEffect(() => {
+    setAllComments(comments);
+  }, [comments]);
+
   const pinnedComments = allComments.filter(
     (c) => c.xPosition !== null && c.yPosition !== null,
   );
