@@ -130,7 +130,22 @@ export async function createDelivery(
 
   // Check version limit
   const versionCheck = await canUploadVersion(session.user.id, projectId);
-  if (!versionCheck.allowed) return { error: versionCheck.reason! };
+  if (!versionCheck.allowed) {
+    // Se for erro de limite do plano free, retorna mensagem amigável
+    // (Só o plano free tem limite, mas a mensagem cobre qualquer plano com limite)
+    const planCode = versionCheck.reason?.includes("Free plan")
+      ? "free"
+      : undefined;
+    let message = versionCheck.reason || "Limite de versões atingido.";
+    if (planCode === "free") {
+      message =
+        "Você atingiu o limite de versões do plano gratuito (3 versões). Faça upgrade para continuar.";
+    }
+    // Opcional: erro estruturado para facilitar tratamento futuro
+    return {
+      error: JSON.stringify({ code: "VERSION_LIMIT_REACHED", message }),
+    };
+  }
 
   const versionNumber = project._count.deliveries + 1;
   const reviewToken = generateReviewToken();
