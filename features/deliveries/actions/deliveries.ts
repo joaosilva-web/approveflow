@@ -173,7 +173,6 @@ export async function createDelivery(
     }).catch(console.error);
   }
 
-  revalidatePath(`/dashboard/projects/${projectId}`);
   return { reviewToken };
 }
 

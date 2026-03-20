@@ -446,8 +446,7 @@ export default function ProjectDetailClient({
         isOpen={uploadOpen}
         onClose={() => setUploadOpen(false)}
         onSuccess={() => {
-          // Refresh will happen via Next.js router when modal closes
-          window.location.reload();
+          // Realtime subscription handles the list update automatically
         }}
       />
     </div>
