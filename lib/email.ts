@@ -44,6 +44,15 @@ function htmlWrapper(body: string) {
 </html>`;
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 const UNSUBSCRIBE_HEADERS = {
   "List-Unsubscribe": `<mailto:contato@joaogustavoribeiro.com.br?subject=unsubscribe>`,
   "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
@@ -215,6 +224,65 @@ export async function sendChangesRequestedEmail(opts: {
     <p style="margin:4px 0 24px;font-size:15px;color:#555">${t.body}</p>
     <p style="margin:0 0 28px;font-size:14px;color:#555">${t.sub}</p>
     <a href="${url}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px;font-weight:600">
+      ${t.cta}
+    </a>`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: opts.to,
+    subject: t.subject,
+    html: htmlWrapper(body),
+    text: t.text,
+    headers: UNSUBSCRIBE_HEADERS,
+  });
+}
+// ─── Notify freelancer — client comment ────────────────────────────
+export async function sendCommentNotificationEmail(opts: {
+  to: string;
+  projectName: string;
+  reviewToken: string;
+  authorName: string;
+  comment: string;
+  locale?: Locale;
+}) {
+  const locale = opts.locale ?? "pt";
+  const reviewUrl = `${BASE_URL}/review/${opts.reviewToken}?preview=1`;
+  const safeComment = escapeHtml(opts.comment).replace(/\r?\n/g, "<br />");
+
+  const t =
+    locale === "pt"
+      ? {
+          subject: `Novo comentário em ${opts.projectName}`,
+          title: "Novo comentário do cliente",
+          body: `<strong>${escapeHtml(opts.authorName)}</strong> comentou no projeto <strong>${escapeHtml(opts.projectName)}</strong>.`,
+          quoteLabel: "Comentário",
+          sub: "Abra o projeto para responder ou revisar o contexto completo.",
+          cta: "Abrir Projeto",
+          text: `Novo comentário do cliente\n\n${opts.authorName} comentou no projeto ${opts.projectName}:\n\n"${opts.comment}"\n\nAbrir projeto:\n${reviewUrl}\n\n— ApproveFlow`,
+        }
+      : {
+          subject: `New comment on ${opts.projectName}`,
+          title: "New client comment",
+          body: `<strong>${escapeHtml(opts.authorName)}</strong> commented on <strong>${escapeHtml(opts.projectName)}</strong>.`,
+          quoteLabel: "Comment",
+          sub: "Open the project to reply or review the full context.",
+          cta: "Open Project",
+          text: `New client comment\n\n${opts.authorName} commented on ${opts.projectName}:\n\n"${opts.comment}"\n\nOpen project:\n${reviewUrl}\n\n— ApproveFlow`,
+        };
+
+  const body = `
+    <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111">${t.title}</p>
+    <p style="margin:4px 0 24px;font-size:15px;color:#555">${t.body}</p>
+
+    <div style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#888">
+      ${t.quoteLabel}
+    </div>
+    <blockquote style="margin:0 0 24px;padding:16px 18px;border-left:4px solid #7c3aed;background:#faf5ff;color:#333;font-size:14px;line-height:1.7">
+      "${safeComment}"
+    </blockquote>
+
+    <p style="margin:0 0 28px;font-size:14px;color:#555">${t.sub}</p>
+    <a href="${reviewUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px;font-weight:600">
       ${t.cta}
     </a>`;
 
