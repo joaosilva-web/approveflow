@@ -166,26 +166,25 @@ export default function ProjectDetailClient({
   const [liveDeliveries, setLiveDeliveries] = useState(initialDeliveries);
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  // ─── Supabase Realtime ────────────────────────────────────────────────────
-  useEffect(() => {
-    const refetch = async () => {
-      try {
-        const res = await fetch(`/api/projects/${projectId}/deliveries`);
-        if (!res.ok) return;
-        const data: DeliveryRow[] = await res.json();
-        // Preserve Date objects
-        setLiveDeliveries(
-          data.map((d) => ({
-            ...d,
-            createdAt: new Date(d.createdAt),
-            lastViewedAt: d.lastViewedAt ? new Date(d.lastViewedAt) : null,
-          })),
-        );
-      } catch {
-        // silently ignore
-      }
-    };
+  // ─── Supabase Realtime + refetch helper ────────────────────────────────────
+  const refetch = React.useCallback(async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/deliveries`);
+      if (!res.ok) return;
+      const data: DeliveryRow[] = await res.json();
+      setLiveDeliveries(
+        data.map((d) => ({
+          ...d,
+          createdAt: new Date(d.createdAt),
+          lastViewedAt: d.lastViewedAt ? new Date(d.lastViewedAt) : null,
+        })),
+      );
+    } catch {
+      // silently ignore
+    }
+  }, [projectId]);
 
+  useEffect(() => {
     const channel = supabaseClient
       .channel(`project-detail-${projectId}`)
       // Status changes live on Delivery rows
@@ -236,7 +235,7 @@ export default function ProjectDetailClient({
       supabaseClient.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  }, [projectId, refetch, liveDeliveries]);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8 flex flex-col gap-8">
@@ -446,7 +445,7 @@ export default function ProjectDetailClient({
         isOpen={uploadOpen}
         onClose={() => setUploadOpen(false)}
         onSuccess={() => {
-          // Realtime subscription handles the list update automatically
+          refetch();
         }}
       />
     </div>
