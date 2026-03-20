@@ -1,125 +1,125 @@
-# ApproveFlow — Developer Onboarding
+# ApproveFlow — Onboarding para Desenvolvedores
 
-Welcome to ApproveFlow. This guide explains how the project is organized,
-what each part does, and how to add new code correctly.
-
----
-
-## What is ApproveFlow?
-
-A SaaS for freelancers to send files to clients and collect approvals or
-change requests — all through a shareable link, without the client needing
-an account.
-
-**Core flow:**
-
-1. Freelancer creates a **Project** (client name, email)
-2. Freelancer uploads a file → a **Delivery** is created with a unique review token
-3. A link like `approveflow.app/review/{token}` is shared with the client
-4. Client views the file, leaves comments, clicks **Approve** or **Request Changes**
-5. Freelancer sees the status update live in their dashboard
+Bem-vindo ao ApproveFlow. Este guia explica como o projeto está organizado,
+o que cada parte faz e como adicionar código novo corretamente.
 
 ---
 
-## Running Locally
+## O que é o ApproveFlow?
+
+Um SaaS para freelancers enviarem arquivos a clientes e coletarem aprovações ou
+pedidos de alteração — tudo via link compartilhável, sem o cliente precisar de conta.
+
+**Fluxo principal:**
+
+1. Freelancer cria um **Projeto** (nome do cliente, e-mail)
+2. Freelancer faz upload de um arquivo → uma **Entrega** é criada com um token único de revisão
+3. Um link como `approveflow.app/review/{token}` é compartilhado com o cliente
+4. Cliente visualiza o arquivo, deixa comentários, clica em **Aprovar** ou **Solicitar Alterações**
+5. Freelancer vê a atualização de status ao vivo no dashboard
+
+---
+
+## Rodando Localmente
 
 ```bash
-# 1. Install dependencies
+# 1. Instalar dependências
 npm install
 
-# 2. Copy environment variables
+# 2. Copiar variáveis de ambiente
 cp .env.example .env.local
-# Fill in all values (see "Environment Variables" below)
+# Preencha todos os valores (veja "Variáveis de Ambiente" abaixo)
 
-# 3. Apply database migrations
+# 3. Aplicar migrações do banco
 npx prisma migrate dev
 
-# 4. Seed plans (Free / Pro / Studio)
+# 4. Seedar os planos (Free / Pro / Studio)
 npm run db:seed
 
-# 5. Start dev server
+# 5. Iniciar servidor de desenvolvimento
 npm run dev
 ```
 
-Open http://localhost:3000.
+Abra http://localhost:3000.
 
-**Other useful commands:**
+**Outros comandos úteis:**
 
-| Command             | Purpose               |
-| ------------------- | --------------------- |
-| `npm run build`     | Production build      |
-| `npx tsc --noEmit`  | TypeScript type check |
-| `npm run lint`      | ESLint                |
-| `npx prisma studio` | Visual DB browser     |
+| Comando             | Finalidade                  |
+| ------------------- | --------------------------- |
+| `npm run build`     | Build de produção           |
+| `npx tsc --noEmit`  | Verificação de tipos TypeScript |
+| `npm run lint`      | ESLint                      |
+| `npx prisma studio` | Navegador visual do banco   |
 
 ---
 
-## Environment Variables
+## Variáveis de Ambiente
 
 ```env
-# Database (PostgreSQL)
+# Banco de dados (PostgreSQL)
 DATABASE_URL=
+DIRECT_URL=
 
-# NextAuth
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=http://localhost:3000
+# NextAuth v5
+AUTH_SECRET=
 
-# Supabase (file storage)
+# Supabase (armazenamento de arquivos)
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_STORAGE_BUCKET=deliveries
 NEXT_PUBLIC_SUPABASE_BUCKET=deliveries
 
-# Stripe (billing)
+# Stripe (cobrança)
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-STRIPE_PRO_PRICE_ID=
+STRIPE_PRICE_PRO=
+STRIPE_PRICE_STUDIO=
 
-# Resend (transactional email)
+# Resend (e-mail transacional)
 RESEND_API_KEY=
 RESEND_FROM=
 
-# App
+# URL da aplicação
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ---
 
-## Project Structure Overview
+## Visão Geral da Estrutura do Projeto
 
 ```
-app/           → Next.js App Router — routing, layouts, page composition only
-components/    → Shared, domain-agnostic UI (design system + marketing layout)
-features/      → ALL domain logic, components, and actions (one folder per domain)
-lib/           → Infrastructure only (Prisma, Supabase, token generation, utils)
-prisma/        → DB schema and migrations
-types/         → Global TypeScript types
-docs/          → Architecture and onboarding docs
+app/           → Next.js App Router — roteamento, layouts e composição de páginas apenas
+components/    → UI compartilhada e sem domínio (design system + layout de marketing)
+features/      → TODA a lógica de domínio, componentes e actions (uma pasta por domínio)
+lib/           → Infraestrutura apenas (Prisma, Supabase, geração de tokens, utils)
+prisma/        → Schema e migrações do banco
+types/         → Tipos TypeScript globais
+docs/          → Documentação de arquitetura e onboarding
 ```
 
-### The rule that matters most
+### A regra mais importante
 
-> **Business logic lives in `features/`.**
-> `app/` only routes. `components/` only generic UI. `lib/` only infrastructure.
+> **Lógica de negócio fica em `features/`.**
+> `app/` apenas roteia. `components/` apenas UI genérica. `lib/` apenas infraestrutura.
 
 ---
 
-## `features/` — Domain Modules
+## `features/` — Módulos de Domínio
 
-Each domain is self-contained under `features/{domain}/`:
+Cada domínio é autocontido em `features/{domain}/`:
 
 ```
 features/
   auth/
-    actions/auth.ts           ← registerUser() server action
+    actions/auth.ts           ← server action registerUser()
   billing/
-    plans.ts                  ← PLANS constant — source of truth for plan limits
+    plans.ts                  ← constante PLANS — fonte da verdade para limites de plano
     limits.ts                 ← canCreateProject(), canUploadVersion(), etc.
     subscription.ts           ← getSubscriptionInfo(userId)
-    providers/stripe.ts       ← Stripe client singleton
+    providers/stripe.ts       ← singleton do cliente Stripe
   dashboard/
-    components/Sidebar.tsx    ← Authenticated app navigation
+    components/Sidebar.tsx    ← navegação do app autenticado
   deliveries/
     actions/deliveries.ts     ← getUploadUrl(), createDelivery()
     components/
@@ -127,15 +127,15 @@ features/
       UploadZone.tsx
   guest-review/
     components/
-      GuestReviewShell.tsx    ← Review page for unauthenticated guests
-      GuestUploader.tsx       ← File upload widget for SEO/tool pages
+      GuestReviewShell.tsx    ← página de revisão para visitantes não autenticados
+      GuestUploader.tsx       ← widget de upload para páginas SEO/ferramentas
   marketing/
-    context/lang-context.tsx  ← pt/en language toggle context
+    context/lang-context.tsx  ← contexto de alternância de idioma pt/en
     components/
-      LandingPage.tsx         ← Home page composition
+      LandingPage.tsx         ← composição da página inicial
       Hero.tsx, Features.tsx, HowItWorks.tsx, Pricing.tsx, CTA.tsx
-      ToolLandingPage.tsx     ← SEO tool page template (EN)
-      ToolLandingPagePT.tsx   ← SEO tool page template (PT)
+      ToolLandingPage.tsx     ← template de página de ferramenta SEO (EN)
+      ToolLandingPagePT.tsx   ← template de página de ferramenta SEO (PT)
   projects/
     actions/projects.ts       ← createProject(), updateProject(), deleteProject()
     components/
@@ -143,246 +143,247 @@ features/
       NewProjectModal.tsx
   review/
     components/
-      ReviewClientShell.tsx   ← Main review page shell
-      ApprovalPanel.tsx       ← Approve / Request Changes buttons
-      CommentSystem.tsx       ← Threaded comments
-      ImageWithComments.tsx   ← Pinned comments on images
-      PasswordGate.tsx        ← Password protection prompt
-      FilePreview.tsx         ← PDF / image / video viewer
-      VersionSwitcher.tsx     ← Switch between delivery versions
+      ReviewClientShell.tsx   ← shell principal da página de revisão
+      ApprovalPanel.tsx       ← botões Aprovar / Solicitar Alterações
+      CommentSystem.tsx       ← comentários encadeados
+      ImageWithComments.tsx   ← comentários fixados em imagens
+      PasswordGate.tsx        ← prompt de proteção por senha
+      FilePreview.tsx         ← visualizador de PDF / imagem / vídeo
+      VersionSwitcher.tsx     ← alternância entre versões de entrega
 ```
 
 ---
 
-## `app/` — Routing Only
+## `app/` — Apenas Roteamento
 
-`app/` is the Next.js App Router. It handles routing, auth guards, and page
-composition. **No business logic here.**
+`app/` é o App Router do Next.js. Gerencia roteamento, guards de autenticação e
+composição de páginas. **Nenhuma lógica de negócio aqui.**
 
-Pages fetch data directly via Prisma (RSC), then pass it as props to
-`*PageClient.tsx` components for interactivity.
+Páginas buscam dados diretamente via Prisma (RSC) e passam como props para
+componentes `*PageClient.tsx` que gerenciam interatividade.
 
-| Path                                       | What it does                                  |
-| ------------------------------------------ | --------------------------------------------- |
-| `app/(auth)/login/`                        | Login page                                    |
-| `app/(dashboard)/dashboard/`               | Main dashboard (projects list)                |
-| `app/(dashboard)/dashboard/billing/`       | Billing / plan management                     |
-| `app/(dashboard)/dashboard/projects/[id]/` | Single project detail                         |
-| `app/review/[token]/`                      | Public review page (auth via token)           |
-| `app/guest-review/[token]/`                | Guest upload review page                      |
-| `app/api/`                                 | REST API routes (webhooks + public endpoints) |
-| `app/(marketing)/`                         | Landing page + SEO tool pages                 |
+| Caminho                                    | O que faz                                          |
+| ------------------------------------------ | -------------------------------------------------- |
+| `app/(auth)/login/`                        | Página de login                                    |
+| `app/(dashboard)/dashboard/`               | Dashboard principal (lista de projetos)            |
+| `app/(dashboard)/dashboard/billing/`       | Cobrança / gerenciamento de plano                  |
+| `app/(dashboard)/dashboard/projects/[id]/` | Detalhe de projeto                                 |
+| `app/review/[token]/`                      | Página pública de revisão (autenticação via token) |
+| `app/guest-review/[token]/`                | Página de revisão para visitantes                  |
+| `app/api/`                                 | Rotas REST (webhooks + endpoints públicos)         |
+| `app/(marketing)/`                         | Página inicial + páginas SEO                       |
 
-### `*PageClient.tsx` pattern
+### Padrão `*PageClient.tsx`
 
-Pages that need client-side state use this split:
+Páginas que precisam de estado no cliente usam essa divisão:
 
 ```
-page.tsx                 ← async RSC — fetches data, renders server HTML
-DashboardPageClient.tsx  ← "use client" — state, events, real-time
+page.tsx                 ← RSC assíncrono — busca dados, renderiza HTML no servidor
+DashboardPageClient.tsx  ← "use client" — estado, eventos, tempo real
 ```
 
-Rule: `page.tsx` never has `useState`. `*PageClient.tsx` never queries the DB.
+Regra: `page.tsx` nunca tem `useState`. `*PageClient.tsx` nunca consulta o banco.
 
-### `app/api/` — when to use
+### `app/api/` — quando usar
 
 - **Webhooks** — `POST /api/billing/webhook/stripe`
-- **Public unauthenticated endpoints** — `/api/review/[token]/view`
-- **Real-time polling** — `GET /api/projects/[id]`
-- **Mutations from client components** — approve, comment, request-changes
+- **Endpoints públicos não autenticados** — `/api/review/[token]/view`
+- **Polling em tempo real** — `GET /api/projects/[id]`
+- **Mutações de componentes cliente** — aprovar, comentar, solicitar alterações
 
-Use **Server Actions** (in `features/*/actions/`) for form-driven mutations
-from authenticated pages. See [Server Actions vs API Routes](#server-actions-vs-api-routes).
+Use **Server Actions** (em `features/*/actions/`) para mutações orientadas a formulário
+de páginas autenticadas. Veja [Server Actions vs Rotas de API](#server-actions-vs-rotas-de-api).
 
 ---
 
-## `components/` — Generic UI Only
+## `components/` — Apenas UI Genérica
 
-Only truly domain-agnostic code belongs here. If it references a project entity,
-a route path like `/dashboard`, or a Prisma model — it belongs in `features/`.
+Somente código verdadeiramente sem domínio pertence aqui. Se faz referência a uma
+entidade do projeto, a um caminho de rota como `/dashboard` ou a um modelo Prisma
+— pertence a `features/`.
 
 ### `components/ui/`
 
-Design-system primitives. No business logic.
+Primitivos do design system. Sem lógica de negócio.
 
-| Component           | Variants                                                            |
+| Componente          | Variantes                                                           |
 | ------------------- | ------------------------------------------------------------------- |
 | `Button`            | `primary` \| `secondary` \| `ghost` \| `outline` \| `danger`        |
 | `Card`              | `default` \| `glass` \| `elevated` \| `outlined`                    |
 | `Badge`             | `default` \| `brand` \| `success` \| `warning` \| `error` \| `info` |
-| `Modal`             | SSR-safe portal, controlled via `isOpen` prop                       |
-| `Input`, `Textarea` | Forwarded ref, error state                                          |
+| `Modal`             | Portal seguro para SSR, controlado via prop `isOpen`               |
+| `Input`, `Textarea` | Ref encaminhada, estado de erro                                     |
 
-Import from the barrel: `import { Button, Card } from "@/components/ui"`.
+Importe via barrel: `import { Button, Card } from "@/components/ui"`.
 
 ### `components/layout/`
 
-Marketing site layout — `Header.tsx` and `Footer.tsx`.
+Layout do site de marketing — `Header.tsx` e `Footer.tsx`.
 
 ---
 
-## `lib/` — Infrastructure Only
+## `lib/` — Apenas Infraestrutura
 
-Pure infrastructure. No domain logic, no email templates, no plan definitions.
+Infraestrutura pura. Sem lógica de domínio, sem templates de e-mail, sem definições de plano.
 
-| File                      | Exports                                                         |
-| ------------------------- | --------------------------------------------------------------- |
-| `lib/prisma/client.ts`    | `prisma` — Prisma Client singleton                              |
-| `lib/supabase/server.ts`  | `uploadFile()`, `getSignedUrl()`, `getSignedUploadUrl()`        |
-| `lib/supabase/browser.ts` | `supabaseClient` — browser Supabase client                      |
-| `lib/tokens.ts`           | `generateReviewToken()`, `generateOtpCode()` — crypto utilities |
-| `lib/utils.ts`            | `cn()` — Tailwind class merge utility                           |
-| `lib/email.ts`            | Resend client + transactional email helpers                     |
+| Arquivo                   | Exportações                                                        |
+| ------------------------- | ------------------------------------------------------------------ |
+| `lib/prisma/client.ts`    | `prisma` — singleton do Prisma Client                              |
+| `lib/supabase/server.ts`  | `uploadFile()`, `getSignedUrl()`, `getSignedUploadUrl()`           |
+| `lib/supabase/browser.ts` | `supabaseClient` — cliente Supabase para o browser                 |
+| `lib/tokens.ts`           | `generateReviewToken()`, `generateOtpCode()` — utilitários de criptografia |
+| `lib/utils.ts`            | `cn()` — utilitário de merge de classes Tailwind                   |
+| `lib/email.ts`            | Cliente Resend + helpers de e-mail transacional                    |
 
 ---
 
-## Domain Explanations
+## Explicação dos Domínios
 
 ### auth
 
-Authentication via NextAuth v5 + Prisma adapter.
+Autenticação via NextAuth v5 + adaptador Prisma.
 
-- Credentials provider (email + bcrypt password)
-- Session persisted in DB (`Account`, `Session` tables)
-- `auth()` from `@/auth` — call in any Server Component to get the session
-- User registration: `features/auth/actions/auth.ts` → `registerUser()`
+- Provider de credenciais (e-mail + senha bcrypt)
+- Sessão persistida no banco (tabelas `Account`, `Session`)
+- `auth()` de `@/auth` — chame em qualquer Server Component para obter a sessão
+- Registro de usuário: `features/auth/actions/auth.ts` → `registerUser()`
 
 ### billing
 
-Stripe subscriptions + plan-based feature limits.
+Assinaturas Stripe + limites de funcionalidades por plano.
 
-- `features/billing/plans.ts` — **source of truth** for plan definitions (Free/Pro/Studio)
+- `features/billing/plans.ts` — **fonte da verdade** para definições de plano (Free/Pro/Studio)
 - `features/billing/limits.ts` — `canCreateProject()`, `canUploadVersion()`, `canUploadFile()`
-- `features/billing/subscription.ts` — `getSubscriptionInfo(userId)` used on every dashboard page
-- `features/billing/providers/stripe.ts` — Stripe SDK singleton
-- Webhook handler: `app/api/billing/webhook/stripe/route.ts`
+- `features/billing/subscription.ts` — `getSubscriptionInfo(userId)` usado em todas as páginas do dashboard
+- `features/billing/providers/stripe.ts` — singleton do SDK Stripe
+- Handler de webhook: `app/api/billing/webhook/stripe/route.ts`
 
-**Never hardcode plan limits in UI.** Always read from `PLANS` in `features/billing/plans.ts`.
+**Nunca hardcode limites de plano na UI.** Sempre leia de `PLANS` em `features/billing/plans.ts`.
 
 ### projects
 
-A `Project` belongs to a `User` and has a `clientName` + optional `clientEmail`.
-Each project holds multiple `Delivery` versions.
+Um `Project` pertence a um `User` e tem `clientName` + `clientEmail` opcional.
+Cada projeto contém múltiplas versões de `Delivery`.
 
 - CRUD: `features/projects/actions/projects.ts`
-- Components: `features/projects/components/`
-- API (real-time): `app/api/projects/`
+- Componentes: `features/projects/components/`
+- API (tempo real): `app/api/projects/`
 
 ### deliveries
 
-A `Delivery` is one uploaded file — one version of a project.
-Each delivery has a unique `reviewToken` that becomes the shareable link.
+Uma `Delivery` é um arquivo enviado — uma versão do projeto.
+Cada entrega tem um `reviewToken` único que vira o link compartilhável.
 
 - Actions: `features/deliveries/actions/deliveries.ts`
-- Components: `features/deliveries/components/`
-- Files stored in Supabase Storage bucket `deliveries`
-- Status: `PENDING` → `APPROVED` or `CHANGES_REQUESTED`
+- Componentes: `features/deliveries/components/`
+- Arquivos armazenados no bucket `deliveries` do Supabase Storage
+- Status: `PENDING` → `APPROVED` ou `CHANGES_REQUESTED`
 
 ### review
 
-The public-facing review flow, accessed via `/review/{token}`.
-No login required — the token IS the authorization.
+O fluxo público de revisão, acessado via `/review/{token}`.
+Nenhum login necessário — o token É a autorização.
 
-- All components: `features/review/components/`
-- API routes: `app/api/review/[token]/`
-- Entry point: `app/review/[token]/page.tsx`
+- Todos os componentes: `features/review/components/`
+- Rotas de API: `app/api/review/[token]/`
+- Ponto de entrada: `app/review/[token]/page.tsx`
 
 ### guest-review
 
-Unauthenticated guests (clients without an account) can upload files back.
+Visitantes não autenticados (clientes sem conta) podem fazer upload de arquivos de volta.
 
-- Components: `features/guest-review/components/`
-- API routes: `app/api/guest/`
-- Entry point: `app/guest-review/[token]/page.tsx`
+- Componentes: `features/guest-review/components/`
+- Rotas de API: `app/api/guest/`
+- Ponto de entrada: `app/guest-review/[token]/page.tsx`
 
 ### marketing
 
-Landing page + SEO tool pages (EN + PT bilingual).
+Página inicial + páginas de ferramentas SEO (bilíngue EN + PT).
 
-- All components: `features/marketing/components/`
-- Language context: `features/marketing/context/lang-context.tsx`
-- Entry point: `app/(marketing)/page.tsx`
-- SEO pages: `app/client-approval-tool/`, `app/pt/*/`, etc.
+- Todos os componentes: `features/marketing/components/`
+- Contexto de idioma: `features/marketing/context/lang-context.tsx`
+- Ponto de entrada: `app/(marketing)/page.tsx`
+- Páginas SEO: `app/client-approval-tool/`, `app/pt/*/`, etc.
 
 ### dashboard
 
-The authenticated shell wrapping all dashboard pages.
+O shell autenticado que envolve todas as páginas do dashboard.
 
-- Sidebar navigation: `features/dashboard/components/Sidebar.tsx`
-- Layout: `app/(dashboard)/layout.tsx` (auth guard + Sidebar render)
-
----
-
-## Where to Add New Code
-
-### New dashboard page
-
-1. Create `app/(dashboard)/dashboard/my-feature/page.tsx` (async RSC — data fetch)
-2. Create `app/(dashboard)/dashboard/my-feature/MyFeaturePageClient.tsx` if client state needed
-3. Add the nav link in `features/dashboard/components/Sidebar.tsx`
-4. Put any business logic in `features/my-feature/actions/` or `features/my-feature/components/`
-
-### New API endpoint
-
-1. Create `app/api/my-feature/route.ts`
-2. Use `auth()` to guard authenticated routes
-3. Return `NextResponse.json()`
-
-### New Server Action
-
-1. Create `features/{domain}/actions/my-action.ts`
-2. Add `"use server"` at the top of the file
-3. Validate all inputs — never trust client data
-
-### New UI primitive (no domain logic)
-
-1. Create `components/ui/MyComponent.tsx`
-2. Export from `components/ui/index.ts`
-
-### New domain-specific component
-
-1. Create `features/{domain}/components/MyComponent.tsx`
-2. Import it in the relevant page or shell component
-
-### New billing plan
-
-1. Add the plan object to `PLANS` in `features/billing/plans.ts`
-2. Add the `Plan` row in `prisma/seed.ts`
-3. Run `npm run db:seed`
-4. Create the Stripe Price in the Stripe dashboard and set `STRIPE_*_PRICE_ID` env var
+- Navegação lateral: `features/dashboard/components/Sidebar.tsx`
+- Layout: `app/(dashboard)/layout.tsx` (guard de autenticação + renderização do Sidebar)
 
 ---
 
-## Server Actions vs API Routes
+## Onde Adicionar Código Novo
 
-| Use Server Action when…                                      | Use API Route when…                                                |
-| ------------------------------------------------------------ | ------------------------------------------------------------------ |
-| Mutating data from a form or button                          | Receiving external webhooks (Stripe, etc.)                         |
-| Simple CRUD with auth check                                  | Endpoint called from real-time hooks or external services          |
-| You want automatic Next.js revalidation via `revalidatePath` | Public unauthenticated endpoint (e.g., `/api/review/[token]/view`) |
-|                                                              | Client polling for live updates                                    |
+### Nova página do dashboard
 
-**Rule of thumb:** Server Actions for authenticated user mutations.
-API routes for webhooks, public endpoints, and real-time polling.
+1. Crie `app/(dashboard)/dashboard/minha-feature/page.tsx` (RSC assíncrono — busca de dados)
+2. Crie `app/(dashboard)/dashboard/minha-feature/MinhaFeaturePageClient.tsx` se precisar de estado no cliente
+3. Adicione o link de navegação em `features/dashboard/components/Sidebar.tsx`
+4. Coloque a lógica de negócio em `features/minha-feature/actions/` ou `features/minha-feature/components/`
+
+### Novo endpoint de API
+
+1. Crie `app/api/minha-feature/route.ts`
+2. Use `auth()` para proteger rotas autenticadas
+3. Retorne `NextResponse.json()`
+
+### Nova Server Action
+
+1. Crie `features/{domain}/actions/minha-action.ts`
+2. Adicione `"use server"` no topo do arquivo
+3. Valide todas as entradas — nunca confie em dados do cliente
+
+### Novo primitivo de UI (sem lógica de domínio)
+
+1. Crie `components/ui/MeuComponente.tsx`
+2. Exporte de `components/ui/index.ts`
+
+### Novo componente específico de domínio
+
+1. Crie `features/{domain}/components/MeuComponente.tsx`
+2. Importe-o na página ou shell relevante
+
+### Novo plano de cobrança
+
+1. Adicione o objeto do plano em `PLANS` em `features/billing/plans.ts`
+2. Adicione a linha `Plan` em `prisma/seed.ts`
+3. Execute `npm run db:seed`
+4. Crie o Preço no dashboard do Stripe e defina a env var `STRIPE_PRICE_*`
 
 ---
 
-## Naming Conventions
+## Server Actions vs Rotas de API
 
-| What                   | Convention             | Example                        |
-| ---------------------- | ---------------------- | ------------------------------ |
-| Components             | PascalCase             | `ProjectCard.tsx`              |
-| Page client components | `{Page}PageClient.tsx` | `DashboardPageClient.tsx`      |
-| Server action files    | camelCase              | `projects.ts`, `deliveries.ts` |
-| API route files        | always `route.ts`      | `app/api/projects/route.ts`    |
-| Hooks                  | `use` prefix           | `useProjectStatus.ts`          |
-| Types                  | PascalCase             | `ProjectData`, `DeliveryRow`   |
-| Database models        | PascalCase (Prisma)    | `Project`, `Delivery`          |
-| CSS classes            | kebab-case Tailwind    | `text-white/40`                |
+| Use Server Action quando…                                              | Use Rota de API quando…                                                    |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Mutando dados de um formulário ou botão                                | Recebendo webhooks externos (Stripe, etc.)                                 |
+| CRUD simples com verificação de autenticação                           | Endpoint chamado por hooks de tempo real ou serviços externos              |
+| Quer revalidação automática do Next.js via `revalidatePath`            | Endpoint público não autenticado (ex: `/api/review/[token]/view`)          |
+|                                                                        | Polling do cliente para atualizações ao vivo                               |
+
+**Regra geral:** Server Actions para mutações autenticadas de usuário.
+Rotas de API para webhooks, endpoints públicos e polling em tempo real.
 
 ---
 
-## Database Schema Quick Reference
+## Convenções de Nomenclatura
+
+| O quê                          | Convenção              | Exemplo                        |
+| ------------------------------ | ---------------------- | ------------------------------ |
+| Componentes                    | PascalCase             | `ProjectCard.tsx`              |
+| Componentes cliente de página  | `{Pagina}PageClient.tsx` | `DashboardPageClient.tsx`    |
+| Arquivos de server action      | camelCase              | `projects.ts`, `deliveries.ts` |
+| Arquivos de rota de API        | sempre `route.ts`      | `app/api/projects/route.ts`    |
+| Hooks                          | prefixo `use`          | `useProjectStatus.ts`          |
+| Tipos                          | PascalCase             | `ProjectData`, `DeliveryRow`   |
+| Modelos do banco               | PascalCase (Prisma)    | `Project`, `Delivery`          |
+| Classes CSS                    | kebab-case Tailwind    | `text-white/40`                |
+
+---
+
+## Referência Rápida do Schema do Banco
 
 ```
 User           → id, name, email, password, locale
@@ -400,8 +401,8 @@ GuestView      → id, guestUploadId, ipAddress, userAgent
 
 ---
 
-## Useful Links
+## Links Úteis
 
-- [Prisma Studio](http://localhost:5555) — run `npx prisma studio`
-- [Supabase Dashboard](https://supabase.com/dashboard) — file storage
-- [Stripe Dashboard](https://dashboard.stripe.com) — subscriptions
+- [Prisma Studio](http://localhost:5555) — execute `npx prisma studio`
+- [Supabase Dashboard](https://supabase.com/dashboard) — armazenamento de arquivos
+- [Stripe Dashboard](https://dashboard.stripe.com) — assinaturas
