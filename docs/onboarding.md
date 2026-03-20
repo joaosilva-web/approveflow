@@ -44,12 +44,12 @@ Abra http://localhost:3000.
 
 **Outros comandos úteis:**
 
-| Comando             | Finalidade                  |
-| ------------------- | --------------------------- |
-| `npm run build`     | Build de produção           |
+| Comando             | Finalidade                      |
+| ------------------- | ------------------------------- |
+| `npm run build`     | Build de produção               |
 | `npx tsc --noEmit`  | Verificação de tipos TypeScript |
-| `npm run lint`      | ESLint                      |
-| `npx prisma studio` | Navegador visual do banco   |
+| `npm run lint`      | ESLint                          |
+| `npx prisma studio` | Navegador visual do banco       |
 
 ---
 
@@ -211,7 +211,7 @@ Primitivos do design system. Sem lógica de negócio.
 | `Button`            | `primary` \| `secondary` \| `ghost` \| `outline` \| `danger`        |
 | `Card`              | `default` \| `glass` \| `elevated` \| `outlined`                    |
 | `Badge`             | `default` \| `brand` \| `success` \| `warning` \| `error` \| `info` |
-| `Modal`             | Portal seguro para SSR, controlado via prop `isOpen`               |
+| `Modal`             | Portal seguro para SSR, controlado via prop `isOpen`                |
 | `Input`, `Textarea` | Ref encaminhada, estado de erro                                     |
 
 Importe via barrel: `import { Button, Card } from "@/components/ui"`.
@@ -226,14 +226,14 @@ Layout do site de marketing — `Header.tsx` e `Footer.tsx`.
 
 Infraestrutura pura. Sem lógica de domínio, sem templates de e-mail, sem definições de plano.
 
-| Arquivo                   | Exportações                                                        |
-| ------------------------- | ------------------------------------------------------------------ |
-| `lib/prisma/client.ts`    | `prisma` — singleton do Prisma Client                              |
-| `lib/supabase/server.ts`  | `uploadFile()`, `getSignedUrl()`, `getSignedUploadUrl()`           |
-| `lib/supabase/browser.ts` | `supabaseClient` — cliente Supabase para o browser                 |
+| Arquivo                   | Exportações                                                                |
+| ------------------------- | -------------------------------------------------------------------------- |
+| `lib/prisma/client.ts`    | `prisma` — singleton do Prisma Client                                      |
+| `lib/supabase/server.ts`  | `uploadFile()`, `getSignedUrl()`, `getSignedUploadUrl()`                   |
+| `lib/supabase/browser.ts` | `supabaseClient` — cliente Supabase para o browser                         |
 | `lib/tokens.ts`           | `generateReviewToken()`, `generateOtpCode()` — utilitários de criptografia |
-| `lib/utils.ts`            | `cn()` — utilitário de merge de classes Tailwind                   |
-| `lib/email.ts`            | Cliente Resend + helpers de e-mail transacional                    |
+| `lib/utils.ts`            | `cn()` — utilitário de merge de classes Tailwind                           |
+| `lib/email.ts`            | Cliente Resend + helpers de e-mail transacional                            |
 
 ---
 
@@ -356,12 +356,12 @@ O shell autenticado que envolve todas as páginas do dashboard.
 
 ## Server Actions vs Rotas de API
 
-| Use Server Action quando…                                              | Use Rota de API quando…                                                    |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Mutando dados de um formulário ou botão                                | Recebendo webhooks externos (Stripe, etc.)                                 |
-| CRUD simples com verificação de autenticação                           | Endpoint chamado por hooks de tempo real ou serviços externos              |
-| Quer revalidação automática do Next.js via `revalidatePath`            | Endpoint público não autenticado (ex: `/api/review/[token]/view`)          |
-|                                                                        | Polling do cliente para atualizações ao vivo                               |
+| Use Server Action quando…                                   | Use Rota de API quando…                                           |
+| ----------------------------------------------------------- | ----------------------------------------------------------------- |
+| Mutando dados de um formulário ou botão                     | Recebendo webhooks externos (Stripe, etc.)                        |
+| CRUD simples com verificação de autenticação                | Endpoint chamado por hooks de tempo real ou serviços externos     |
+| Quer revalidação automática do Next.js via `revalidatePath` | Endpoint público não autenticado (ex: `/api/review/[token]/view`) |
+|                                                             | Polling do cliente para atualizações ao vivo                      |
 
 **Regra geral:** Server Actions para mutações autenticadas de usuário.
 Rotas de API para webhooks, endpoints públicos e polling em tempo real.
@@ -370,16 +370,16 @@ Rotas de API para webhooks, endpoints públicos e polling em tempo real.
 
 ## Convenções de Nomenclatura
 
-| O quê                          | Convenção              | Exemplo                        |
-| ------------------------------ | ---------------------- | ------------------------------ |
-| Componentes                    | PascalCase             | `ProjectCard.tsx`              |
-| Componentes cliente de página  | `{Pagina}PageClient.tsx` | `DashboardPageClient.tsx`    |
-| Arquivos de server action      | camelCase              | `projects.ts`, `deliveries.ts` |
-| Arquivos de rota de API        | sempre `route.ts`      | `app/api/projects/route.ts`    |
-| Hooks                          | prefixo `use`          | `useProjectStatus.ts`          |
-| Tipos                          | PascalCase             | `ProjectData`, `DeliveryRow`   |
-| Modelos do banco               | PascalCase (Prisma)    | `Project`, `Delivery`          |
-| Classes CSS                    | kebab-case Tailwind    | `text-white/40`                |
+| O quê                         | Convenção                | Exemplo                        |
+| ----------------------------- | ------------------------ | ------------------------------ |
+| Componentes                   | PascalCase               | `ProjectCard.tsx`              |
+| Componentes cliente de página | `{Pagina}PageClient.tsx` | `DashboardPageClient.tsx`      |
+| Arquivos de server action     | camelCase                | `projects.ts`, `deliveries.ts` |
+| Arquivos de rota de API       | sempre `route.ts`        | `app/api/projects/route.ts`    |
+| Hooks                         | prefixo `use`            | `useProjectStatus.ts`          |
+| Tipos                         | PascalCase               | `ProjectData`, `DeliveryRow`   |
+| Modelos do banco              | PascalCase (Prisma)      | `Project`, `Delivery`          |
+| Classes CSS                   | kebab-case Tailwind      | `text-white/40`                |
 
 ---
 
