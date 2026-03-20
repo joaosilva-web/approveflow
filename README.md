@@ -3,7 +3,7 @@
   <h1>ApproveFlow</h1>
   <p><strong>Aprovações de arquivos sem a bagunça. Feito para freelancers.</strong></p>
   <p>
-    <a href="https://approveflow.app">approveflow.app</a> &bull;
+    <a href="https://approveflow-two.vercel.app">approveflow-two.vercel.app</a> &bull;
     Em beta 🚧
   </p>
 </div>
@@ -46,23 +46,47 @@ ApproveFlow é um SaaS para freelancers enviarem arquivos para clientes e recebe
 
 ```
 app/
-  (auth)/           → Login
-  (dashboard)/      → Dashboard do freelancer (projetos, billing)
-  api/              → API routes (auth, billing, review, guest)
-  review/[token]/   → Página de revisão pública para o cliente
-  r/[token]/        → Redirect de link curto
+  (auth)/                     → Login
+  (dashboard)/                → Dashboard do freelancer (projetos, billing)
+  (marketing)/                → Landing page + páginas SEO
+  api/                        → API routes (auth, billing, review, guest)
+  review/[token]/             → Página de revisão pública para o cliente
+  guest-review/[token]/       → Revisão para uploads de convidados
+features/
+  auth/
+    actions/auth.ts           → registerUser()
+  billing/
+    plans.ts                  → Definição dos planos (fonte da verdade)
+    limits.ts                 → canCreateProject(), canUploadVersion()…
+    subscription.ts           → getSubscriptionInfo()
+    providers/stripe.ts       → Cliente Stripe
+  dashboard/
+    components/Sidebar.tsx    → Navegação do dashboard
+  deliveries/
+    actions/deliveries.ts     → getUploadUrl(), createDelivery()
+    components/               → NewDeliveryModal, UploadZone
+  guest-review/
+    components/               → GuestReviewShell, GuestUploader
+  marketing/
+    context/lang-context.tsx  → Toggle PT/EN
+    components/               → LandingPage, Hero, Features, Pricing, CTA…
+  projects/
+    actions/projects.ts       → createProject(), updateProject(), deleteProject()
+    components/               → ProjectCard, NewProjectModal
+  review/
+    components/               → ReviewClientShell, ApprovalPanel, CommentSystem…
 components/
-  dashboard/        → ProjectCard, NewProjectModal, NewDeliveryModal, Sidebar
-  review/           → ReviewClientShell, ApprovalPanel, CommentSystem, FilePreview
-  sections/         → Seções da landing page (Hero, Features, Pricing, etc.)
-  layout/           → Header, Footer
-  ui/               → Design system (Button, Input, Modal, Badge, Card…)
+  ui/                         → Design system (Button, Input, Modal, Badge, Card…)
+  layout/                     → Header, Footer
 lib/
-  actions/          → Server Actions (projects, deliveries, auth)
-  billing/          → Planos, limites, assinatura
-  email.ts          → Templates de e-mail PT/EN
+  prisma/client.ts            → Singleton do Prisma
+  supabase/server.ts          → uploadFile(), getSignedUrl()
+  supabase/browser.ts         → Cliente Supabase (browser)
+  tokens.ts                   → Geração de tokens criptográficos
+  email.ts                    → Templates de e-mail PT/EN via Resend
+  utils.ts                    → cn() — merge de classes Tailwind
 prisma/
-  schema.prisma     → Modelos: User, Project, Delivery, Comment, Subscription…
+  schema.prisma               → Modelos: User, Project, Delivery, Comment, Subscription…
 ```
 
 ## Rodar localmente
