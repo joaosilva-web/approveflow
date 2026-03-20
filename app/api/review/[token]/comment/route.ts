@@ -1,5 +1,6 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { sendCommentNotificationEmail } from "@/lib/email";
 import { z } from "zod";
 
 const commentSchema = z.object({
@@ -7,7 +8,7 @@ const commentSchema = z.object({
   authorEmail: z.string().email().optional().or(z.literal("")),
   authorType: z.enum(["CLIENT", "FREELANCER"]).optional().default("CLIENT"),
   content: z.string().min(1).max(2000),
-  // Normalized image coordinates (0–1). null = general comment
+  // Normalized image coordinates (0-1). null = general comment
   xPosition: z.number().min(0).max(1).optional().nullable(),
   yPosition: z.number().min(0).max(1).optional().nullable(),
 });
@@ -20,7 +21,22 @@ export async function POST(
 
   const delivery = await prisma.delivery.findUnique({
     where: { reviewToken: token },
-    select: { id: true, expiresAt: true },
+    select: {
+      id: true,
+      expiresAt: true,
+      project: {
+        select: {
+          id: true,
+          name: true,
+          user: {
+            select: {
+              email: true,
+              locale: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!delivery) {
@@ -51,6 +67,20 @@ export async function POST(
       yPosition: parsed.data.yPosition ?? null,
     },
   });
+
+  if (comment.authorType === "CLIENT") {
+    const ownerEmail = delivery.project.user?.email;
+    if (ownerEmail) {
+      sendCommentNotificationEmail({
+        to: ownerEmail,
+        projectName: delivery.project.name,
+        reviewToken: token,
+        authorName: comment.authorName,
+        comment: comment.content,
+        locale: (delivery.project.user?.locale as "pt" | "en") ?? "pt",
+      }).catch(console.error);
+    }
+  }
 
   return NextResponse.json({
     id: comment.id,
