@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useState, useTransition, useRef } from "react";
+import { supabaseClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
@@ -19,6 +20,7 @@ export interface CommentData {
 
 interface CommentSystemProps {
   token: string;
+  deliveryId: string;
   initialComments: CommentData[];
   pinnedComments?: Record<string, number>;
   mode?: "client" | "freelancer";
@@ -46,131 +48,60 @@ function formatResolvedAt(dateStr: string): string {
 
 function CommentBubble({
   comment,
-  pinNumber,
+  isOwn,
   canResolve,
   isToggling,
   onToggleResolved,
 }: {
   comment: CommentData;
-  pinNumber?: number;
+  isOwn: boolean;
   canResolve: boolean;
   isToggling: boolean;
   onToggleResolved: (comment: CommentData) => void;
 }) {
   const isClient = comment.authorType === "CLIENT";
   const isResolved = Boolean(comment.resolvedAt);
-
   return (
     <div
-      className={cn(
-        "rounded-2xl border p-3 transition-colors",
-        isClient
-          ? isResolved
-            ? "border-emerald-500/20 bg-emerald-500/[0.06]"
-            : "border-violet-500/12 bg-violet-500/[0.04]"
-          : "border-white/[0.06] bg-white/[0.02]",
-      )}
+      className={cn("flex flex-col gap-1", isOwn ? "items-end" : "items-start")}
     >
-      <div className="flex gap-3">
-        <div
-          className={cn(
-            "h-7 w-7 shrink-0 rounded-full border text-xs font-bold flex items-center justify-center",
-            isClient
-              ? "border-violet-500/30 bg-violet-600/20 text-violet-400"
-              : "border-white/[0.10] bg-white/[0.06] text-white/60",
-          )}
-        >
-          {comment.authorName[0]?.toUpperCase() ?? "?"}
+      <div
+        className={cn(
+          "max-w-[80%] px-4 py-2 rounded-2xl border text-sm",
+          isOwn
+            ? "bg-violet-600/30 border-violet-500/30 text-white/90"
+            : isClient
+              ? isResolved
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-200"
+                : "bg-white/[0.04] border-violet-500/12 text-white/80"
+              : "bg-white/[0.02] border-white/[0.06] text-white/70",
+        )}
+      >
+        <div className="flex items-baseline gap-2">
+          <span className="text-xs font-semibold">{comment.authorName}</span>
+          <span className="ml-auto text-[10px] text-white/30">
+            {timeAgo(comment.createdAt)}
+          </span>
         </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-xs font-semibold text-white/80">
-              {comment.authorName}
-            </span>
-            {pinNumber !== undefined && (
-              <span className="font-mono text-[10px] text-violet-400">
-                #{pinNumber}
-              </span>
+        <div className="mt-1 break-words leading-relaxed">
+          {comment.content}
+        </div>
+        {canResolve && (
+          <button
+            type="button"
+            onClick={() => onToggleResolved(comment)}
+            disabled={isToggling}
+            className={cn(
+              "text-[11px] font-medium mt-2",
+              isResolved
+                ? "text-emerald-300/80 hover:text-emerald-200"
+                : "text-violet-300/80 hover:text-violet-200",
+              isToggling && "cursor-not-allowed opacity-60",
             )}
-            <span className="ml-auto text-[10px] text-white/30">
-              {timeAgo(comment.createdAt)}
-            </span>
-          </div>
-
-          <p className="mt-1 break-words text-sm leading-relaxed text-white/65">
-            {comment.content}
-          </p>
-
-          {isClient && (
-            <div className="mt-3 flex flex-wrap items-start justify-between gap-2">
-              {canResolve ? (
-                <label
-                  className={cn(
-                    "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium cursor-pointer",
-                    isResolved
-                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
-                      : "border-white/[0.08] bg-white/[0.04] text-white/55",
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    className="h-3.5 w-3.5 rounded border-white/20 bg-transparent accent-emerald-500"
-                    checked={isResolved}
-                    onChange={() => onToggleResolved(comment)}
-                    disabled={isToggling}
-                  />
-                  <span>{isResolved ? "Resolvido" : "Pendente"}</span>
-                </label>
-              ) : (
-                <div className="flex flex-col gap-1">
-                  <span
-                    className={cn(
-                      "text-[11px] font-medium",
-                      isResolved ? "text-emerald-300" : "text-yellow-300",
-                    )}
-                  >
-                    {isResolved ? "Resolvido" : "Pendente"}
-                  </span>
-                  {comment.resolvedAt && (
-                    <span className="text-[10px] text-emerald-300/70">
-                      em {formatResolvedAt(comment.resolvedAt)}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
-                {comment.resolvedAt && canResolve && (
-                  <span className="text-[10px] text-emerald-300/70">
-                    Marcado em {formatResolvedAt(comment.resolvedAt)}
-                  </span>
-                )}
-
-                {canResolve && (
-                  <button
-                    type="button"
-                    onClick={() => onToggleResolved(comment)}
-                    disabled={isToggling}
-                    className={cn(
-                      "text-[11px] font-medium transition-colors",
-                      isResolved
-                        ? "text-emerald-300/80 hover:text-emerald-200"
-                        : "text-violet-300/80 hover:text-violet-200",
-                      isToggling && "cursor-not-allowed opacity-60",
-                    )}
-                  >
-                    {isToggling
-                      ? "Salvando..."
-                      : isResolved
-                        ? "Desfazer"
-                        : "Resolver"}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+          >
+            {isToggling ? "Salvando..." : isResolved ? "Desfazer" : "Resolver"}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -178,15 +109,18 @@ function CommentBubble({
 
 export default function CommentSystem({
   token,
+  deliveryId,
   initialComments,
   pinnedComments = {},
   mode = "client",
   freelancerName = "Freelancer",
   commentApiBase = "/api/review",
   onCommentsChange,
-}: CommentSystemProps) {
+  scrollable,
+}: CommentSystemProps & { scrollable?: boolean }) {
   const isFreelancer = mode === "freelancer";
   const [comments, setComments] = useState<CommentData[]>(initialComments);
+  const commentsEndRef = useRef<HTMLDivElement | null>(null);
   const [content, setContent] = useState("");
   const [authorName, setAuthorName] = useState("");
   const [formError, setFormError] = useState("");
@@ -199,6 +133,64 @@ export default function CommentSystem({
   useEffect(() => {
     setComments(initialComments);
   }, [initialComments]);
+
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabaseClient
+      .channel(`comments-${deliveryId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "Comment" },
+        (payload) => {
+          const newComment = payload.new as CommentData & {
+            deliveryId: string;
+          };
+          if (newComment && newComment.deliveryId === deliveryId) {
+            setComments((prev) => {
+              if (prev.some((c) => c.id === newComment.id)) return prev;
+              return [
+                ...prev,
+                {
+                  ...newComment,
+                  createdAt: newComment.createdAt || new Date().toISOString(),
+                },
+              ];
+            });
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "Comment" },
+        (payload) => {
+          const updated = payload.new as CommentData & { deliveryId: string };
+          if (updated && updated.deliveryId === deliveryId) {
+            setComments((prev) =>
+              prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)),
+            );
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "Comment" },
+        (payload) => {
+          const deleted = payload.old as CommentData & { deliveryId: string };
+          if (deleted && deleted.deliveryId === deliveryId) {
+            setComments((prev) => prev.filter((c) => c.id !== deleted.id));
+          }
+        },
+      )
+      .subscribe();
+    return () => {
+      supabaseClient.removeChannel(channel);
+    };
+  }, [deliveryId]);
+
+  // Scroll to bottom on new comment
+  useEffect(() => {
+    commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [comments]);
 
   const updateComments = (
     next: CommentData[] | ((previous: CommentData[]) => CommentData[]),
@@ -235,9 +227,7 @@ export default function CommentSystem({
       });
 
       if (res.ok) {
-        const data: CommentData = await res.json();
-        updateComments((previous) => [...previous, data]);
-        setContent("");
+        setContent(""); // Limpa o campo, o realtime cuidará do resto
       } else {
         const data = await res.json().catch(() => ({}));
         setFormError(data.error ?? "Falha ao publicar comentário");
@@ -270,7 +260,9 @@ export default function CommentSystem({
         );
       } else {
         const data = await res.json().catch(() => ({}));
-        setToggleError(data.error ?? "Falha ao atualizar o status do comentário");
+        setToggleError(
+          data.error ?? "Falha ao atualizar o status do comentário",
+        );
       }
 
       setTogglingCommentId(null);
@@ -278,23 +270,34 @@ export default function CommentSystem({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 h-full">
       <p className="text-xs font-semibold uppercase tracking-wider text-white/50">
         Comentários{comments.length > 0 ? ` (${comments.length})` : ""}
       </p>
 
       {comments.length > 0 ? (
-        <div className="flex flex-col gap-4">
+        <div
+          className={
+            scrollable
+              ? "flex-1 min-h-0 overflow-y-auto flex flex-col gap-2"
+              : "flex flex-col gap-2"
+          }
+        >
           {comments.map((comment) => (
             <CommentBubble
               key={comment.id}
               comment={comment}
-              pinNumber={pinnedComments[comment.id]}
+              isOwn={
+                isFreelancer
+                  ? comment.authorType === "FREELANCER"
+                  : comment.authorType === "CLIENT"
+              }
               canResolve={isFreelancer && comment.authorType === "CLIENT"}
               isToggling={togglingCommentId === comment.id}
               onToggleResolved={toggleResolved}
             />
           ))}
+          <div ref={commentsEndRef} />
         </div>
       ) : (
         <p className="py-4 text-center text-sm text-white/30">
@@ -316,7 +319,9 @@ export default function CommentSystem({
             </div>
             <span className="text-xs text-white/50">
               Respondendo como{" "}
-              <span className="font-medium text-white/80">{freelancerName}</span>
+              <span className="font-medium text-white/80">
+                {freelancerName}
+              </span>
             </span>
           </div>
         ) : (

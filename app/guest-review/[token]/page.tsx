@@ -195,6 +195,7 @@ export default async function GuestReviewPage({ params }: PageProps) {
   return (
     <GuestReviewShell
       token={token}
+      deliveryId={upload.id}
       signedUrl={signedUrl}
       fileName={upload.fileName}
       mimeType={upload.mimeType}

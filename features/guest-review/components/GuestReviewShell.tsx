@@ -19,6 +19,7 @@ type Status = "PENDING" | "APPROVED" | "CHANGES_REQUESTED";
 
 interface GuestReviewShellProps {
   token: string;
+  deliveryId: string;
   signedUrl: string;
   fileName: string;
   mimeType: string;
@@ -45,6 +46,7 @@ const statusLabel: Record<Status, string> = {
 
 export default function GuestReviewShell({
   token,
+  deliveryId,
   signedUrl,
   fileName,
   mimeType,
@@ -189,6 +191,7 @@ export default function GuestReviewShell({
             {/* Comments */}
             <CommentSystem
               token={token}
+              deliveryId={deliveryId}
               initialComments={comments}
               pinnedComments={pinnedCommentNumbers}
               commentApiBase="/api/guest"

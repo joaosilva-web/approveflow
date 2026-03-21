@@ -14,7 +14,7 @@ import VersionSwitcher from "@/features/review/components/VersionSwitcher";
 import { cn } from "@/lib/utils";
 import type { BadgeVariant } from "@/components/ui/Badge";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type Status = "PENDING" | "APPROVED" | "CHANGES_REQUESTED";
 
@@ -29,6 +29,7 @@ interface DeliverySummary {
 
 interface ReviewClientShellProps {
   token: string;
+  deliveryId: string;
   signedUrl: string;
   fileName: string;
   mimeType: string;
@@ -116,6 +117,7 @@ function DownloadFileButton({
 
 export default function ReviewClientShell({
   token,
+  deliveryId,
   signedUrl,
   fileName,
   mimeType,
@@ -135,6 +137,7 @@ export default function ReviewClientShell({
 
   const [status, setStatus] = useState<Status>(initialStatus);
   const [comments, setComments] = useState<CommentData[]>(initialComments);
+  const [showChat, setShowChat] = useState(false);
 
   // Build pin number map for comment system
   const pinnedComments = comments.filter(
@@ -180,21 +183,17 @@ export default function ReviewClientShell({
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
-        {/* Main preview */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
           {/* Humanized intro — shown to clients */}
-          {!isFreelancerPreview && freelancerDisplayName && (
+          {/* {!isFreelancerPreview && freelancerDisplayName && (
             <p className="text-sm text-white/50 mb-5">
-              <span className="font-medium text-white/80">
-                {freelancerDisplayName}
-              </span>
+              <span className="font-medium text-white/80">{freelancerDisplayName}</span>
               {" compartilhou "}
-              <span className="font-medium text-white/80">
-                &ldquo;{projectName}&rdquo;
-              </span>
+              <span className="font-medium text-white/80">&ldquo;{projectName}&rdquo;</span>
               {" para sua revisão"}
             </p>
-          )}
+          )} */}
+
           <div className="flex items-center gap-2.5 mb-5">
             <span className="text-xs font-mono text-white/40 bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 rounded-md">
               v{versionNumber}
@@ -234,57 +233,81 @@ export default function ReviewClientShell({
         <aside
           className={cn(
             "w-full lg:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.06]",
-            "bg-[#080814] overflow-y-auto flex flex-col",
+            "bg-[#080814] flex flex-col h-screen lg:h-screen",
           )}
         >
-          <div className="flex flex-col gap-6 p-5">
-            {/* Approval — client only */}
-            {!isFreelancerPreview && (
-              <>
-                <ApprovalPanel
-                  token={token}
-                  status={status}
-                  onStatusChange={setStatus}
-                />
-                <hr className="border-white/[0.06]" />
-              </>
-            )}
-
-            {/* Freelancer preview banner */}
-            {isFreelancerPreview && (
-              <div className="flex items-center gap-2.5 rounded-xl bg-violet-600/10 border border-violet-500/20 px-3.5 py-3">
-                <div className="w-2 h-2 rounded-full bg-violet-400 shrink-0" />
-                <p className="text-xs text-violet-300/80 leading-snug">
-                  <span className="font-semibold text-violet-300">
-                    Modo visualização
-                  </span>
-                  {" — "}o cliente vê este link, você pode responder os
-                  comentários abaixo.
-                </p>
+          {showChat ? (
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+                <button
+                  onClick={() => setShowChat(false)}
+                  className="text-white/60 hover:text-white/90 px-2 py-1 rounded-lg transition font-semibold"
+                >
+                  ← Voltar
+                </button>
+                <span className="text-base font-semibold text-white">
+                  Conversa
+                </span>
+                <span className="w-12" />
               </div>
-            )}
 
-            {/* Comments */}
-            <CommentSystem
-              token={token}
-              initialComments={comments}
-              pinnedComments={pinnedCommentNumbers}
-              mode={isFreelancerPreview ? "freelancer" : "client"}
-              freelancerName={freelancerName ?? undefined}
-              onCommentsChange={setComments}
-            />
-
-            {/* Version history */}
-            {allDeliveries.length > 1 && (
-              <>
-                <hr className="border-white/[0.06]" />
-                <VersionSwitcher
-                  deliveries={allDeliveries}
-                  currentToken={token}
+              <div className="flex-1 min-h-0 flex flex-col p-4">
+                <CommentSystem
+                  token={token}
+                  deliveryId={deliveryId}
+                  initialComments={comments}
+                  pinnedComments={pinnedCommentNumbers}
+                  mode={isFreelancerPreview ? "freelancer" : "client"}
+                  freelancerName={freelancerName ?? undefined}
+                  onCommentsChange={setComments}
+                  scrollable
                 />
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6 p-5 h-full">
+              {!isFreelancerPreview && (
+                <>
+                  <ApprovalPanel
+                    token={token}
+                    status={status}
+                    onStatusChange={setStatus}
+                  />
+                  <hr className="border-white/[0.06]" />
+                </>
+              )}
+
+              {isFreelancerPreview && (
+                <div className="flex items-center gap-2.5 rounded-xl bg-violet-600/10 border border-violet-500/20 px-3.5 py-3">
+                  <div className="w-2 h-2 rounded-full bg-violet-400 shrink-0" />
+                  <p className="text-xs text-violet-300/80 leading-snug">
+                    <span className="font-semibold text-violet-300">
+                      Modo visualização
+                    </span>
+                    {" — "}o cliente vê este link, você pode responder os
+                    comentários abaixo.
+                  </p>
+                </div>
+              )}
+
+              <button
+                className="w-full py-2 px-4 rounded-lg bg-violet-600/80 hover:bg-violet-700 text-white font-semibold transition mb-2"
+                onClick={() => setShowChat(true)}
+              >
+                Abrir conversa
+              </button>
+
+              {allDeliveries.length > 1 && (
+                <>
+                  <hr className="border-white/[0.06]" />
+                  <VersionSwitcher
+                    deliveries={allDeliveries}
+                    currentToken={token}
+                  />
+                </>
+              )}
+            </div>
+          )}
         </aside>
       </div>
 

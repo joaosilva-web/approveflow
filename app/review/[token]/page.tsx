@@ -140,9 +140,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
     );
   }
 
-  const [resolvedAtColumn] = await prisma.$queryRaw<
-    Array<{ exists: boolean }>
-  >`
+  const [resolvedAtColumn] = await prisma.$queryRaw<Array<{ exists: boolean }>>`
     SELECT EXISTS (
       SELECT 1
       FROM information_schema.columns
@@ -242,6 +240,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
   return (
     <ReviewClientShell
       token={token}
+      deliveryId={delivery.id}
       signedUrl={signedUrl}
       fileName={delivery.fileName}
       mimeType={delivery.mimeType}
