@@ -53,6 +53,8 @@ export default function DashboardPageClient({
     planCode: string;
     maxProjects: number | null;
     projectCount: number;
+    storageUsage?: number;
+    maxStorageBytes?: number | null;
   };
 }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -172,6 +174,22 @@ export default function DashboardPageClient({
     subscription !== undefined &&
     subscription.projectCount >= (subscription.maxProjects ?? Infinity);
 
+  // Storage usage display helpers
+  function formatSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024)
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  }
+
+  const storageUsage = subscription?.storageUsage ?? 0;
+  const maxStorageBytes = subscription?.maxStorageBytes ?? null;
+  const storagePercent =
+    maxStorageBytes && maxStorageBytes > 0
+      ? Math.min(100, Math.round((storageUsage / maxStorageBytes) * 100))
+      : null;
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-8">
       {/* Header */}
@@ -206,7 +224,38 @@ export default function DashboardPageClient({
           Novo projeto
         </Button>
       </div>
-
+      {/* Storage usage bar */}
+      {maxStorageBytes && (
+        <div className="flex flex-col gap-1 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-white/40">Armazenamento usado:</span>
+            <span className="text-xs text-white/80 font-semibold">
+              {formatSize(storageUsage)}
+              {" / "}
+              {formatSize(maxStorageBytes)}
+            </span>
+            {storagePercent !== null && (
+              <span
+                className={`text-xs font-semibold ${storagePercent >= 90 ? "text-red-400" : storagePercent >= 75 ? "text-yellow-400" : "text-white/40"}`}
+              >
+                {storagePercent}%
+              </span>
+            )}
+          </div>
+          <div className="w-full h-2 bg-white/[0.08] rounded-lg overflow-hidden">
+            <div
+              className={`h-2 rounded-lg transition-all duration-300 ${
+                storagePercent !== null && storagePercent >= 90
+                  ? "bg-red-500"
+                  : storagePercent !== null && storagePercent >= 75
+                    ? "bg-yellow-400"
+                    : "bg-emerald-400"
+              }`}
+              style={{ width: `${storagePercent ?? 0}%` }}
+            />
+          </div>
+        </div>
+      )}
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard

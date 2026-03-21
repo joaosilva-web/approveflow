@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const [projects, subscriptionInfo] = await Promise.all([
+  const [projects, subscriptionInfo, storageUsage] = await Promise.all([
     prisma.project.findMany({
       where: { userId: session.user.id },
       orderBy: { updatedAt: "desc" },
@@ -55,12 +55,26 @@ export default async function DashboardPage() {
       },
     }) as Promise<ProjectRow[]>,
     getSubscriptionInfo(session.user.id),
+    prisma.delivery.aggregate({
+      _sum: { fileSize: true },
+      where: {
+        project: { userId: session.user.id },
+      },
+    }),
   ]);
+
+  // Get plan storage limit from PLANS
+  // Import PLANS here to avoid circular import issues
+  const { PLANS } = await import("@/features/billing/plans");
+  const planDef = PLANS[subscriptionInfo.planCode] ?? PLANS["free"];
+  const maxStorageBytes = planDef.maxStorageBytes ?? null;
 
   const subscription = {
     planCode: subscriptionInfo.planCode,
     maxProjects: subscriptionInfo.maxProjects,
     projectCount: subscriptionInfo.projectCount,
+    storageUsage: storageUsage._sum.fileSize ?? 0,
+    maxStorageBytes,
   };
 
   const totalProjects = projects.length;
