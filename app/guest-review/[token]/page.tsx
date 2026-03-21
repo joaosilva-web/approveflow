@@ -114,11 +114,24 @@ export default async function GuestReviewPage({ params }: PageProps) {
 
   const hasResolvedAtColumn = resolvedAtColumn?.exists === true;
 
+  const [audioUrlColumn] = await prisma.$queryRaw<Array<{ exists: boolean }>>`
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'GuestComment'
+        AND column_name = 'audioUrl'
+    ) as "exists"
+  `;
+
+  const hasAudioUrlColumn = audioUrlColumn?.exists === true;
+
   let comments: Array<{
     id: string;
     authorType: "CLIENT" | "FREELANCER";
     authorName: string;
     content: string;
+    audioUrl?: string | null;
     xPosition: number | null;
     yPosition: number | null;
     resolvedAt: Date | null;
@@ -126,57 +139,71 @@ export default async function GuestReviewPage({ params }: PageProps) {
   }>;
 
   if (hasResolvedAtColumn) {
-    comments = await prisma.$queryRaw<
-      Array<{
-        id: string;
-        authorType: "CLIENT" | "FREELANCER";
-        authorName: string;
-        content: string;
-        xPosition: number | null;
-        yPosition: number | null;
-        resolvedAt: Date | null;
-        createdAt: Date;
-      }>
-    >`
-      SELECT
-        "id",
-        "authorType",
-        "authorName",
-        "content",
-        "xPosition",
-        "yPosition",
-        "resolvedAt",
-        "createdAt"
-      FROM "GuestComment"
-      WHERE "guestUploadId" = ${upload.id}
-      ORDER BY "createdAt" ASC
-    `;
+    if (hasAudioUrlColumn) {
+      comments = await prisma.$queryRaw<Array<any>>`
+        SELECT
+          "id",
+          "authorType",
+          "authorName",
+          "content",
+          "audioUrl",
+          "xPosition",
+          "yPosition",
+          "resolvedAt",
+          "createdAt"
+        FROM "GuestComment"
+        WHERE "guestUploadId" = ${upload.id}
+        ORDER BY "createdAt" ASC
+      `;
+    } else {
+      comments = await prisma.$queryRaw<Array<any>>`
+        SELECT
+          "id",
+          "authorType",
+          "authorName",
+          "content",
+          "xPosition",
+          "yPosition",
+          "resolvedAt",
+          "createdAt"
+        FROM "GuestComment"
+        WHERE "guestUploadId" = ${upload.id}
+        ORDER BY "createdAt" ASC
+      `;
+    }
   } else {
-    comments = await prisma.$queryRaw<
-      Array<{
-        id: string;
-        authorType: "CLIENT" | "FREELANCER";
-        authorName: string;
-        content: string;
-        xPosition: number | null;
-        yPosition: number | null;
-        resolvedAt: Date | null;
-        createdAt: Date;
-      }>
-    >`
-      SELECT
-        "id",
-        "authorType",
-        "authorName",
-        "content",
-        "xPosition",
-        "yPosition",
-        NULL::timestamp as "resolvedAt",
-        "createdAt"
-      FROM "GuestComment"
-      WHERE "guestUploadId" = ${upload.id}
-      ORDER BY "createdAt" ASC
-    `;
+    if (hasAudioUrlColumn) {
+      comments = await prisma.$queryRaw<Array<any>>`
+        SELECT
+          "id",
+          "authorType",
+          "authorName",
+          "content",
+          "audioUrl",
+          "xPosition",
+          "yPosition",
+          NULL::timestamp as "resolvedAt",
+          "createdAt"
+        FROM "GuestComment"
+        WHERE "guestUploadId" = ${upload.id}
+        ORDER BY "createdAt" ASC
+      `;
+    } else {
+      comments = await prisma.$queryRaw<Array<any>>`
+        SELECT
+          "id",
+          "authorType",
+          "authorName",
+          "content",
+          "xPosition",
+          "yPosition",
+          NULL::timestamp as "resolvedAt",
+          "createdAt"
+        FROM "GuestComment"
+        WHERE "guestUploadId" = ${upload.id}
+        ORDER BY "createdAt" ASC
+      `;
+    }
   }
 
   const initialComments: CommentData[] = comments.map((c) => ({
@@ -184,6 +211,7 @@ export default async function GuestReviewPage({ params }: PageProps) {
     authorType: c.authorType,
     authorName: c.authorName,
     content: c.content,
+    audioUrl: (c as any).audioUrl ?? null,
     xPosition: c.xPosition,
     yPosition: c.yPosition,
     resolvedAt: c.resolvedAt?.toISOString() ?? null,

@@ -18,15 +18,21 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { token } = await params;
-  const delivery = await prisma.delivery.findUnique({
-    where: { reviewToken: token },
-    select: { fileName: true, project: { select: { name: true } } },
-  });
+  let delivery: { fileName?: string; project?: { name?: string } } | null = null;
+  try {
+    delivery = await prisma.delivery.findUnique({
+      where: { reviewToken: token },
+      select: { fileName: true, project: { select: { name: true } } },
+    });
+  } catch (err) {
+    // If Prisma can't be used in this environment (dev/edge), return a safe default.
+    return { title: "Review — ApproveFlow" };
+  }
 
   if (!delivery) return { title: "Review — ApproveFlow" };
 
   return {
-    title: `Review: ${delivery.project.name} — ApproveFlow`,
+    title: `Review: ${delivery.project?.name ?? 'Review'} — ApproveFlow`,
     robots: { index: false },
   };
 }
@@ -102,11 +108,11 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
   }
 
   // Check password protection (skip in freelancer preview mode)
-  if (delivery.password && !isFreelancerPreview) {
+    if (delivery.password && !isFreelancerPreview) {
     const cookieStore = await cookies();
     const unlocked = cookieStore.get(`review_pw_${token}`)?.value === "1";
     if (!unlocked) {
-      return <PasswordGate token={token} projectName={delivery.project.name} />;
+      return <PasswordGate token={token} projectName={delivery.project?.name ?? ''} />;
     }
   }
 
@@ -152,11 +158,24 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
 
   const hasResolvedAtColumn = resolvedAtColumn?.exists === true;
 
+  const [audioUrlColumn] = await prisma.$queryRaw<Array<{ exists: boolean }>>`
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'Comment'
+        AND column_name = 'audioUrl'
+    ) as "exists"
+  `;
+
+  const hasAudioUrlColumn = audioUrlColumn?.exists === true;
+
   let comments: Array<{
     id: string;
     authorType: "CLIENT" | "FREELANCER";
     authorName: string;
     content: string;
+    audioUrl?: string | null;
     xPosition: number | null;
     yPosition: number | null;
     resolvedAt: Date | null;
@@ -164,57 +183,71 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
   }>;
 
   if (hasResolvedAtColumn) {
-    comments = await prisma.$queryRaw<
-      Array<{
-        id: string;
-        authorType: "CLIENT" | "FREELANCER";
-        authorName: string;
-        content: string;
-        xPosition: number | null;
-        yPosition: number | null;
-        resolvedAt: Date | null;
-        createdAt: Date;
-      }>
-    >`
-      SELECT
-        "id",
-        "authorType",
-        "authorName",
-        "content",
-        "xPosition",
-        "yPosition",
-        "resolvedAt",
-        "createdAt"
-      FROM "Comment"
-      WHERE "deliveryId" = ${delivery.id}
-      ORDER BY "createdAt" ASC
-    `;
+    if (hasAudioUrlColumn) {
+      comments = await prisma.$queryRaw<Array<any>>`
+        SELECT
+          "id",
+          "authorType",
+          "authorName",
+          "content",
+          "audioUrl",
+          "xPosition",
+          "yPosition",
+          "resolvedAt",
+          "createdAt"
+        FROM "Comment"
+        WHERE "deliveryId" = ${delivery.id}
+        ORDER BY "createdAt" ASC
+      `;
+    } else {
+      comments = await prisma.$queryRaw<Array<any>>`
+        SELECT
+          "id",
+          "authorType",
+          "authorName",
+          "content",
+          "xPosition",
+          "yPosition",
+          "resolvedAt",
+          "createdAt"
+        FROM "Comment"
+        WHERE "deliveryId" = ${delivery.id}
+        ORDER BY "createdAt" ASC
+      `;
+    }
   } else {
-    comments = await prisma.$queryRaw<
-      Array<{
-        id: string;
-        authorType: "CLIENT" | "FREELANCER";
-        authorName: string;
-        content: string;
-        xPosition: number | null;
-        yPosition: number | null;
-        resolvedAt: Date | null;
-        createdAt: Date;
-      }>
-    >`
-      SELECT
-        "id",
-        "authorType",
-        "authorName",
-        "content",
-        "xPosition",
-        "yPosition",
-        NULL::timestamp as "resolvedAt",
-        "createdAt"
-      FROM "Comment"
-      WHERE "deliveryId" = ${delivery.id}
-      ORDER BY "createdAt" ASC
-    `;
+    if (hasAudioUrlColumn) {
+      comments = await prisma.$queryRaw<Array<any>>`
+        SELECT
+          "id",
+          "authorType",
+          "authorName",
+          "content",
+          "audioUrl",
+          "xPosition",
+          "yPosition",
+          NULL::timestamp as "resolvedAt",
+          "createdAt"
+        FROM "Comment"
+        WHERE "deliveryId" = ${delivery.id}
+        ORDER BY "createdAt" ASC
+      `;
+    } else {
+      comments = await prisma.$queryRaw<Array<any>>`
+        SELECT
+          "id",
+          "authorType",
+          "authorName",
+          "content",
+          "xPosition",
+          "yPosition",
+          NULL::timestamp as "resolvedAt",
+          "createdAt"
+        FROM "Comment"
+        WHERE "deliveryId" = ${delivery.id}
+        ORDER BY "createdAt" ASC
+      `;
+    }
   }
 
   const initialComments: CommentData[] = comments.map((c) => ({
@@ -222,6 +255,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
     authorType: c.authorType,
     authorName: c.authorName,
     content: c.content,
+    audioUrl: (c as any).audioUrl ?? null,
     xPosition: c.xPosition,
     yPosition: c.yPosition,
     resolvedAt: c.resolvedAt?.toISOString() ?? null,

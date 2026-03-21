@@ -7,7 +7,8 @@ const commentSchema = z.object({
   authorName: z.string().min(1).max(100),
   authorEmail: z.string().email().optional().or(z.literal("")),
   authorType: z.enum(["CLIENT", "FREELANCER"]).optional().default("CLIENT"),
-  content: z.string().min(1).max(2000),
+  content: z.string().max(2000).optional(),
+  audioUrl: z.string().url().optional(),
   // Normalized image coordinates (0-1). null = general comment
   xPosition: z.number().min(0).max(1).optional().nullable(),
   yPosition: z.number().min(0).max(1).optional().nullable(),
@@ -56,17 +57,30 @@ export async function POST(
     );
   }
 
-  const comment = await prisma.comment.create({
-    data: {
-      deliveryId: delivery.id,
-      authorType: parsed.data.authorType,
-      authorName: parsed.data.authorName,
-      authorEmail: parsed.data.authorEmail || null,
-      content: parsed.data.content,
-      xPosition: parsed.data.xPosition ?? null,
-      yPosition: parsed.data.yPosition ?? null,
-    },
-  });
+  // Either content or audioUrl must be provided
+  if (!parsed.data.content && !parsed.data.audioUrl) {
+    return NextResponse.json({ error: "Either content or audioUrl is required" }, { status: 400 });
+  }
+
+  let comment;
+  try {
+    comment = await prisma.comment.create({
+      // Cast to any because Prisma client may not be regenerated in this environment yet
+      data: {
+        deliveryId: delivery.id,
+        authorType: parsed.data.authorType,
+        authorName: parsed.data.authorName,
+        authorEmail: parsed.data.authorEmail || null,
+        content: parsed.data.content ?? "",
+        audioUrl: parsed.data.audioUrl ?? null,
+        xPosition: parsed.data.xPosition ?? null,
+        yPosition: parsed.data.yPosition ?? null,
+      } as any,
+    });
+  } catch (err: any) {
+    console.error('Comment create failed:', err);
+    return NextResponse.json({ error: err?.message ?? 'Comment create failed' }, { status: 500 });
+  }
 
   if (comment.authorType === "CLIENT") {
     const ownerEmail = delivery.project.user?.email;
@@ -87,6 +101,7 @@ export async function POST(
     authorType: comment.authorType,
     authorName: comment.authorName,
     content: comment.content,
+    audioUrl: (comment as any).audioUrl ?? null,
     xPosition: comment.xPosition,
     yPosition: comment.yPosition,
     resolvedAt: null,

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useTransition, useRef } from "react";
 import { supabaseClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/Button";
+import AudioPlayer from "@/components/ui/AudioPlayer";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ export interface CommentData {
   authorType: "CLIENT" | "FREELANCER";
   authorName: string;
   content: string;
+  audioUrl?: string | null;
   xPosition: number | null;
   yPosition: number | null;
   resolvedAt: string | null;
@@ -84,7 +86,11 @@ function CommentBubble({
           </span>
         </div>
         <div className="mt-1 break-words leading-relaxed">
-          {comment.content}
+          {comment.audioUrl || comment.content?.startsWith("__audio__:") ? (
+            <AudioPlayer src={comment.audioUrl ?? comment.content.replace("__audio__:", "")} />
+          ) : (
+            comment.content
+          )}
         </div>
         {canResolve && (
           <button
@@ -122,6 +128,14 @@ export default function CommentSystem({
   const [comments, setComments] = useState<CommentData[]>(initialComments);
   const commentsEndRef = useRef<HTMLDivElement | null>(null);
   const [content, setContent] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null,
+  );
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioPreview, setAudioPreview] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [authorName, setAuthorName] = useState("");
   const [formError, setFormError] = useState("");
   const [toggleError, setToggleError] = useState("");
@@ -204,8 +218,15 @@ export default function CommentSystem({
     onCommentsChange?.(comments);
   }, [comments, onCommentsChange]);
 
+  // Cleanup object URL for audio preview on unmount
+  useEffect(() => {
+    return () => {
+      if (audioPreview) URL.revokeObjectURL(audioPreview);
+    };
+  }, []);
+
   const submit = () => {
-    if (!content.trim()) {
+    if (!content.trim() && !audioBlob && !audioUrl) {
       setFormError("O comentário não pode ser vazio");
       return;
     }
@@ -216,11 +237,41 @@ export default function CommentSystem({
       : authorName.trim() || "Anonymous client";
 
     startTransition(async () => {
+      let finalAudioUrl = audioUrl;
+
+      // If there's a recorded blob but it hasn't been uploaded yet, upload now
+      if (!finalAudioUrl && audioBlob) {
+        try {
+          const form = new FormData();
+          const filename = `${Date.now()}.webm`;
+          form.append('file', audioBlob, filename);
+          form.append('deliveryId', deliveryId);
+
+          const up = await fetch(`${commentApiBase}/${token}/upload-audio`, {
+            method: 'POST',
+            body: form,
+          });
+
+          if (!up.ok) {
+            const data = await up.json().catch(() => ({}));
+            setFormError(data.error ?? 'Failed to upload audio');
+            return;
+          }
+
+          const upData = await up.json();
+          finalAudioUrl = upData.publicUrl || null;
+        } catch (err) {
+          setFormError('Falha ao enviar áudio');
+          return;
+        }
+      }
+
       const res = await fetch(`${commentApiBase}/${token}/comment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content: content.trim(),
+          audioUrl: finalAudioUrl ?? undefined,
           authorName: effectiveName,
           authorType: isFreelancer ? "FREELANCER" : "CLIENT",
         }),
@@ -228,11 +279,68 @@ export default function CommentSystem({
 
       if (res.ok) {
         setContent(""); // Limpa o campo, o realtime cuidará do resto
+        setAudioUrl(null);
+        // clear local preview
+        removeAudioPreview();
       } else {
         const data = await res.json().catch(() => ({}));
         setFormError(data.error ?? "Falha ao publicar comentário");
       }
     });
+  };
+
+  // --- Audio recording helpers (stores audio as data URL in comment content prefixed)
+  const startRecording = async () => {
+    setFormError("");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setFormError("Audio recording not supported in this browser");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+      mr.ondataavailable = (e) => chunks.push(e.data);
+      mr.onstop = async () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+
+        // Create a local preview URL so the user can listen before sending
+        try {
+          const preview = URL.createObjectURL(blob);
+          setAudioBlob(blob);
+          setAudioPreview(preview);
+          // clear content placeholder
+          setContent('');
+        } catch (err) {
+          setFormError('Could not prepare audio preview');
+        }
+
+        // stop all tracks
+        stream.getTracks().forEach((t) => t.stop());
+        setIsRecording(false);
+        setMediaRecorder(null);
+        setAudioChunks([]);
+      };
+      mr.start();
+      setMediaRecorder(mr);
+      setAudioChunks(chunks);
+      setIsRecording(true);
+    } catch (err) {
+      setFormError("Could not start audio recording");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
+  };
+
+  const removeAudioPreview = () => {
+    if (audioPreview) URL.revokeObjectURL(audioPreview);
+    setAudioPreview(null);
+    setAudioBlob(null);
+    setAudioUrl(null);
   };
 
   const toggleResolved = (comment: CommentData) => {
@@ -326,19 +434,68 @@ export default function CommentSystem({
           </div>
         )}
 
-        <Textarea
-          label={isFreelancer ? "Sua resposta" : "Adicionar comentário"}
-          placeholder={
-            isFreelancer
-              ? "Responder ao cliente..."
-              : "Deixar uma nota para o freelancer..."
-          }
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={1}
-          resize="none"
-          fullWidth
-        />
+        <div className="flex flex-col gap-2">
+          <Textarea
+            label={isFreelancer ? "Sua resposta" : "Adicionar comentário"}
+            placeholder={
+              isFreelancer
+                ? "Responder ao cliente..."
+                : "Deixar uma nota para o freelancer..."
+            }
+            value={content.startsWith("__audio__:") ? "[Áudio pronto para enviar]" : content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={3}
+            resize="none"
+            fullWidth
+          />
+
+          <div className="flex items-center gap-2">
+            {!isRecording ? (
+              <button
+                type="button"
+                onClick={startRecording}
+                className="px-3 py-1 rounded-md bg-violet-600 text-white text-sm"
+              >
+                Record audio
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={stopRecording}
+                className="px-3 py-1 rounded-md bg-red-600 text-white text-sm"
+              >
+                Stop
+              </button>
+            )}
+            <span className="text-xs text-white/40">You can also type a message.</span>
+          </div>
+          {/* Audio preview: allow user to listen before sending */}
+          {audioPreview && (
+            <div className="mt-2 flex items-center gap-2">
+              <AudioPlayer src={audioPreview} />
+              <button
+                type="button"
+                onClick={() => {
+                  removeAudioPreview();
+                }}
+                className="px-2 py-1 rounded-md bg-red-600 text-white text-xs"
+              >
+                Remover áudio
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // re-record: remove preview and start again
+                  removeAudioPreview();
+                  startRecording();
+                }}
+                className="px-2 py-1 rounded-md bg-violet-600 text-white text-xs"
+              >
+                Regravar
+              </button>
+            </div>
+          )}
+        </div>
 
         {formError && (
           <p className="text-xs text-red-400" role="alert">
@@ -351,7 +508,7 @@ export default function CommentSystem({
           size="sm"
           onClick={submit}
           loading={isPending}
-          disabled={!content.trim()}
+          disabled={!content.trim() && !audioBlob && !audioUrl}
         >
           {isFreelancer ? "Enviar resposta" : "Publicar comentário"}
         </Button>

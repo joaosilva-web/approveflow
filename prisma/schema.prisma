@@ -116,6 +116,7 @@ model Comment {
     authorName  String
     authorEmail String?
     content     String     @db.Text
+    audioUrl    String?
     // Normalized image coordinates (0–1). null = general comment
     xPosition   Float?
     yPosition   Float?
@@ -240,6 +241,7 @@ model GuestComment {
     authorType    AuthorType @default(CLIENT)
     authorName    String
     content       String     @db.Text
+    audioUrl      String?
     xPosition     Float?
     yPosition     Float?
     resolvedAt    DateTime?
