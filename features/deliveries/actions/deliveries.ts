@@ -20,6 +20,13 @@ function detectLocale(acceptLanguage: string | null): "pt" | "en" {
   return primary.startsWith("pt") ? "pt" : "en";
 }
 
+// Proteção: impede alteração de delivery aprovada
+export function assertDeliveryNotApproved(delivery: { status: string }) {
+  if (delivery.status === "APPROVED") {
+    throw new Error("Esta versão já foi aprovada e não pode ser modificada.");
+  }
+}
+
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
 const createDeliverySchema = z.object({
@@ -202,9 +209,15 @@ export async function deleteDelivery(
 
   const delivery = await prisma.delivery.findFirst({
     where: { id: deliveryId, project: { userId: session.user.id } },
-    select: { id: true, filePath: true, projectId: true },
+    select: { id: true, filePath: true, projectId: true, status: true },
   });
   if (!delivery) return { error: "Delivery not found" };
+
+  try {
+    assertDeliveryNotApproved(delivery);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Delivery bloqueada" };
+  }
 
   // Remove storage file (best-effort)
   await deleteFile(delivery.filePath).catch(console.error);

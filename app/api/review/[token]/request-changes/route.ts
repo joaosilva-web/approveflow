@@ -33,6 +33,13 @@ export async function POST(
     return NextResponse.json({ error: "Link expired" }, { status: 410 });
   }
 
+  if (delivery.status === "APPROVED") {
+    return NextResponse.json(
+      { error: "Esta versão já foi aprovada e não pode ser modificada." },
+      { status: 409 },
+    );
+  }
+
   await prisma.delivery.update({
     where: { id: delivery.id },
     data: { status: "CHANGES_REQUESTED" },
