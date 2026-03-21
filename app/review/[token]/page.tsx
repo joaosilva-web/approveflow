@@ -18,7 +18,8 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { token } = await params;
-  let delivery: { fileName?: string; project?: { name?: string } } | null = null;
+  let delivery: { fileName?: string; project?: { name?: string } } | null =
+    null;
   try {
     delivery = await prisma.delivery.findUnique({
       where: { reviewToken: token },
@@ -32,7 +33,7 @@ export async function generateMetadata({
   if (!delivery) return { title: "Review — ApproveFlow" };
 
   return {
-    title: `Review: ${delivery.project?.name ?? 'Review'} — ApproveFlow`,
+    title: `Review: ${delivery.project?.name ?? "Review"} — ApproveFlow`,
     robots: { index: false },
   };
 }
@@ -108,11 +109,16 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
   }
 
   // Check password protection (skip in freelancer preview mode)
-    if (delivery.password && !isFreelancerPreview) {
+  if (delivery.password && !isFreelancerPreview) {
     const cookieStore = await cookies();
     const unlocked = cookieStore.get(`review_pw_${token}`)?.value === "1";
     if (!unlocked) {
-      return <PasswordGate token={token} projectName={delivery.project?.name ?? ''} />;
+      return (
+        <PasswordGate
+          token={token}
+          projectName={delivery.project?.name ?? ""}
+        />
+      );
     }
   }
 

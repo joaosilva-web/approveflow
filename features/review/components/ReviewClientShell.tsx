@@ -138,6 +138,7 @@ export default function ReviewClientShell({
   const [status, setStatus] = useState<Status>(initialStatus);
   const [comments, setComments] = useState<CommentData[]>(initialComments);
   const [showChat, setShowChat] = useState(false);
+  const [openPinCommentId, setOpenPinCommentId] = useState<string | null>(null);
 
   // Build pin number map for comment system
   const pinnedComments = comments.filter(
@@ -202,6 +203,11 @@ export default function ReviewClientShell({
                 comments={comments}
                 token={token}
                 onCommentAdded={(c) => setComments((prev) => [...prev, c])}
+                openPinCommentId={openPinCommentId}
+                onPinClick={(id) => {
+                  setShowChat(true);
+                  setOpenPinCommentId(id);
+                }}
               />
               {/* {allowDownload && (
                 <div className="flex justify-center mt-4">
@@ -250,6 +256,8 @@ export default function ReviewClientShell({
                   mode={isFreelancerPreview ? "freelancer" : "client"}
                   freelancerName={freelancerName ?? undefined}
                   onCommentsChange={setComments}
+                  onOpenPin={(id) => setOpenPinCommentId(id)}
+                  openCommentId={openPinCommentId}
                   scrollable
                 />
               </div>

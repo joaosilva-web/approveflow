@@ -1,19 +1,22 @@
-import { NextResponse, NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/server';
+import { NextResponse, NextRequest } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ token: string }> },
+) {
   try {
     const form = await request.formData();
-    const file = form.get('file') as File | null;
-    const deliveryId = form.get('deliveryId') as string | null;
+    const file = form.get("file") as File | null;
+    const deliveryId = form.get("deliveryId") as string | null;
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const bucket = 'comments-audio';
+    const bucket = "comments-audio";
     const filename = file.name || `${Date.now()}.webm`;
-    const path = `${deliveryId ?? 'unknown'}/${Date.now()}-${filename}`;
+    const path = `${deliveryId ?? "unknown"}/${Date.now()}-${filename}`;
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -31,11 +34,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .getPublicUrl(path as string);
 
     if (!publicData || !publicData.data?.publicUrl) {
-      return NextResponse.json({ error: 'failed to get public url' }, { status: 500 });
+      return NextResponse.json(
+        { error: "failed to get public url" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ publicUrl: publicData.data.publicUrl });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message ?? 'unknown' }, { status: 500 });
+    return NextResponse.json(
+      { error: err?.message ?? "unknown" },
+      { status: 500 },
+    );
   }
 }

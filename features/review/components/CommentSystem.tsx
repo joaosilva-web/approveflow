@@ -30,6 +30,8 @@ interface CommentSystemProps {
   freelancerName?: string;
   commentApiBase?: string;
   onCommentsChange?: (comments: CommentData[]) => void;
+  onOpenPin?: (commentId: string) => void;
+  openCommentId?: string | null;
 }
 
 function timeAgo(dateStr: string): string {
@@ -56,6 +58,8 @@ function CommentBubble({
   isToggling,
   onToggleResolved,
   pinnedNumber,
+  onOpenPin,
+  active,
 }: {
   comment: CommentData;
   isOwn: boolean;
@@ -63,14 +67,25 @@ function CommentBubble({
   isToggling: boolean;
   onToggleResolved: (comment: CommentData) => void;
   pinnedNumber?: number | null;
+  onOpenPin?: (id: string) => void;
+  active?: boolean;
 }) {
   const isClient = comment.authorType === "CLIENT";
   const isResolved = Boolean(comment.resolvedAt);
   return (
     <div
-      className={cn("flex flex-col gap-1", isOwn ? "items-end" : "items-start")}
+      className={cn(
+        "flex flex-col gap-1",
+        isOwn ? "items-end" : "items-start",
+      )}
     >
       <div
+        onClick={(e) => {
+          if (comment.xPosition !== null && comment.yPosition !== null) {
+            e.stopPropagation();
+            onOpenPin?.(comment.id);
+          }
+        }}
         className={cn(
           "max-w-[80%] px-4 py-2 rounded-2xl border text-sm",
           isOwn
@@ -80,6 +95,7 @@ function CommentBubble({
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-200"
                 : "bg-white/[0.04] border-violet-500/12 text-white/80"
               : "bg-white/[0.02] border-white/[0.06] text-white/70",
+          active && "ring-2 ring-violet-400/60",
         )}
       >
         <div className="flex items-baseline gap-2">
@@ -115,7 +131,10 @@ function CommentBubble({
         {canResolve && (
           <button
             type="button"
-            onClick={() => onToggleResolved(comment)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleResolved(comment);
+            }}
             disabled={isToggling}
             className={cn(
               "text-[11px] font-medium mt-2",
@@ -129,6 +148,7 @@ function CommentBubble({
           </button>
         )}
       </div>
+      {/* Pin click handled on the bubble itself to ensure proper hit area */}
     </div>
   );
 }
@@ -142,11 +162,15 @@ export default function CommentSystem({
   freelancerName = "Freelancer",
   commentApiBase = "/api/review",
   onCommentsChange,
+  onOpenPin,
+  openCommentId,
   scrollable,
 }: CommentSystemProps & { scrollable?: boolean }) {
   const isFreelancer = mode === "freelancer";
   const [comments, setComments] = useState<CommentData[]>(initialComments);
   const commentsEndRef = useRef<HTMLDivElement | null>(null);
+  const commentsContainerRef = useRef<HTMLDivElement | null>(null);
+  const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [content, setContent] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
@@ -225,6 +249,21 @@ export default function CommentSystem({
   useEffect(() => {
     commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [comments]);
+
+  // When parent requests opening a comment, scroll it into view and highlight
+  useEffect(() => {
+    if (!openCommentId) return;
+    const container = commentsContainerRef.current;
+    if (!container) return;
+
+    const el = container.querySelector(`[data-comment-id="${openCommentId}"]`) as HTMLElement | null;
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setActiveCommentId(openCommentId);
+    const t = setTimeout(() => setActiveCommentId(null), 3000);
+    return () => clearTimeout(t);
+  }, [openCommentId]);
 
   const updateComments = (
     next: CommentData[] | ((previous: CommentData[]) => CommentData[]),
@@ -405,6 +444,7 @@ export default function CommentSystem({
 
       {comments.length > 0 ? (
         <div
+          ref={commentsContainerRef}
           className={
             scrollable
               ? "flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 px-1"
@@ -412,21 +452,28 @@ export default function CommentSystem({
           }
         >
           {comments.map((comment) => (
-            <CommentBubble
+            <div
               key={comment.id}
-              comment={comment}
-              isOwn={
-                isFreelancer
-                  ? comment.authorType === "FREELANCER"
-                  : comment.authorType === "CLIENT"
-              }
-              canResolve={isFreelancer && comment.authorType === "CLIENT"}
-              isToggling={togglingCommentId === comment.id}
-              onToggleResolved={toggleResolved}
-              pinnedNumber={
-                pinnedComments ? pinnedComments[comment.id] : undefined
-              }
-            />
+              data-comment-id={comment.id}
+              className={cn("w-full")}
+            >
+              <CommentBubble
+                comment={comment}
+                isOwn={
+                  isFreelancer
+                    ? comment.authorType === "FREELANCER"
+                    : comment.authorType === "CLIENT"
+                }
+                canResolve={isFreelancer && comment.authorType === "CLIENT"}
+                isToggling={togglingCommentId === comment.id}
+                onToggleResolved={toggleResolved}
+                pinnedNumber={
+                  pinnedComments ? pinnedComments[comment.id] : undefined
+                }
+                onOpenPin={onOpenPin}
+                active={activeCommentId === comment.id}
+              />
+            </div>
           ))}
           <div ref={commentsEndRef} />
         </div>

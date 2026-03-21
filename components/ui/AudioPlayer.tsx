@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { Pause, Play } from "lucide-react";
 
 interface AudioPlayerProps {
   src: string;
@@ -75,14 +76,20 @@ export default function AudioPlayer({ src, className }: AudioPlayerProps) {
   };
 
   return (
-    <div className={cn("flex items-center gap-3", "bg-white/[0.02] border border-white/[0.06] rounded-md px-3 py-2", className)}>
+    <div
+      className={cn(
+        "flex items-center gap-3",
+        "bg-white/[0.02] border border-white/[0.06] rounded-md px-3 py-2",
+        className,
+      )}
+    >
       <button
         type="button"
         onClick={toggle}
         aria-label={playing ? "Pause" : "Play"}
-        className="h-9 w-9 rounded-full bg-violet-600 flex items-center justify-center text-white text-lg"
+        className="h-9 w-9 rounded-full bg-violet-600 flex items-center justify-center text-white"
       >
-        {playing ? "▌▌" : "▶"}
+        {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
       </button>
 
       <div className="flex-1 min-w-0">
@@ -100,11 +107,6 @@ export default function AudioPlayer({ src, className }: AudioPlayerProps) {
           <span>{formatTime(duration)}</span>
         </div>
       </div>
-
-      <a href={src} target="_blank" rel="noreferrer" className="text-xs text-white/70 underline">
-        Abrir
-      </a>
-
       <audio ref={audioRef} src={src} preload="metadata" className="hidden" />
     </div>
   );

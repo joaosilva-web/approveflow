@@ -21,6 +21,9 @@ interface ImageWithCommentsProps {
   onCommentAdded: (comment: CommentData) => void;
   /** API base path for comment submission. Default: "/api/review" */
   commentApiBase?: string;
+  openPinCommentId?: string | null;
+  onPinOpened?: () => void;
+  onPinClick?: (commentId: string) => void;
 }
 
 // ─── Zoom constants ───────────────────────────────────────────────────────────
@@ -110,7 +113,7 @@ function PinMarker({
       className={cn(
         "absolute -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full",
         "flex items-center justify-center text-[10px] font-bold text-white select-none",
-        "shadow-lg shadow-black/50 pointer-events-none",
+        "shadow-lg shadow-black/50",
         "border-2",
         active
           ? "bg-violet-600 border-violet-400 scale-110"
@@ -239,6 +242,9 @@ export default function ImageWithComments({
   token,
   onCommentAdded,
   commentApiBase = "/api/review",
+  openPinCommentId,
+  onPinOpened,
+  onPinClick,
 }: ImageWithCommentsProps) {
   const imgRef = useRef<HTMLImageElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -253,6 +259,41 @@ export default function ImageWithComments({
   const pinnedComments = allComments.filter(
     (c) => c.xPosition !== null && c.yPosition !== null,
   );
+  const [activePinId, setActivePinId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!openPinCommentId) return;
+    const vp = viewportRef.current;
+    if (!vp) return;
+
+    const el = vp.querySelector(
+      `[data-comment-id="${openPinCommentId}"]`,
+    ) as HTMLElement | null;
+    if (!el) {
+      // no element found
+      onPinOpened?.();
+      return;
+    }
+
+    // offsetLeft/Top is relative to the positioned parent (the inner wrapper)
+    const offsetLeft = el.offsetLeft + el.offsetWidth / 2;
+    const offsetTop = el.offsetTop + el.offsetHeight / 2;
+
+    vp.scrollTo({
+      left: Math.max(0, offsetLeft - vp.clientWidth / 2),
+      top: Math.max(0, offsetTop - vp.clientHeight / 2),
+      behavior: "smooth",
+    });
+
+    setActivePinId(openPinCommentId);
+    // clear highlight after 3s and notify parent
+    const t = setTimeout(() => {
+      setActivePinId(null);
+      onPinOpened?.();
+    }, 3000);
+
+    return () => clearTimeout(t);
+  }, [openPinCommentId, onPinOpened]);
 
   // Mouse-wheel zoom (Ctrl+scroll)
   useEffect(() => {
@@ -328,16 +369,51 @@ export default function ImageWithComments({
             />
 
             {/* Pinned comment markers */}
-            {pinnedComments.map((c, i) => (
-              <PinMarker
-                key={c.id}
-                number={i + 1}
-                style={{
-                  left: `${(c.xPosition ?? 0) * 100}%`,
-                  top: `${(c.yPosition ?? 0) * 100}%`,
-                }}
-              />
-            ))}
+            {(() => {
+              // Group pins that are very close and stack them visually to avoid overlap
+              const groups: Record<string, CommentData[]> = {};
+              pinnedComments.forEach((c) => {
+                const kx = Math.round((c.xPosition ?? 0) * 1000);
+                const ky = Math.round((c.yPosition ?? 0) * 1000);
+                const key = `${kx}_${ky}`;
+                groups[key] = groups[key] || [];
+                groups[key].push(c);
+              });
+
+              return pinnedComments.map((c, i) => {
+                const kx = Math.round((c.xPosition ?? 0) * 1000);
+                const ky = Math.round((c.yPosition ?? 0) * 1000);
+                const key = `${kx}_${ky}`;
+                const group = groups[key] || [];
+                const indexInGroup = group.findIndex((g) => g.id === c.id);
+
+                const transform = `translate(-50%, calc(-50% + ${indexInGroup * 12}px))`;
+
+                return (
+                  <div
+                    key={c.id}
+                    data-comment-id={c.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPinClick?.(c.id);
+                    }}
+                    style={{
+                      position: "absolute",
+                      left: `${(c.xPosition ?? 0) * 100}%`,
+                      top: `${(c.yPosition ?? 0) * 100}%`,
+                      transform,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <PinMarker
+                      number={i + 1}
+                      style={{}}
+                      active={activePinId === c.id}
+                    />
+                  </div>
+                );
+              });
+            })()}
 
             {/* Pending pin (before popup submitted) */}
             {pendingPin && (
@@ -382,3 +458,6 @@ export default function ImageWithComments({
     </div>
   );
 }
+
+// Scroll to and highlight a pin when requested
+// Implemented below as a separate effect to avoid rerendering the main return.

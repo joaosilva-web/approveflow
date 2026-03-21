@@ -59,7 +59,10 @@ export async function POST(
 
   // Either content or audioUrl must be provided
   if (!parsed.data.content && !parsed.data.audioUrl) {
-    return NextResponse.json({ error: "Either content or audioUrl is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Either content or audioUrl is required" },
+      { status: 400 },
+    );
   }
 
   let comment;
@@ -78,8 +81,11 @@ export async function POST(
       } as any,
     });
   } catch (err: any) {
-    console.error('Comment create failed:', err);
-    return NextResponse.json({ error: err?.message ?? 'Comment create failed' }, { status: 500 });
+    console.error("Comment create failed:", err);
+    return NextResponse.json(
+      { error: err?.message ?? "Comment create failed" },
+      { status: 500 },
+    );
   }
 
   if (comment.authorType === "CLIENT") {
