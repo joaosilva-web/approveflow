@@ -55,12 +55,14 @@ function CommentBubble({
   canResolve,
   isToggling,
   onToggleResolved,
+  pinnedNumber,
 }: {
   comment: CommentData;
   isOwn: boolean;
   canResolve: boolean;
   isToggling: boolean;
   onToggleResolved: (comment: CommentData) => void;
+  pinnedNumber?: number | null;
 }) {
   const isClient = comment.authorType === "CLIENT";
   const isResolved = Boolean(comment.resolvedAt);
@@ -82,6 +84,19 @@ function CommentBubble({
       >
         <div className="flex items-baseline gap-2">
           <span className="text-xs font-semibold">{comment.authorName}</span>
+          {typeof pinnedNumber === "number" ? (
+            <span className="ml-1 inline-flex items-center justify-center text-[8px] p-1 bg-violet-600 text-white rounded-full">
+              Pin #{pinnedNumber}
+            </span>
+          ) : (
+            comment.xPosition !== null &&
+            comment.yPosition !== null && (
+              <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-violet-700/80 text-white px-2 py-0.5 rounded-full">
+                <span aria-hidden>📌</span>
+                <span>Fixado</span>
+              </span>
+            )
+          )}
           <span className="ml-auto text-[10px] text-white/30">
             {timeAgo(comment.createdAt)}
           </span>
@@ -408,6 +423,9 @@ export default function CommentSystem({
               canResolve={isFreelancer && comment.authorType === "CLIENT"}
               isToggling={togglingCommentId === comment.id}
               onToggleResolved={toggleResolved}
+              pinnedNumber={
+                pinnedComments ? pinnedComments[comment.id] : undefined
+              }
             />
           ))}
           <div ref={commentsEndRef} />
