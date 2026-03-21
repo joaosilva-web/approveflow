@@ -7,6 +7,7 @@ import AudioPlayer from "@/components/ui/AudioPlayer";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import { Mic, Pause, X } from "lucide-react";
 
 export interface CommentData {
   id: string;
@@ -87,7 +88,11 @@ function CommentBubble({
         </div>
         <div className="mt-1 break-words leading-relaxed">
           {comment.audioUrl || comment.content?.startsWith("__audio__:") ? (
-            <AudioPlayer src={comment.audioUrl ?? comment.content.replace("__audio__:", "")} />
+            <AudioPlayer
+              src={
+                comment.audioUrl ?? comment.content.replace("__audio__:", "")
+              }
+            />
           ) : (
             comment.content
           )}
@@ -244,24 +249,24 @@ export default function CommentSystem({
         try {
           const form = new FormData();
           const filename = `${Date.now()}.webm`;
-          form.append('file', audioBlob, filename);
-          form.append('deliveryId', deliveryId);
+          form.append("file", audioBlob, filename);
+          form.append("deliveryId", deliveryId);
 
           const up = await fetch(`${commentApiBase}/${token}/upload-audio`, {
-            method: 'POST',
+            method: "POST",
             body: form,
           });
 
           if (!up.ok) {
             const data = await up.json().catch(() => ({}));
-            setFormError(data.error ?? 'Failed to upload audio');
+            setFormError(data.error ?? "Failed to upload audio");
             return;
           }
 
           const upData = await up.json();
           finalAudioUrl = upData.publicUrl || null;
         } catch (err) {
-          setFormError('Falha ao enviar áudio');
+          setFormError("Falha ao enviar áudio");
           return;
         }
       }
@@ -310,9 +315,9 @@ export default function CommentSystem({
           setAudioBlob(blob);
           setAudioPreview(preview);
           // clear content placeholder
-          setContent('');
+          setContent("");
         } catch (err) {
-          setFormError('Could not prepare audio preview');
+          setFormError("Could not prepare audio preview");
         }
 
         // stop all tracks
@@ -435,64 +440,61 @@ export default function CommentSystem({
         )}
 
         <div className="flex flex-col gap-2">
-          <Textarea
-            label={isFreelancer ? "Sua resposta" : "Adicionar comentário"}
-            placeholder={
-              isFreelancer
-                ? "Responder ao cliente..."
-                : "Deixar uma nota para o freelancer..."
-            }
-            value={content.startsWith("__audio__:") ? "[Áudio pronto para enviar]" : content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={3}
-            resize="none"
-            fullWidth
-          />
+          <div className="flex items-center gap-2 w-full">
+            <Textarea
+              placeholder={"Escrever..."}
+              value={
+                content.startsWith("__audio__:")
+                  ? "[Áudio pronto para enviar]"
+                  : content
+              }
+              onChange={(e) => setContent(e.target.value)}
+              rows={1}
+              resize="none"
+              fullWidth
+              className="flex-1 h-12 px-4 py-2"
+            />
 
-          <div className="flex items-center gap-2">
-            {!isRecording ? (
+            <div className="flex items-center gap-2">
+              {!isRecording ? (
+                <button
+                  type="button"
+                  onClick={startRecording}
+                  className="h-12 w-12 flex items-center justify-center rounded-md bg-violet-600 text-white text-sm cursor-pointer"
+                  aria-label="Gravar áudio"
+                >
+                  <Mic />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={stopRecording}
+                  className="h-12 w-12 flex items-center justify-center rounded-md bg-red-600 text-white text-sm cursor-pointer"
+                  aria-label="Parar gravação"
+                >
+                  <Pause />
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={startRecording}
-                className="px-3 py-1 rounded-md bg-violet-600 text-white text-sm"
+                onClick={() => {
+                  if (isRecording) stopRecording();
+                  removeAudioPreview();
+                  setContent("");
+                }}
+                className="h-12 w-12 flex items-center justify-center rounded-md bg-white/[0.04] text-white text-sm cursor-pointer"
+                aria-label="Cancelar"
               >
-                Record audio
+                <X />
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={stopRecording}
-                className="px-3 py-1 rounded-md bg-red-600 text-white text-sm"
-              >
-                Stop
-              </button>
-            )}
-            <span className="text-xs text-white/40">You can also type a message.</span>
+            </div>
           </div>
+
           {/* Audio preview: allow user to listen before sending */}
           {audioPreview && (
             <div className="mt-2 flex items-center gap-2">
               <AudioPlayer src={audioPreview} />
-              <button
-                type="button"
-                onClick={() => {
-                  removeAudioPreview();
-                }}
-                className="px-2 py-1 rounded-md bg-red-600 text-white text-xs"
-              >
-                Remover áudio
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  // re-record: remove preview and start again
-                  removeAudioPreview();
-                  startRecording();
-                }}
-                className="px-2 py-1 rounded-md bg-violet-600 text-white text-xs"
-              >
-                Regravar
-              </button>
             </div>
           )}
         </div>
