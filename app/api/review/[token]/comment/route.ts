@@ -89,6 +89,7 @@ export async function POST(
     content: comment.content,
     xPosition: comment.xPosition,
     yPosition: comment.yPosition,
+    resolvedAt: null,
     createdAt: comment.createdAt.toISOString(),
   });
 }

@@ -65,18 +65,6 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
           },
         },
       },
-      comments: {
-        orderBy: { createdAt: "asc" },
-        select: {
-          id: true,
-          authorType: true,
-          authorName: true,
-          content: true,
-          xPosition: true,
-          yPosition: true,
-          createdAt: true,
-        },
-      },
     },
   });
 
@@ -152,13 +140,93 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
     );
   }
 
-  const initialComments: CommentData[] = delivery.comments.map((c) => ({
+  const [resolvedAtColumn] = await prisma.$queryRaw<
+    Array<{ exists: boolean }>
+  >`
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'Comment'
+        AND column_name = 'resolvedAt'
+    ) as "exists"
+  `;
+
+  const hasResolvedAtColumn = resolvedAtColumn?.exists === true;
+
+  let comments: Array<{
+    id: string;
+    authorType: "CLIENT" | "FREELANCER";
+    authorName: string;
+    content: string;
+    xPosition: number | null;
+    yPosition: number | null;
+    resolvedAt: Date | null;
+    createdAt: Date;
+  }>;
+
+  if (hasResolvedAtColumn) {
+    comments = await prisma.$queryRaw<
+      Array<{
+        id: string;
+        authorType: "CLIENT" | "FREELANCER";
+        authorName: string;
+        content: string;
+        xPosition: number | null;
+        yPosition: number | null;
+        resolvedAt: Date | null;
+        createdAt: Date;
+      }>
+    >`
+      SELECT
+        "id",
+        "authorType",
+        "authorName",
+        "content",
+        "xPosition",
+        "yPosition",
+        "resolvedAt",
+        "createdAt"
+      FROM "Comment"
+      WHERE "deliveryId" = ${delivery.id}
+      ORDER BY "createdAt" ASC
+    `;
+  } else {
+    comments = await prisma.$queryRaw<
+      Array<{
+        id: string;
+        authorType: "CLIENT" | "FREELANCER";
+        authorName: string;
+        content: string;
+        xPosition: number | null;
+        yPosition: number | null;
+        resolvedAt: Date | null;
+        createdAt: Date;
+      }>
+    >`
+      SELECT
+        "id",
+        "authorType",
+        "authorName",
+        "content",
+        "xPosition",
+        "yPosition",
+        NULL::timestamp as "resolvedAt",
+        "createdAt"
+      FROM "Comment"
+      WHERE "deliveryId" = ${delivery.id}
+      ORDER BY "createdAt" ASC
+    `;
+  }
+
+  const initialComments: CommentData[] = comments.map((c) => ({
     id: c.id,
     authorType: c.authorType,
     authorName: c.authorName,
     content: c.content,
     xPosition: c.xPosition,
     yPosition: c.yPosition,
+    resolvedAt: c.resolvedAt?.toISOString() ?? null,
     createdAt: c.createdAt.toISOString(),
   }));
 

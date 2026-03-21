@@ -119,6 +119,7 @@ model Comment {
     // Normalized image coordinates (0–1). null = general comment
     xPosition   Float?
     yPosition   Float?
+    resolvedAt  DateTime?
     createdAt   DateTime   @default(now())
 
     delivery Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
@@ -241,6 +242,7 @@ model GuestComment {
     content       String     @db.Text
     xPosition     Float?
     yPosition     Float?
+    resolvedAt    DateTime?
     createdAt     DateTime   @default(now())
 
     guestUpload GuestUpload @relation(fields: [guestUploadId], references: [id], onDelete: Cascade)

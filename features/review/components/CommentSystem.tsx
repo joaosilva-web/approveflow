@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CommentData {
   id: string;
@@ -15,23 +13,19 @@ export interface CommentData {
   content: string;
   xPosition: number | null;
   yPosition: number | null;
+  resolvedAt: string | null;
   createdAt: string;
 }
 
 interface CommentSystemProps {
   token: string;
   initialComments: CommentData[];
-  /** When comment has coordinates, show a pin number for reference */
   pinnedComments?: Record<string, number>;
-  /** "client" = public review form; "freelancer" = reply form with pre-filled name */
   mode?: "client" | "freelancer";
-  /** Pre-filled name used in freelancer mode */
   freelancerName?: string;
-  /** API base path for comment submission. Default: "/api/review" */
   commentApiBase?: string;
+  onCommentsChange?: (comments: CommentData[]) => void;
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function timeAgo(dateStr: string): string {
   const secs = Math.floor((Date.now() - Date.parse(dateStr)) / 1000);
@@ -43,51 +37,144 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hrs / 24)}d atrás`;
 }
 
-// ─── Comment bubble ───────────────────────────────────────────────────────────
+function formatResolvedAt(dateStr: string): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(dateStr));
+}
 
 function CommentBubble({
   comment,
   pinNumber,
+  canResolve,
+  isToggling,
+  onToggleResolved,
 }: {
   comment: CommentData;
   pinNumber?: number;
+  canResolve: boolean;
+  isToggling: boolean;
+  onToggleResolved: (comment: CommentData) => void;
 }) {
   const isClient = comment.authorType === "CLIENT";
+  const isResolved = Boolean(comment.resolvedAt);
+
   return (
-    <div className="flex gap-3 group">
-      <div
-        className={cn(
-          "w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-bold",
-          isClient
-            ? "bg-violet-600/20 text-violet-400 border border-violet-500/30"
-            : "bg-white/[0.06] text-white/60 border border-white/[0.10]",
-        )}
-      >
-        {comment.authorName[0]?.toUpperCase() ?? "?"}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-2">
-          <span className="text-xs font-semibold text-white/80">
-            {comment.authorName}
-          </span>
-          {pinNumber !== undefined && (
-            <span className="text-[10px] text-violet-400 font-mono">
-              #{pinNumber}
-            </span>
+    <div
+      className={cn(
+        "rounded-2xl border p-3 transition-colors",
+        isClient
+          ? isResolved
+            ? "border-emerald-500/20 bg-emerald-500/[0.06]"
+            : "border-violet-500/12 bg-violet-500/[0.04]"
+          : "border-white/[0.06] bg-white/[0.02]",
+      )}
+    >
+      <div className="flex gap-3">
+        <div
+          className={cn(
+            "h-7 w-7 shrink-0 rounded-full border text-xs font-bold flex items-center justify-center",
+            isClient
+              ? "border-violet-500/30 bg-violet-600/20 text-violet-400"
+              : "border-white/[0.10] bg-white/[0.06] text-white/60",
           )}
-          <span className="text-[10px] text-white/30 ml-auto">
-            {timeAgo(comment.createdAt)}
-          </span>
+        >
+          {comment.authorName[0]?.toUpperCase() ?? "?"}
         </div>
-        <p className="text-sm text-white/65 mt-1 leading-relaxed break-words">
-          {comment.content}
-        </p>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xs font-semibold text-white/80">
+              {comment.authorName}
+            </span>
+            {pinNumber !== undefined && (
+              <span className="font-mono text-[10px] text-violet-400">
+                #{pinNumber}
+              </span>
+            )}
+            <span className="ml-auto text-[10px] text-white/30">
+              {timeAgo(comment.createdAt)}
+            </span>
+          </div>
+
+          <p className="mt-1 break-words text-sm leading-relaxed text-white/65">
+            {comment.content}
+          </p>
+
+          {isClient && (
+            <div className="mt-3 flex flex-wrap items-start justify-between gap-2">
+              {canResolve ? (
+                <label
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium cursor-pointer",
+                    isResolved
+                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
+                      : "border-white/[0.08] bg-white/[0.04] text-white/55",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    className="h-3.5 w-3.5 rounded border-white/20 bg-transparent accent-emerald-500"
+                    checked={isResolved}
+                    onChange={() => onToggleResolved(comment)}
+                    disabled={isToggling}
+                  />
+                  <span>{isResolved ? "Resolvido" : "Pendente"}</span>
+                </label>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <span
+                    className={cn(
+                      "text-[11px] font-medium",
+                      isResolved ? "text-emerald-300" : "text-yellow-300",
+                    )}
+                  >
+                    {isResolved ? "Resolvido" : "Pendente"}
+                  </span>
+                  {comment.resolvedAt && (
+                    <span className="text-[10px] text-emerald-300/70">
+                      em {formatResolvedAt(comment.resolvedAt)}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                {comment.resolvedAt && canResolve && (
+                  <span className="text-[10px] text-emerald-300/70">
+                    Marcado em {formatResolvedAt(comment.resolvedAt)}
+                  </span>
+                )}
+
+                {canResolve && (
+                  <button
+                    type="button"
+                    onClick={() => onToggleResolved(comment)}
+                    disabled={isToggling}
+                    className={cn(
+                      "text-[11px] font-medium transition-colors",
+                      isResolved
+                        ? "text-emerald-300/80 hover:text-emerald-200"
+                        : "text-violet-300/80 hover:text-violet-200",
+                      isToggling && "cursor-not-allowed opacity-60",
+                    )}
+                  >
+                    {isToggling
+                      ? "Salvando..."
+                      : isResolved
+                        ? "Desfazer"
+                        : "Resolver"}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CommentSystem({
   token,
@@ -96,13 +183,34 @@ export default function CommentSystem({
   mode = "client",
   freelancerName = "Freelancer",
   commentApiBase = "/api/review",
+  onCommentsChange,
 }: CommentSystemProps) {
   const isFreelancer = mode === "freelancer";
   const [comments, setComments] = useState<CommentData[]>(initialComments);
   const [content, setContent] = useState("");
   const [authorName, setAuthorName] = useState("");
   const [formError, setFormError] = useState("");
+  const [toggleError, setToggleError] = useState("");
+  const [togglingCommentId, setTogglingCommentId] = useState<string | null>(
+    null,
+  );
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setComments(initialComments);
+  }, [initialComments]);
+
+  const updateComments = (
+    next: CommentData[] | ((previous: CommentData[]) => CommentData[]),
+  ) => {
+    setComments((previous) =>
+      typeof next === "function" ? next(previous) : next,
+    );
+  };
+
+  useEffect(() => {
+    onCommentsChange?.(comments);
+  }, [comments, onCommentsChange]);
 
   const submit = () => {
     if (!content.trim()) {
@@ -128,7 +236,7 @@ export default function CommentSystem({
 
       if (res.ok) {
         const data: CommentData = await res.json();
-        setComments((prev) => [...prev, data]);
+        updateComments((previous) => [...previous, data]);
         setContent("");
       } else {
         const data = await res.json().catch(() => ({}));
@@ -137,41 +245,78 @@ export default function CommentSystem({
     });
   };
 
+  const toggleResolved = (comment: CommentData) => {
+    if (!isFreelancer || comment.authorType !== "CLIENT") return;
+
+    setToggleError("");
+    setTogglingCommentId(comment.id);
+
+    startTransition(async () => {
+      const res = await fetch(
+        `${commentApiBase}/${token}/comment/${comment.id}/resolve`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resolved: !comment.resolvedAt }),
+        },
+      );
+
+      if (res.ok) {
+        const updatedComment: CommentData = await res.json();
+        updateComments((previous) =>
+          previous.map((item) =>
+            item.id === updatedComment.id ? updatedComment : item,
+          ),
+        );
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setToggleError(data.error ?? "Falha ao atualizar o status do comentário");
+      }
+
+      setTogglingCommentId(null);
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-xs text-white/50 uppercase tracking-wider font-semibold">
+      <p className="text-xs font-semibold uppercase tracking-wider text-white/50">
         Comentários{comments.length > 0 ? ` (${comments.length})` : ""}
       </p>
 
-      {/* Comment list */}
       {comments.length > 0 ? (
         <div className="flex flex-col gap-4">
-          {comments.map((c) => (
+          {comments.map((comment) => (
             <CommentBubble
-              key={c.id}
-              comment={c}
-              pinNumber={pinnedComments[c.id]}
+              key={comment.id}
+              comment={comment}
+              pinNumber={pinnedComments[comment.id]}
+              canResolve={isFreelancer && comment.authorType === "CLIENT"}
+              isToggling={togglingCommentId === comment.id}
+              onToggleResolved={toggleResolved}
             />
           ))}
         </div>
       ) : (
-        <p className="text-sm text-white/30 text-center py-4">
+        <p className="py-4 text-center text-sm text-white/30">
           Nenhum comentário ainda
         </p>
       )}
 
-      {/* Add comment / Reply form */}
-      <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.06]">
+      <div className="flex flex-col gap-3 border-t border-white/[0.06] pt-4">
+        {toggleError && (
+          <p className="text-xs text-red-400" role="alert">
+            {toggleError}
+          </p>
+        )}
+
         {isFreelancer ? (
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-full bg-white/[0.06] border border-white/[0.10] flex items-center justify-center text-xs font-bold text-white/60">
+          <div className="mb-1 flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.06] text-xs font-bold text-white/60">
               {freelancerName[0]?.toUpperCase() ?? "F"}
             </div>
             <span className="text-xs text-white/50">
               Respondendo como{" "}
-              <span className="text-white/80 font-medium">
-                {freelancerName}
-              </span>
+              <span className="font-medium text-white/80">{freelancerName}</span>
             </span>
           </div>
         ) : (
@@ -183,19 +328,19 @@ export default function CommentSystem({
             fullWidth
           />
         )}
-        {/* Quick reactions — client only */}
+
         {!isFreelancer && (
           <div className="flex flex-col gap-1.5">
             <p className="text-[11px] text-white/35">Reações rápidas</p>
             <div className="flex flex-wrap gap-1.5">
               {[
                 {
-                  emoji: "\uD83D\uDC4D",
+                  emoji: "\u{1F44D}",
                   label: "Ficou ótimo",
                   text: "Ficou ótimo!",
                 },
                 {
-                  emoji: "\uD83D\uDD01",
+                  emoji: "\u{1F501}",
                   label: "Precisa de ajustes",
                   text: "Precisa de ajustes: ",
                 },
@@ -204,32 +349,33 @@ export default function CommentSystem({
                   label: "Não está pronto",
                   text: "Esta versão não está pronta porque: ",
                 },
-              ].map((r) => (
+              ].map((reaction) => (
                 <button
-                  key={r.label}
+                  key={reaction.label}
                   type="button"
-                  onClick={() => setContent(r.text)}
+                  onClick={() => setContent(reaction.text)}
                   className={cn(
-                    "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs transition-all duration-150",
-                    "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40",
-                    content === r.text
-                      ? "bg-violet-500/15 border-violet-500/30 text-violet-300"
-                      : "bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.07] hover:text-white/75",
+                    "flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs transition-all duration-150",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40",
+                    content === reaction.text
+                      ? "border-violet-500/30 bg-violet-500/15 text-violet-300"
+                      : "border-white/[0.08] bg-white/[0.04] text-white/50 hover:bg-white/[0.07] hover:text-white/75",
                   )}
                 >
-                  <span>{r.emoji}</span>
-                  <span>{r.label}</span>
+                  <span>{reaction.emoji}</span>
+                  <span>{reaction.label}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
+
         <Textarea
           label={isFreelancer ? "Sua resposta" : "Adicionar comentário"}
           placeholder={
             isFreelancer
-              ? "Responder ao cliente…"
-              : "Deixar uma nota para o freelancer…"
+              ? "Responder ao cliente..."
+              : "Deixar uma nota para o freelancer..."
           }
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -237,11 +383,13 @@ export default function CommentSystem({
           resize="none"
           fullWidth
         />
+
         {formError && (
           <p className="text-xs text-red-400" role="alert">
             {formError}
           </p>
         )}
+
         <Button
           variant="secondary"
           size="sm"
