@@ -149,7 +149,7 @@ export default function ReviewClientShell({
   });
 
   return (
-    <div className="min-h-screen bg-[#06060f] flex flex-col">
+    <div className="h-auto lg:h-screen bg-[#06060f] flex flex-col">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 md:px-8 border-b border-white/[0.06] bg-[#06060f]/90 backdrop-blur-sm">
         <Link href="/" className="flex items-center gap-2.5">
@@ -182,18 +182,8 @@ export default function ReviewClientShell({
       </header>
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          {/* Humanized intro — shown to clients */}
-          {/* {!isFreelancerPreview && freelancerDisplayName && (
-            <p className="text-sm text-white/50 mb-5">
-              <span className="font-medium text-white/80">{freelancerDisplayName}</span>
-              {" compartilhou "}
-              <span className="font-medium text-white/80">&ldquo;{projectName}&rdquo;</span>
-              {" para sua revisão"}
-            </p>
-          )} */}
-
+      <div className="flex flex-1 lg:overflow-hidden flex-col lg:flex-row lg:max-h-[calc(100vh-100px)]">
+        <main className="flex-1 overflow-y-auto p-4 md:p-4">
           <div className="flex items-center gap-2.5 mb-5">
             <span className="text-xs font-mono text-white/40 bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 rounded-md">
               v{versionNumber}
@@ -213,11 +203,11 @@ export default function ReviewClientShell({
                 token={token}
                 onCommentAdded={(c) => setComments((prev) => [...prev, c])}
               />
-              {allowDownload && (
+              {/* {allowDownload && (
                 <div className="flex justify-center mt-4">
                   <DownloadFileButton url={signedUrl} fileName={fileName} />
                 </div>
-              )}
+              )} */}
             </>
           ) : (
             <FilePreview
@@ -233,12 +223,12 @@ export default function ReviewClientShell({
         <aside
           className={cn(
             "w-full lg:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.06]",
-            "bg-[#080814] flex flex-col h-screen lg:h-screen",
+            "bg-[#080814] flex flex-col lg:h-[calc(100vh-112px)] overflow-y-auto",
           )}
         >
           {showChat ? (
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+              <div className="flex items-center justify-between px-5 py-2 border-b border-white/[0.06]">
                 <button
                   onClick={() => setShowChat(false)}
                   className="text-white/60 hover:text-white/90 px-2 py-1 rounded-lg transition font-semibold"
@@ -251,7 +241,7 @@ export default function ReviewClientShell({
                 <span className="w-12" />
               </div>
 
-              <div className="flex-1 min-h-0 flex flex-col p-4">
+              <div className="flex-1 min-h-0 flex flex-col p-1">
                 <CommentSystem
                   token={token}
                   deliveryId={deliveryId}

@@ -279,8 +279,8 @@ export default function CommentSystem({
         <div
           className={
             scrollable
-              ? "flex-1 min-h-0 overflow-y-auto flex flex-col gap-2"
-              : "flex flex-col gap-2"
+              ? "flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 px-1"
+              : "flex flex-col gap-2 px-1"
           }
         >
           {comments.map((comment) => (
@@ -305,7 +305,7 @@ export default function CommentSystem({
         </p>
       )}
 
-      <div className="flex flex-col gap-3 border-t border-white/[0.06] pt-4">
+      <div className="flex flex-col gap-3 border-t border-white/[0.06] pt-2">
         {toggleError && (
           <p className="text-xs text-red-400" role="alert">
             {toggleError}
@@ -319,7 +319,9 @@ export default function CommentSystem({
             </div>
             <span className="text-xs text-white/50">
               Respondendo como{" "}
-              <span className="font-medium text-white/80">{freelancerName}</span>
+              <span className="font-medium text-white/80">
+                {freelancerName}
+              </span>
             </span>
           </div>
         )}
@@ -333,7 +335,7 @@ export default function CommentSystem({
           }
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          rows={3}
+          rows={1}
           resize="none"
           fullWidth
         />

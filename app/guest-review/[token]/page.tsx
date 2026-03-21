@@ -102,9 +102,7 @@ export default async function GuestReviewPage({ params }: PageProps) {
     );
   }
 
-  const [resolvedAtColumn] = await prisma.$queryRaw<
-    Array<{ exists: boolean }>
-  >`
+  const [resolvedAtColumn] = await prisma.$queryRaw<Array<{ exists: boolean }>>`
     SELECT EXISTS (
       SELECT 1
       FROM information_schema.columns

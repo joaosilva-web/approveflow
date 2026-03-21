@@ -74,7 +74,7 @@ export default function GuestReviewShell({
   const expiringSoon = daysLeft <= 2;
 
   return (
-    <div className="min-h-screen bg-[#06060f] flex flex-col">
+    <div className="h-auto lg:h-screen bg-[#06060f] flex flex-col">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 md:px-8 border-b border-white/[0.06] bg-[#06060f]/90 backdrop-blur-sm">
         <Link href="/" className="flex items-center gap-2">
@@ -102,7 +102,7 @@ export default function GuestReviewShell({
       </header>
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
+      <div className="flex flex-1 lg:overflow-hidden flex-col lg:flex-row">
         {/* Main preview */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
           {isImage ? (
@@ -128,7 +128,7 @@ export default function GuestReviewShell({
         <aside
           className={cn(
             "w-full lg:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.06]",
-            "bg-[#080814] overflow-y-auto flex flex-col",
+            "bg-[#080814] overflow-y-auto flex flex-col lg:h-[calc(100vh-112px)]",
           )}
         >
           <div className="flex flex-col gap-6 p-5">
