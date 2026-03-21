@@ -312,66 +312,15 @@ export default function CommentSystem({
           </p>
         )}
 
-        {isFreelancer ? (
+        {isFreelancer && (
           <div className="mb-1 flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.06] text-xs font-bold text-white/60">
               {freelancerName[0]?.toUpperCase() ?? "F"}
             </div>
             <span className="text-xs text-white/50">
               Respondendo como{" "}
-              <span className="font-medium text-white/80">
-                {freelancerName}
-              </span>
+              <span className="font-medium text-white/80">{freelancerName}</span>
             </span>
-          </div>
-        ) : (
-          <Input
-            label="Seu nome (opcional)"
-            placeholder="Jane Silva"
-            value={authorName}
-            onChange={(e) => setAuthorName(e.target.value)}
-            fullWidth
-          />
-        )}
-
-        {!isFreelancer && (
-          <div className="flex flex-col gap-1.5">
-            <p className="text-[11px] text-white/35">Reações rápidas</p>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                {
-                  emoji: "\u{1F44D}",
-                  label: "Ficou ótimo",
-                  text: "Ficou ótimo!",
-                },
-                {
-                  emoji: "\u{1F501}",
-                  label: "Precisa de ajustes",
-                  text: "Precisa de ajustes: ",
-                },
-                {
-                  emoji: "\u274C",
-                  label: "Não está pronto",
-                  text: "Esta versão não está pronta porque: ",
-                },
-              ].map((reaction) => (
-                <button
-                  key={reaction.label}
-                  type="button"
-                  onClick={() => setContent(reaction.text)}
-                  className={cn(
-                    "flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs transition-all duration-150",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40",
-                    content === reaction.text
-                      ? "border-violet-500/30 bg-violet-500/15 text-violet-300"
-                      : "border-white/[0.08] bg-white/[0.04] text-white/50 hover:bg-white/[0.07] hover:text-white/75",
-                  )}
-                >
-                  <span>{reaction.emoji}</span>
-                  <span>{reaction.label}</span>
-                </button>
-              ))}
-            </div>
           </div>
         )}
 
