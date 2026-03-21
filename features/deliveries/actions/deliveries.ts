@@ -21,7 +21,7 @@ function detectLocale(acceptLanguage: string | null): "pt" | "en" {
 }
 
 // Proteção: impede alteração de delivery aprovada
-export function assertDeliveryNotApproved(delivery: { status: string }) {
+function assertDeliveryNotApproved(delivery: { status: string }) {
   if (delivery.status === "APPROVED") {
     throw new Error("Esta versão já foi aprovada e não pode ser modificada.");
   }
