@@ -6,7 +6,13 @@ import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "danger";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "outline"
+  | "danger"
+  | "success";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -37,11 +43,14 @@ const variantClasses: Record<ButtonVariant, string> = {
   danger:
     "bg-red-500/10 text-red-400 border border-red-500/30 " +
     "hover:bg-red-500/20 hover:border-red-400/60",
+  success:
+    "bg-emerald-600 text-white border border-emerald-500/30 " +
+    "hover:bg-emerald-500 hover:border-emerald-400/60",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
   sm: "h-8 px-3.5 text-xs rounded-lg gap-1.5",
-  md: "h-10 px-5 text-sm rounded-xl gap-2",
+  md: "h-11 px-3 text-sm rounded-xl gap-2",
   lg: "h-12 px-7 text-base rounded-xl gap-2.5",
 };
 
