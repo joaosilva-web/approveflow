@@ -315,17 +315,14 @@ export default function DashboardPageClient({
               { key: "CHANGES_REQUESTED", label: "Alterações" },
             ] as const
           ).map(({ key, label }) => (
-            <button
+            <Button
+              variant={statusFilter === key ? "primary" : "ghost"}
+              size="sm"
               key={key}
               onClick={() => setStatusFilter(key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                statusFilter === key
-                  ? "bg-violet-600 text-white"
-                  : "text-white/40 hover:text-white/70"
-              }`}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
