@@ -7,7 +7,7 @@ import AudioPlayer from "@/components/ui/AudioPlayer";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { Mic, Pause, X } from "lucide-react";
+import { Mic, Pause, X, SendHorizontal } from "lucide-react";
 
 export interface CommentData {
   id: string;
@@ -74,10 +74,7 @@ function CommentBubble({
   const isResolved = Boolean(comment.resolvedAt);
   return (
     <div
-      className={cn(
-        "flex flex-col gap-1",
-        isOwn ? "items-end" : "items-start",
-      )}
+      className={cn("flex flex-col gap-1", isOwn ? "items-end" : "items-start")}
     >
       <div
         onClick={(e) => {
@@ -87,7 +84,7 @@ function CommentBubble({
           }
         }}
         className={cn(
-          "max-w-[80%] px-4 py-2 rounded-2xl border text-sm",
+          "max-w-[80%] px-3 py-2 rounded-xl border text-sm",
           isOwn
             ? "bg-violet-600/30 border-violet-500/30 text-white/90"
             : isClient
@@ -99,7 +96,9 @@ function CommentBubble({
         )}
       >
         <div className="flex items-baseline gap-2">
-          <span className="text-xs font-semibold">{comment.authorName}</span>
+          <span className="text-[10px] font-semibold">
+            {comment.authorName}
+          </span>
           {typeof pinnedNumber === "number" ? (
             <span className="ml-1 inline-flex items-center justify-center text-[8px] p-1 bg-violet-600 text-white rounded-full">
               Pin #{pinnedNumber}
@@ -256,7 +255,9 @@ export default function CommentSystem({
     const container = commentsContainerRef.current;
     if (!container) return;
 
-    const el = container.querySelector(`[data-comment-id="${openCommentId}"]`) as HTMLElement | null;
+    const el = container.querySelector(
+      `[data-comment-id="${openCommentId}"]`,
+    ) as HTMLElement | null;
     if (!el) return;
 
     el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -521,38 +522,41 @@ export default function CommentSystem({
             />
 
             <div className="flex items-center gap-2">
-              {!isRecording ? (
-                <button
-                  type="button"
-                  onClick={startRecording}
-                  className="h-12 w-12 flex items-center justify-center rounded-md bg-violet-600 text-white text-sm cursor-pointer"
-                  aria-label="Gravar áudio"
-                >
-                  <Mic />
-                </button>
-              ) : (
-                <button
-                  type="button"
+              {isRecording ? (
+                <Button
+                  variant="danger"
                   onClick={stopRecording}
-                  className="h-12 w-12 flex items-center justify-center rounded-md bg-red-600 text-white text-sm cursor-pointer"
                   aria-label="Parar gravação"
                 >
                   <Pause />
-                </button>
+                </Button>
+              ) : (content.trim() || audioBlob || audioUrl) ? (
+                <Button
+                  variant="secondary"
+                  onClick={submit}
+                  loading={isPending}
+                  disabled={!content.trim() && !audioBlob && !audioUrl}
+                  aria-label="Enviar comentário"
+                >
+                  <SendHorizontal />
+                </Button>
+              ) : (
+                <Button onClick={startRecording} aria-label="Gravar áudio">
+                  <Mic />
+                </Button>
               )}
 
-              <button
-                type="button"
+              <Button
                 onClick={() => {
                   if (isRecording) stopRecording();
                   removeAudioPreview();
                   setContent("");
                 }}
-                className="h-12 w-12 flex items-center justify-center rounded-md bg-white/[0.04] text-white text-sm cursor-pointer"
+                variant="ghost"
                 aria-label="Cancelar"
               >
                 <X />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -570,7 +574,7 @@ export default function CommentSystem({
           </p>
         )}
 
-        <Button
+        {/* <Button
           variant="secondary"
           size="sm"
           onClick={submit}
@@ -578,7 +582,7 @@ export default function CommentSystem({
           disabled={!content.trim() && !audioBlob && !audioUrl}
         >
           {isFreelancer ? "Enviar resposta" : "Publicar comentário"}
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
