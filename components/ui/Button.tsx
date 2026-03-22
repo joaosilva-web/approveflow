@@ -44,8 +44,9 @@ const variantClasses: Record<ButtonVariant, string> = {
     "bg-red-500/10 text-red-400 border border-red-500/30 " +
     "hover:bg-red-500/20 hover:border-red-400/60",
   success:
-    "bg-emerald-600 text-white border border-emerald-500/30 " +
-    "hover:bg-emerald-500 hover:border-emerald-400/60",
+    "bg-gradient-to-r from-emerald-600 to-teal-600 text-white " +
+    "hover:from-emerald-500 hover:to-teal-500 " +
+    "shadow-lg shadow-emerald-900/30 border border-emerald-500/20",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
