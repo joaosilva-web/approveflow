@@ -13,6 +13,8 @@ import FilePreview from "@/features/review/components/FilePreview";
 import VersionSwitcher from "@/features/review/components/VersionSwitcher";
 import { cn } from "@/lib/utils";
 import type { BadgeVariant } from "@/components/ui/Badge";
+import { Button } from "@/components/ui";
+import { ChevronLeft } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -234,13 +236,14 @@ export default function ReviewClientShell({
         >
           {showChat ? (
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between px-5 py-2 border-b border-white/[0.06]">
-                <button
+              <div className="flex items-center justify-between px-2 py-2 border-b border-white/[0.06]">
+                <Button
                   onClick={() => setShowChat(false)}
-                  className="text-white/60 hover:text-white/90 px-2 py-1 rounded-lg transition font-semibold"
+                  variant="outline"
+                  className="p-2"
                 >
-                  ← Voltar
-                </button>
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
                 <span className="text-base font-semibold text-white">
                   Conversa
                 </span>
@@ -288,12 +291,9 @@ export default function ReviewClientShell({
                 </div>
               )}
 
-              <button
-                className="w-full py-2 px-4 rounded-lg bg-violet-600/80 hover:bg-violet-700 text-white font-semibold transition mb-2"
-                onClick={() => setShowChat(true)}
-              >
+              <Button variant="primary" onClick={() => setShowChat(true)}>
                 Abrir conversa
-              </button>
+              </Button>
 
               {allDeliveries.length > 1 && (
                 <>

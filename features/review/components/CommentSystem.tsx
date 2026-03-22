@@ -530,9 +530,9 @@ export default function CommentSystem({
                 >
                   <Pause />
                 </Button>
-              ) : (content.trim() || audioBlob || audioUrl) ? (
+              ) : content.trim() || audioBlob || audioUrl ? (
                 <Button
-                  variant="secondary"
+                  variant="primary"
                   onClick={submit}
                   loading={isPending}
                   disabled={!content.trim() && !audioBlob && !audioUrl}
