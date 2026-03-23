@@ -38,7 +38,6 @@ export default function useLiveProjects<T extends { id: string }>(
   useEffect(() => {
     // create channel explicitly and register handlers
     const channel = supabaseClient.channel("projects-realtime");
-    
 
     channel.on(
       "postgres_changes",
@@ -64,7 +63,9 @@ export default function useLiveProjects<T extends { id: string }>(
         try {
           console.debug("useLiveProjects Delivery payload", payload);
         } catch {}
-        const row = (payload.eventType === "DELETE" ? payload.old : payload.new) as {
+        const row = (
+          payload.eventType === "DELETE" ? payload.old : payload.new
+        ) as {
           projectId: string;
         };
         if (row.projectId) {

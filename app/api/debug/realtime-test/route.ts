@@ -5,9 +5,16 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { projectId } = body as { projectId?: string };
-    if (!projectId) return NextResponse.json({ ok: false, error: "missing projectId" }, { status: 400 });
+    if (!projectId)
+      return NextResponse.json(
+        { ok: false, error: "missing projectId" },
+        { status: 400 },
+      );
 
-    await prisma.project.update({ where: { id: projectId }, data: { updatedAt: new Date() } });
+    await prisma.project.update({
+      where: { id: projectId },
+      data: { updatedAt: new Date() },
+    });
 
     return NextResponse.json({ ok: true });
   } catch (e) {

@@ -51,7 +51,8 @@ export default function DashboardPageClient({
   const [statusFilter, setStatusFilter] = useState<
     "ALL" | "PENDING" | "APPROVED" | "CHANGES_REQUESTED"
   >("ALL");
-  const [liveProjects, setLiveProjects] = useLiveProjects<ProjectData>(projects);
+  const [liveProjects, setLiveProjects] =
+    useLiveProjects<ProjectData>(projects);
 
   // Realtime handled by useLiveProjects hook
 
@@ -171,18 +172,21 @@ export default function DashboardPageClient({
           label="Aguardando revisão"
           value={stats.totalPending}
           color="text-yellow-400"
+          bgColor="bg-yellow-500/[0.10]"
           icon={<Clock className="w-5 h-5 text-yellow-400" />}
         />
         <StatCard
           label="Aprovados"
           value={stats.totalApproved}
           color="text-emerald-400"
+          bgColor="bg-emerald-500/[0.10]"
           icon={<CheckCircle className="w-5 h-5 text-emerald-400" />}
         />
         <StatCard
           label="Alterações"
           value={stats.totalChanges}
           color="text-red-400"
+          bgColor="bg-red-500/[0.10]"
           icon={<AlertCircle className="w-5 h-5 text-red-400" />}
         />
       </div>
@@ -232,12 +236,9 @@ export default function DashboardPageClient({
               Free.
             </p>
           </div>
-          <Link
-            href="/dashboard/billing"
-            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-violet-600 hover:bg-violet-500 transition-colors"
-          >
+          <Button variant="primary" href="/dashboard/billing" size="sm">
             Fazer upgrade para Pro
-          </Link>
+          </Button>
         </div>
       )}
 
