@@ -119,6 +119,7 @@ export default async function DashboardPage() {
       stats={{ totalProjects, totalPending, totalApproved, totalChanges }}
       projects={projectData}
       subscription={subscription}
+      searchInputId="dashboard-search-input"
     />
   );
 }

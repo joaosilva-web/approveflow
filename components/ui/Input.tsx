@@ -20,9 +20,9 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 // ─── Size map ─────────────────────────────────────────────────────────────────
 
 const sizeClasses: Record<InputSize, string> = {
-  sm: "h-8 px-3 text-sm rounded-lg",
-  md: "h-10 px-4 text-sm rounded-xl",
-  lg: "h-12 px-4 text-base rounded-xl",
+  sm: "h-8 px-3 text-sm rounded-full",
+  md: "h-10 px-4 text-sm rounded-full",
+  lg: "h-12 px-4 text-base rounded-full",
 };
 
 const paddingLeft: Record<InputSize, string> = {

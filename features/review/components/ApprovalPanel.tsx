@@ -4,6 +4,7 @@ import React, { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
+import { Check, Edit } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -257,47 +258,18 @@ export default function ApprovalPanel({
             Decisão de revisão
           </p>
           <Button
-            variant="primary"
+            variant="success"
             fullWidth
             onClick={() => setPanel("approving")}
-            leftIcon={
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            }
+            leftIcon={<Check className="w-4 h-4" />}
           >
             Aprovar esta versão
           </Button>
           <Button
-            variant="outline"
+            variant="danger"
             fullWidth
             onClick={() => setPanel("requesting")}
-            leftIcon={
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-            }
+            leftIcon={<Edit className="w-4 h-4" />}
           >
             Solicitar alterações
           </Button>

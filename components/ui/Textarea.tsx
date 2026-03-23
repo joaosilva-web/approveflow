@@ -64,7 +64,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           required={required}
           className={cn(
             "w-full bg-white/[0.04] border text-white/90 placeholder:text-white/30",
-            "px-4 py-3 text-sm rounded-xl",
+            "px-4 py-3 text-sm rounded-full",
             "transition-all duration-200 outline-none",
             "focus:bg-white/[0.06] focus:ring-2",
             error

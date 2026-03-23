@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import type { BadgeVariant } from "@/components/ui/Badge";
+import { Building, Rocket } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ interface ProjectCardProps {
 const statusLabel: Record<string, string> = {
   PENDING: "Pendente",
   APPROVED: "Aprovado",
-  CHANGES_REQUESTED: "Alterações solicitadas",
+  CHANGES_REQUESTED: "Alterações",
 };
 
 const statusVariant: Record<string, BadgeVariant> = {
@@ -73,9 +74,7 @@ export default function ProjectCard({
           <h3 className="text-sm font-semibold text-white/90 truncate group-hover:text-white transition-colors">
             {name}
           </h3>
-          <p className="text-xs text-white/45 mt-0.5 truncate">
-            Cliente: {clientName}
-          </p>
+          <p className="text-xs text-white/45 mt-0.5 truncate">{clientName}</p>
         </div>
         <Badge variant={variant} dot size="sm">
           {label}
@@ -85,22 +84,9 @@ export default function ProjectCard({
       {/* Stats row */}
       <div className="flex flex-col gap-1.5 pt-3 border-t border-white/[0.05]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-white/35">
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
-              <polyline points="13 2 13 9 20 9" />
-            </svg>
-            {totalDeliveries} versão{totalDeliveries !== 1 ? "es" : ""}
+          <div className="flex items-center gap-1 text-xs text-white/35">
+            <Rocket className="w-3 h-3" />
+            {totalDeliveries} vers{totalDeliveries !== 1 ? "ões" : "ão"}
           </div>
           <span className="text-[10px] text-white/25">
             {timeAgo(updatedAt)}
@@ -108,12 +94,10 @@ export default function ProjectCard({
         </div>
         {lastViewedAt ? (
           <span className="text-[10px] text-violet-400/60">
-            👀 Cliente viu {timeAgo(lastViewedAt)}
+            Visto {timeAgo(lastViewedAt)}
           </span>
         ) : (
-          <span className="text-[10px] text-white/20">
-            👀 Ainda não visualizado
-          </span>
+          <span className="text-[10px] text-white/20">Não visualizado</span>
         )}
       </div>
     </Link>

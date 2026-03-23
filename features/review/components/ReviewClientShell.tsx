@@ -291,7 +291,11 @@ export default function ReviewClientShell({
                 </div>
               )}
 
-              <Button variant="primary" onClick={() => setShowChat(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowChat(true)}
+              >
                 Abrir conversa
               </Button>
 

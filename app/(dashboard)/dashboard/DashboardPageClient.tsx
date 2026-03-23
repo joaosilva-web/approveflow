@@ -5,7 +5,11 @@ import Link from "next/link";
 import ProjectCard from "@/features/projects/components/ProjectCard";
 import NewProjectModal from "@/features/projects/components/NewProjectModal";
 import { Button } from "@/components/ui/Button";
-import { supabaseClient } from "@/lib/supabase/browser";
+import { Clock, CheckCircle, AlertCircle, Folders, Search } from "lucide-react";
+import useLiveProjects from "@/features/projects/hooks/useLiveProjects";
+import { Input } from "@/components/ui";
+import StatCard from "@/features/dashboard/components/StatCard";
+import { formatSize } from "@/lib/utils";
 
 interface Stats {
   totalProjects: number;
@@ -25,27 +29,11 @@ interface ProjectData {
   lastViewedAt?: Date | null;
 }
 
-function StatCard({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-      <span className="text-xs text-white/40">{label}</span>
-      <span className={`text-2xl font-bold ${color}`}>{value}</span>
-    </div>
-  );
-}
-
 export default function DashboardPageClient({
   stats,
   projects,
   subscription,
+  searchInputId,
 }: {
   stats: Stats;
   projects: ProjectData[];
@@ -56,93 +44,16 @@ export default function DashboardPageClient({
     storageUsage?: number;
     maxStorageBytes?: number | null;
   };
+  searchInputId?: string;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "ALL" | "PENDING" | "APPROVED" | "CHANGES_REQUESTED"
   >("ALL");
-  const [liveProjects, setLiveProjects] = useState<ProjectData[]>(projects);
+  const [liveProjects, setLiveProjects] = useLiveProjects<ProjectData>(projects);
 
-  // ─── Supabase Realtime ──────────────────────────────────────────────────────
-  useEffect(() => {
-    const fetchAndUpdateProject = async (projectId: string) => {
-      try {
-        const res = await fetch(`/api/projects/${projectId}`);
-        if (!res.ok) return;
-        const fresh: ProjectData = await res.json();
-        const updated = {
-          ...fresh,
-          updatedAt: new Date(fresh.updatedAt),
-          lastViewedAt: fresh.lastViewedAt
-            ? new Date(fresh.lastViewedAt)
-            : null,
-        };
-        setLiveProjects((prev) => {
-          const exists = prev.some((p) => p.id === updated.id);
-          if (exists) {
-            return prev.map((p) => (p.id === updated.id ? updated : p));
-          }
-          return [updated, ...prev];
-        });
-      } catch {
-        // silently ignore — next event will catch it
-      }
-    };
-
-    const channel = supabaseClient
-      .channel("projects-realtime")
-      // Project row changes (name, clientName, etc.)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "Project" },
-        async (payload) => {
-          if (payload.eventType === "DELETE") {
-            const deletedId = (payload.old as { id: string }).id;
-            setLiveProjects((prev) => prev.filter((p) => p.id !== deletedId));
-            return;
-          }
-          const projectId = (payload.new as { id: string }).id;
-          await fetchAndUpdateProject(projectId);
-        },
-      )
-      // Delivery changes — status (PENDING/APPROVED/CHANGES_REQUESTED) lives here
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "Delivery" },
-        async (payload) => {
-          const row = (
-            payload.eventType === "DELETE" ? payload.old : payload.new
-          ) as {
-            projectId: string;
-          };
-          if (row.projectId) {
-            await fetchAndUpdateProject(row.projectId);
-          }
-        },
-      )
-      // View inserts — "client viewed X ago" lives here
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "View" },
-        async (payload) => {
-          const { deliveryId } = payload.new as { deliveryId: string };
-          try {
-            const res = await fetch(`/api/projects/by-delivery/${deliveryId}`);
-            if (!res.ok) return;
-            const { projectId } = await res.json();
-            if (projectId) await fetchAndUpdateProject(projectId);
-          } catch {
-            // silently ignore
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabaseClient.removeChannel(channel);
-    };
-  }, []);
+  // Realtime handled by useLiveProjects hook
 
   // ─── Sorting priority ───────────────────────────────────────────────────────
   const STATUS_PRIORITY: Record<string, number> = {
@@ -173,15 +84,6 @@ export default function DashboardPageClient({
     subscription?.maxProjects !== null &&
     subscription !== undefined &&
     subscription.projectCount >= (subscription.maxProjects ?? Infinity);
-
-  // Storage usage display helpers
-  function formatSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    if (bytes < 1024 * 1024 * 1024)
-      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-  }
 
   const storageUsage = subscription?.storageUsage ?? 0;
   const maxStorageBytes = subscription?.maxStorageBytes ?? null;
@@ -223,10 +125,11 @@ export default function DashboardPageClient({
         >
           Novo projeto
         </Button>
+        {/* actions */}
       </div>
       {/* Storage usage bar */}
       {maxStorageBytes && (
-        <div className="flex flex-col gap-1 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+        <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <span className="text-xs text-white/40">Armazenamento usado:</span>
             <span className="text-xs text-white/80 font-semibold">
@@ -262,51 +165,41 @@ export default function DashboardPageClient({
           label="Total de projetos"
           value={stats.totalProjects}
           color="text-white/80"
+          icon={<Folders className="w-5 h-5 text-white/40" />}
         />
         <StatCard
           label="Aguardando revisão"
           value={stats.totalPending}
           color="text-yellow-400"
+          icon={<Clock className="w-5 h-5 text-yellow-400" />}
         />
         <StatCard
           label="Aprovados"
           value={stats.totalApproved}
           color="text-emerald-400"
+          icon={<CheckCircle className="w-5 h-5 text-emerald-400" />}
         />
         <StatCard
-          label="Alterações sol."
+          label="Alterações"
           value={stats.totalChanges}
           color="text-red-400"
+          icon={<AlertCircle className="w-5 h-5 text-red-400" />}
         />
       </div>
 
       {/* Search + Status filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none"
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
+          <Input
+            id={searchInputId}
             type="text"
+            leftElement={<Search className="w-4 h-4 text-white/40" />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar projetos ou clientes..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white placeholder-white/30 focus:outline-none focus:border-violet-500/60 focus:bg-white/[0.06] transition-colors"
           />
         </div>
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+        <div className="flex items-center gap-1 p-1 rounded-xl">
           {(
             [
               { key: "ALL", label: "Todos" },

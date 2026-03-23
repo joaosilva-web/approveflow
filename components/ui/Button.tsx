@@ -50,9 +50,9 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "h-8 px-3.5 text-xs rounded-lg gap-1.5",
-  md: "h-11 px-3 text-sm rounded-xl gap-2",
-  lg: "h-12 px-7 text-base rounded-xl gap-2.5",
+  sm: "h-8 px-3.5 text-xs rounded-full gap-1.5",
+  md: "h-11 px-3 text-sm rounded-full gap-2",
+  lg: "h-12 px-7 text-base rounded-full gap-2.5",
 };
 
 const spinnerSizes: Record<ButtonSize, number> = {

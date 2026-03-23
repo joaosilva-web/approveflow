@@ -47,7 +47,7 @@ export default function VersionSwitcher({
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-white/50 uppercase tracking-wider font-semibold">
-        Version history
+        Histórico de versões
       </p>
       <ul className="flex flex-col gap-1 list-none" role="list">
         {deliveries
