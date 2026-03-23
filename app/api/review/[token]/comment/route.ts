@@ -7,6 +7,7 @@ const commentSchema = z.object({
   authorName: z.string().min(1).max(100),
   authorEmail: z.string().email().optional().or(z.literal("")),
   authorType: z.enum(["CLIENT", "FREELANCER"]).optional().default("CLIENT"),
+  parentId: z.string().min(1).optional().nullable(),
   content: z.string().max(2000).optional(),
   audioUrl: z.string().url().optional(),
   // Normalized image coordinates (0-1). null = general comment
@@ -65,12 +66,43 @@ export async function POST(
     );
   }
 
-  let comment;
+  let comment: {
+    id: string;
+    parentId: string | null;
+    authorType: "CLIENT" | "FREELANCER";
+    authorName: string;
+    content: string;
+    audioUrl: string | null;
+    xPosition: number | null;
+    yPosition: number | null;
+    createdAt: Date;
+  };
   try {
+    let parentId: string | null = null;
+
+    if (parsed.data.parentId) {
+      const parentComment = await prisma.comment.findFirst({
+        where: {
+          id: parsed.data.parentId,
+          deliveryId: delivery.id,
+        },
+        select: { id: true },
+      });
+
+      if (!parentComment) {
+        return NextResponse.json(
+          { error: "Parent comment not found" },
+          { status: 400 },
+        );
+      }
+
+      parentId = parentComment.id;
+    }
+
     comment = await prisma.comment.create({
-      // Cast to any because Prisma client may not be regenerated in this environment yet
       data: {
         deliveryId: delivery.id,
+        parentId,
         authorType: parsed.data.authorType,
         authorName: parsed.data.authorName,
         authorEmail: parsed.data.authorEmail || null,
@@ -78,12 +110,15 @@ export async function POST(
         audioUrl: parsed.data.audioUrl ?? null,
         xPosition: parsed.data.xPosition ?? null,
         yPosition: parsed.data.yPosition ?? null,
-      } as any,
+      } as unknown as Parameters<typeof prisma.comment.create>[0]["data"],
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Comment create failed:", err);
     return NextResponse.json(
-      { error: err?.message ?? "Comment create failed" },
+      {
+        error:
+          err instanceof Error ? err.message : "Comment create failed",
+      },
       { status: 500 },
     );
   }
@@ -107,7 +142,8 @@ export async function POST(
     authorType: comment.authorType,
     authorName: comment.authorName,
     content: comment.content,
-    audioUrl: (comment as any).audioUrl ?? null,
+    audioUrl: comment.audioUrl,
+    parentId: comment.parentId,
     xPosition: comment.xPosition,
     yPosition: comment.yPosition,
     resolvedAt: null,

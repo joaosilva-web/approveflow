@@ -112,6 +112,7 @@ model Delivery {
 model Comment {
     id          String     @id @default(cuid())
     deliveryId  String
+    parentId    String?
     authorType  AuthorType
     authorName  String
     authorEmail String?
@@ -124,6 +125,8 @@ model Comment {
     createdAt   DateTime   @default(now())
 
     delivery Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+    parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
+    replies  Comment[] @relation("CommentReplies")
 }
 
 model View {
@@ -238,6 +241,7 @@ model GuestUpload {
 model GuestComment {
     id            String     @id @default(cuid())
     guestUploadId String
+    parentId      String?
     authorType    AuthorType @default(CLIENT)
     authorName    String
     content       String     @db.Text
@@ -248,6 +252,8 @@ model GuestComment {
     createdAt     DateTime   @default(now())
 
     guestUpload GuestUpload @relation(fields: [guestUploadId], references: [id], onDelete: Cascade)
+    parent      GuestComment?  @relation("GuestCommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
+    replies     GuestComment[] @relation("GuestCommentReplies")
 }
 
 model GuestView {
