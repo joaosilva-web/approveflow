@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -15,8 +16,14 @@ import { cn } from "@/lib/utils";
 import type { BadgeVariant } from "@/components/ui/Badge";
 import { Button } from "@/components/ui";
 import { ChevronLeft } from "lucide-react";
+import {
+  DEFAULT_PRIMARY_COLOR,
+  DEFAULT_SECONDARY_COLOR,
+  hexToRgba,
+  type FreelancerBranding,
+} from "@/lib/freelancer-branding-shared";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Status = "PENDING" | "APPROVED" | "CHANGES_REQUESTED";
 
@@ -46,9 +53,11 @@ interface ReviewClientShellProps {
   isFreelancerPreview?: boolean;
   freelancerName?: string | null;
   freelancerDisplayName?: string | null;
+  branding?: FreelancerBranding | null;
+  reviewPathSlug?: string | null;
 }
 
-// ─── Status badge map ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Status badge map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const statusVariant: Record<Status, BadgeVariant> = {
   PENDING: "warning",
@@ -59,10 +68,10 @@ const statusVariant: Record<Status, BadgeVariant> = {
 const statusLabel: Record<Status, string> = {
   PENDING: "Aguardando revisão",
   APPROVED: "Aprovado",
-  CHANGES_REQUESTED: "Alterações solicitadas",
+  CHANGES_REQUESTED: "AlteraÃ§Ãµes solicitadas",
 };
 
-// ─── Download helper (blob fetch bypasses cross-origin anchor restriction) ───
+// â”€â”€â”€ Download helper (blob fetch bypasses cross-origin anchor restriction) â”€â”€â”€
 
 function DownloadFileButton({
   url,
@@ -115,7 +124,7 @@ function DownloadFileButton({
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function ReviewClientShell({
   token,
@@ -134,8 +143,15 @@ export default function ReviewClientShell({
   isFreelancerPreview = false,
   freelancerName,
   freelancerDisplayName,
+  branding,
+  reviewPathSlug,
 }: ReviewClientShellProps) {
   const isImage = mimeType.startsWith("image/");
+  const primaryColor = branding?.primaryColor ?? DEFAULT_PRIMARY_COLOR;
+  const secondaryColor = branding?.secondaryColor ?? DEFAULT_SECONDARY_COLOR;
+  const brandName =
+    branding?.displayName ?? freelancerDisplayName ?? "ApproveFlow";
+  const brandLogo = branding?.logoUrl;
 
   const [status, setStatus] = useState<Status>(initialStatus);
   const [comments, setComments] = useState<CommentData[]>(initialComments);
@@ -152,21 +168,31 @@ export default function ReviewClientShell({
   });
 
   return (
-    <div className="h-auto lg:h-screen bg-[#06060f] flex flex-col">
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
+    <div
+      className="h-auto lg:h-screen bg-[#06060f] flex flex-col"
+      style={{
+        backgroundImage: `radial-gradient(circle at top right, ${hexToRgba(primaryColor, 0.1)}, transparent 28%)`,
+      }}
+    >
+      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 md:px-8 border-b border-white/[0.06] bg-[#06060f]/90 backdrop-blur-sm">
         <Link href="/" className="flex items-center gap-2.5">
-          <Image
-            src="/logo.png"
-            alt=""
-            width={24}
-            height={24}
-            className="shrink-0"
-          />
-          <span className="text-sm font-semibold">
-            <span className="text-white">Approve</span>
-            <span className="gradient-text">Flow</span>
-          </span>
+          {brandLogo ? (
+            <img
+              src={brandLogo}
+              alt={brandName}
+              className="h-6 w-6 shrink-0 rounded-md object-cover"
+            />
+          ) : (
+            <Image
+              src="/logo.png"
+              alt=""
+              width={24}
+              height={24}
+              className="shrink-0"
+            />
+          )}
+          <span className="text-sm font-semibold text-white">{brandName}</span>
         </Link>
 
         <div className="flex items-center gap-3">
@@ -184,11 +210,18 @@ export default function ReviewClientShell({
         </div>
       </header>
 
-      {/* ── Body ────────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex flex-1 lg:overflow-hidden flex-col lg:flex-row lg:max-h-[calc(100vh-100px)]">
         <main className="flex-1 overflow-y-auto p-4 md:p-4">
           <div className="flex items-center gap-2.5 mb-5">
-            <span className="text-xs font-mono text-white/40 bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 rounded-md">
+            <span
+              className="rounded-md border px-2 py-0.5 text-xs font-mono"
+              style={{
+                color: primaryColor,
+                backgroundColor: hexToRgba(primaryColor, 0.12),
+                borderColor: hexToRgba(primaryColor, 0.3),
+              }}
+            >
               v{versionNumber}
             </span>
             {label && <span className="text-xs text-white/50">{label}</span>}
@@ -211,11 +244,11 @@ export default function ReviewClientShell({
                   setOpenPinCommentId(id);
                 }}
               />
-              {/* {allowDownload && (
+                            {allowDownload && (
                 <div className="flex justify-center mt-4">
                   <DownloadFileButton url={signedUrl} fileName={fileName} />
                 </div>
-              )} */}
+              )}
             </>
           ) : (
             <FilePreview
@@ -227,7 +260,7 @@ export default function ReviewClientShell({
           )}
         </main>
 
-        {/* ── Sidebar ─────────────────────────────────────────────────────── */}
+        {/* â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <aside
           className={cn(
             "w-full lg:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.06]",
@@ -279,14 +312,26 @@ export default function ReviewClientShell({
               )}
 
               {isFreelancerPreview && (
-                <div className="flex items-center gap-2.5 rounded-xl bg-violet-600/10 border border-violet-500/20 px-3.5 py-3">
-                  <div className="w-2 h-2 rounded-full bg-violet-400 shrink-0" />
-                  <p className="text-xs text-violet-300/80 leading-snug">
-                    <span className="font-semibold text-violet-300">
-                      Modo visualização
+                <div
+                  className="flex items-center gap-2.5 rounded-xl border px-3.5 py-3"
+                  style={{
+                    backgroundColor: hexToRgba(primaryColor, 0.1),
+                    borderColor: hexToRgba(primaryColor, 0.24),
+                  }}
+                >
+                  <div
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                  <p
+                    className="text-xs leading-snug"
+                    style={{ color: hexToRgba(primaryColor, 0.88) }}
+                  >
+                    <span className="font-semibold" style={{ color: primaryColor }}>
+                      Modo visualizaÃ§Ã£o
                     </span>
-                    {" — "}o cliente vê este link, você pode responder os
-                    comentários abaixo.
+                    {" â€” "}o cliente vÃª este link, vocÃª pode responder os
+                    comentÃ¡rios abaixo.
                   </p>
                 </div>
               )}
@@ -295,6 +340,11 @@ export default function ReviewClientShell({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowChat(true)}
+                style={{
+                  borderColor: hexToRgba(primaryColor, 0.45),
+                  color: primaryColor,
+                  backgroundColor: hexToRgba(primaryColor, 0.06),
+                }}
               >
                 Abrir conversa
               </Button>
@@ -305,6 +355,8 @@ export default function ReviewClientShell({
                   <VersionSwitcher
                     deliveries={allDeliveries}
                     currentToken={token}
+                    slug={reviewPathSlug}
+                    preview={isFreelancerPreview}
                   />
                 </>
               )}
@@ -313,7 +365,7 @@ export default function ReviewClientShell({
         </aside>
       </div>
 
-      {/* ── Viral footer ────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Viral footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <footer className="shrink-0 py-2.5 text-center border-t border-white/[0.04]">
         <p className="text-[11px] text-white/20">
           Revisão via{" "}
@@ -321,12 +373,19 @@ export default function ReviewClientShell({
             href="https://approveflow.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-violet-400/50 hover:text-violet-400 transition-colors"
+            className="transition-colors"
+            style={{ color: hexToRgba(secondaryColor, 0.72) }}
           >
-            ApproveFlow
+            {brandName}
           </a>
         </p>
       </footer>
     </div>
   );
 }
+
+
+
+
+
+

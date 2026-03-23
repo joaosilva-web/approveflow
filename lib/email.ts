@@ -7,6 +7,11 @@ const BASE_URL =
 
 type Locale = "pt" | "en";
 
+function getReviewUrl(reviewToken: string, slug?: string | null, preview = false) {
+  const path = slug ? `/${slug}/review/${reviewToken}` : `/review/${reviewToken}`;
+  return `${BASE_URL}${path}${preview ? "?preview=1" : ""}`;
+}
+
 // ─── Shared HTML wrapper (proper email structure improves deliverability) ─────
 
 function htmlWrapper(body: string) {
@@ -68,10 +73,11 @@ export async function sendNewReviewEmail(opts: {
   reviewToken: string;
   versionNumber: number;
   label: string | null;
+  freelancerSlug?: string | null;
   locale?: Locale;
 }) {
   const locale = opts.locale ?? "pt";
-  const url = `${BASE_URL}/review/${opts.reviewToken}`;
+  const url = getReviewUrl(opts.reviewToken, opts.freelancerSlug);
   const versionLabel = opts.label
     ? `${locale === "pt" ? "Versão" : "Version"} ${opts.versionNumber} — ${opts.label}`
     : `${locale === "pt" ? "Versão" : "Version"} ${opts.versionNumber}`;
@@ -195,10 +201,11 @@ export async function sendChangesRequestedEmail(opts: {
   projectName: string;
   clientName: string;
   reviewToken: string;
+  freelancerSlug?: string | null;
   locale?: Locale;
 }) {
   const locale = opts.locale ?? "pt";
-  const url = `${BASE_URL}/review/${opts.reviewToken}?preview=1`;
+  const url = getReviewUrl(opts.reviewToken, opts.freelancerSlug, true);
 
   const t =
     locale === "pt"
@@ -243,10 +250,11 @@ export async function sendCommentNotificationEmail(opts: {
   reviewToken: string;
   authorName: string;
   comment: string;
+  freelancerSlug?: string | null;
   locale?: Locale;
 }) {
   const locale = opts.locale ?? "pt";
-  const reviewUrl = `${BASE_URL}/review/${opts.reviewToken}?preview=1`;
+  const reviewUrl = getReviewUrl(opts.reviewToken, opts.freelancerSlug, true);
   const safeComment = escapeHtml(opts.comment).replace(/\r?\n/g, "<br />");
 
   const t =

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma/client";
 import ProjectDetailPageClient from "@/app/(dashboard)/dashboard/projects/[id]/ProjectDetailPageClient";
+import { getFreelancerBrandingByUserId } from "@/lib/freelancer-branding";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -37,6 +38,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
   if (!project) notFound();
 
+  const branding = await getFreelancerBrandingByUserId(session.user.id);
+
   const deliveries = project.deliveries.map((d) => ({
     id: d.id,
     versionNumber: d.versionNumber,
@@ -59,6 +62,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       clientName={project.clientName}
       clientEmail={project.clientEmail}
       deliveries={deliveries}
+      freelancerSlug={branding.slug}
     />
   );
 }

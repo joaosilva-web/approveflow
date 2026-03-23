@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import type { BadgeVariant } from "@/components/ui/Badge";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface DeliverySummary {
   id: string;
@@ -20,9 +20,11 @@ interface DeliverySummary {
 interface VersionSwitcherProps {
   deliveries: DeliverySummary[];
   currentToken: string;
+  slug?: string | null;
+  preview?: boolean;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const statusVariant: Record<string, BadgeVariant> = {
   PENDING: "warning",
@@ -36,18 +38,20 @@ const statusLabel: Record<string, string> = {
   CHANGES_REQUESTED: "Changes",
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function VersionSwitcher({
   deliveries,
   currentToken,
+  slug,
+  preview = false,
 }: VersionSwitcherProps) {
   if (deliveries.length <= 1) return null;
 
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-white/50 uppercase tracking-wider font-semibold">
-        Histórico de versões
+        HistÃ³rico de versÃµes
       </p>
       <ul className="flex flex-col gap-1 list-none" role="list">
         {deliveries
@@ -55,10 +59,14 @@ export default function VersionSwitcher({
           .sort((a, b) => b.versionNumber - a.versionNumber)
           .map((d) => {
             const isCurrent = d.reviewToken === currentToken;
+            const href = slug
+              ? `/${slug}/review/${d.reviewToken}${preview ? "?preview=1" : ""}`
+              : `/review/${d.reviewToken}${preview ? "?preview=1" : ""}`;
+
             return (
               <li key={d.id}>
                 <Link
-                  href={`/review/${d.reviewToken}`}
+                  href={href}
                   className={cn(
                     "flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm",
                     "transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60",
@@ -92,3 +100,4 @@ export default function VersionSwitcher({
     </div>
   );
 }
+

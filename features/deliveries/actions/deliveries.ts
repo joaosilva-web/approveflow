@@ -10,24 +10,19 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { canUploadVersion, canUploadFile } from "@/features/billing/limits";
 import { sendNewReviewEmail } from "@/lib/email";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import { getFreelancerBrandingByUserId } from "@/lib/freelancer-branding";
 
 function detectLocale(acceptLanguage: string | null): "pt" | "en" {
   if (!acceptLanguage) return "pt";
-  // Accept-Language examples: "pt-BR,pt;q=0.9,en-US;q=0.8" or "en-US,en;q=0.9"
   const primary = acceptLanguage.split(",")[0]?.toLowerCase() ?? "";
   return primary.startsWith("pt") ? "pt" : "en";
 }
 
-// Proteção: impede alteração de delivery aprovada
 function assertDeliveryNotApproved(delivery: { status: string }) {
   if (delivery.status === "APPROVED") {
     throw new Error("Esta versão já foi aprovada e não pode ser modificada.");
   }
 }
-
-// ─── Schemas ──────────────────────────────────────────────────────────────────
 
 const createDeliverySchema = z.object({
   projectId: z.string().cuid(),
@@ -42,12 +37,6 @@ const createDeliverySchema = z.object({
   password: z.string().max(100).optional(),
 });
 
-// ─── Actions ──────────────────────────────────────────────────────────────────
-
-/**
- * Get a presigned upload URL so the client can upload directly to Supabase.
- * Returns { signedUrl, token, path } or { error }.
- */
 export async function getUploadUrl(
   fileName: string,
   contentType: string,
@@ -60,18 +49,15 @@ export async function getUploadUrl(
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
 
-  // Verify ownership
   const project = await prisma.project.findFirst({
     where: { id: projectId, userId: session.user.id },
     select: { id: true },
   });
   if (!project) return { error: "Project not found" };
 
-  // Check version limit before issuing the upload URL
   const versionCheck = await canUploadVersion(session.user.id, projectId);
   if (!versionCheck.allowed) return { error: versionCheck.reason! };
 
-  // Check storage quota before issuing the upload URL
   const storageCheck = await canUploadFile(session.user.id, fileSize);
   if (!storageCheck.allowed) return { error: storageCheck.reason! };
 
@@ -87,22 +73,17 @@ export async function getUploadUrl(
   }
 }
 
-/**
- * After the client has uploaded the file to Supabase,
- * persist the delivery record and return the review link.
- */
 export async function createDelivery(
   raw: Record<string, unknown>,
 ): Promise<{ reviewToken?: string; error?: string }> {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
 
-  // Detect and persist the freelancer's locale on each delivery creation
   const requestHeaders = await headers();
   const locale = detectLocale(requestHeaders.get("accept-language"));
   prisma.user
     .update({ where: { id: session.user.id }, data: { locale } })
-    .catch(() => {}); // fire & forget, non-critical
+    .catch(() => {});
 
   const parsed = createDeliverySchema.safeParse(raw);
   if (!parsed.success) {
@@ -122,7 +103,6 @@ export async function createDelivery(
     password,
   } = parsed.data;
 
-  // Verify project ownership
   const project = await prisma.project.findFirst({
     where: { id: projectId, userId: session.user.id },
     select: {
@@ -135,11 +115,8 @@ export async function createDelivery(
   });
   if (!project) return { error: "Project not found" };
 
-  // Check version limit
   const versionCheck = await canUploadVersion(session.user.id, projectId);
   if (!versionCheck.allowed) {
-    // Se for erro de limite do plano free, retorna mensagem amigável
-    // (Só o plano free tem limite, mas a mensagem cobre qualquer plano com limite)
     const planCode = versionCheck.reason?.includes("Free plan")
       ? "free"
       : undefined;
@@ -148,7 +125,6 @@ export async function createDelivery(
       message =
         "Você atingiu o limite de versões do plano gratuito (3 versões). Faça upgrade para continuar.";
     }
-    // Opcional: erro estruturado para facilitar tratamento futuro
     return {
       error: JSON.stringify({ code: "VERSION_LIMIT_REACHED", message }),
     };
@@ -156,7 +132,6 @@ export async function createDelivery(
 
   const versionNumber = project._count.deliveries + 1;
   const reviewToken = generateReviewToken();
-
   const passwordHash = password ? await bcrypt.hash(password, 10) : null;
 
   let expiresAt: Date | null = null;
@@ -182,8 +157,8 @@ export async function createDelivery(
     },
   });
 
-  // Send email notification to client (fire & forget)
   if (project.clientEmail) {
+    const branding = await getFreelancerBrandingByUserId(session.user.id);
     sendNewReviewEmail({
       to: project.clientEmail,
       projectName: project.name,
@@ -191,6 +166,7 @@ export async function createDelivery(
       reviewToken,
       versionNumber,
       label: label || null,
+      freelancerSlug: branding.slug,
       locale,
     }).catch(console.error);
   }
@@ -198,9 +174,6 @@ export async function createDelivery(
   return { reviewToken };
 }
 
-/**
- * Delete a delivery and its storage file.
- */
 export async function deleteDelivery(
   deliveryId: string,
 ): Promise<{ error?: string }> {
@@ -219,11 +192,10 @@ export async function deleteDelivery(
     return { error: err instanceof Error ? err.message : "Delivery bloqueada" };
   }
 
-  // Remove storage file (best-effort)
   await deleteFile(delivery.filePath).catch(console.error);
-
   await prisma.delivery.delete({ where: { id: deliveryId } });
 
   revalidatePath(`/dashboard/projects/${delivery.projectId}`);
   return {};
 }
+

@@ -3,13 +3,13 @@ import { notFound } from "next/navigation";
 import { headers, cookies } from "next/headers";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma/client";
+import { loadReviewPageData } from "@/features/review/server/loadReviewPageData";
 import ReviewClientShell from "@/features/review/components/ReviewClientShell";
 import PasswordGate from "@/features/review/components/PasswordGate";
-import { loadReviewPageData } from "@/features/review/server/loadReviewPageData";
 import type { Metadata } from "next";
 
 interface PageProps {
-  params: Promise<{ token: string }>;
+  params: Promise<{ slug: string; token: string }>;
   searchParams: Promise<{ preview?: string }>;
 }
 
@@ -17,27 +17,24 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { token } = await params;
-  let delivery: { project?: { name?: string } } | null = null;
-
-  try {
-    delivery = await prisma.delivery.findUnique({
-      where: { reviewToken: token },
-      select: { project: { select: { name: true } } },
-    });
-  } catch {
-    return { title: "Review - ApproveFlow" };
-  }
-
-  if (!delivery) return { title: "Review - ApproveFlow" };
+  const delivery = await prisma.delivery.findUnique({
+    where: { reviewToken: token },
+    select: { project: { select: { name: true } } },
+  });
 
   return {
-    title: `Review: ${delivery.project?.name ?? "Review"} - ApproveFlow`,
+    title: delivery
+      ? `Review: ${delivery.project?.name ?? "Review"} - ApproveFlow`
+      : "Review - ApproveFlow",
     robots: { index: false },
   };
 }
 
-export default async function ReviewPage({ params, searchParams }: PageProps) {
-  const { token } = await params;
+export default async function BrandedReviewPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { slug, token } = await params;
   const { preview } = await searchParams;
   const isFreelancerPreview = preview === "1";
 
@@ -53,6 +50,10 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
 
   const { delivery, signedUrl, initialComments, allDeliveries, branding } =
     pageData;
+
+  if (!branding?.slug || branding.slug !== slug) {
+    notFound();
+  }
 
   if (delivery.expiresAt && delivery.expiresAt < new Date()) {
     return (
@@ -127,7 +128,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
       freelancerName={freelancerName}
       freelancerDisplayName={delivery.project.user?.name ?? null}
       branding={branding}
-      reviewPathSlug={branding?.slug ?? null}
+      reviewPathSlug={slug}
     />
   );
 }

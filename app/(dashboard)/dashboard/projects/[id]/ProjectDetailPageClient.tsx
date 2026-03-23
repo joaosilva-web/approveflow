@@ -6,9 +6,9 @@ import { supabaseClient } from "@/lib/supabase/browser";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import NewDeliveryModal from "@/features/deliveries/components/NewDeliveryModal";
-import { cn } from "@/lib/utils";
 import type { BadgeVariant } from "@/components/ui/Badge";
-import { Copy, Link2Icon } from "lucide-react";
+import { Copy } from "lucide-react";
+import { getPublicReviewPath } from "@/lib/freelancer-branding-shared";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +33,7 @@ interface ProjectDetailClientProps {
   clientName: string;
   clientEmail: string | null | undefined;
   deliveries: DeliveryRow[];
+  freelancerSlug?: string | null;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -67,24 +68,20 @@ function timeAgo(date: Date): string {
 
 // ─── Share buttons ────────────────────────────────────────────────────────────
 
-function ShareButtons({ token }: { token: string }) {
+function ShareButtons({
+  token,
+  slug,
+}: {
+  token: string;
+  slug?: string | null;
+}) {
   const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedWa, setCopiedWa] = useState(false);
 
   const copyLink = () => {
-    const url = `${window.location.origin}/review/${token}`;
+    const url = `${window.location.origin}${getPublicReviewPath(token, slug)}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
-    });
-  };
-
-  const copyWhatsApp = () => {
-    const url = `${window.location.origin}/review/${token}`;
-    const msg = `Hey! Please review the latest version here:\n\n${url}\n\nYou can approve or request changes directly on the page.`;
-    navigator.clipboard.writeText(msg).then(() => {
-      setCopiedWa(true);
-      setTimeout(() => setCopiedWa(false), 2000);
     });
   };
 
@@ -131,6 +128,7 @@ export default function ProjectDetailClient({
   clientName,
   clientEmail,
   deliveries: initialDeliveries,
+  freelancerSlug,
 }: ProjectDetailClientProps) {
   const [liveDeliveries, setLiveDeliveries] = useState(initialDeliveries);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -355,10 +353,10 @@ export default function ProjectDetailClient({
                     </span>
                   )}
 
-                  <ShareButtons token={d.reviewToken} />
+                  <ShareButtons token={d.reviewToken} slug={freelancerSlug} />
 
                   <Link
-                    href={`/review/${d.reviewToken}?preview=1`}
+                    href={`${getPublicReviewPath(d.reviewToken, freelancerSlug)}?preview=1`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-violet-400/70 hover:text-violet-400 transition-colors"
@@ -410,6 +408,7 @@ export default function ProjectDetailClient({
 
       <NewDeliveryModal
         projectId={projectId}
+        freelancerSlug={freelancerSlug}
         isOpen={uploadOpen}
         onClose={() => setUploadOpen(false)}
         onSuccess={() => {
@@ -419,3 +418,5 @@ export default function ProjectDetailClient({
     </div>
   );
 }
+
+
