@@ -25,7 +25,7 @@ export async function generateMetadata({
       where: { reviewToken: token },
       select: { fileName: true, project: { select: { name: true } } },
     });
-  } catch (err) {
+  } catch {
     // If Prisma can't be used in this environment (dev/edge), return a safe default.
     return { title: "Review — ApproveFlow" };
   }
@@ -176,8 +176,21 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
 
   const hasAudioUrlColumn = audioUrlColumn?.exists === true;
 
-  let comments: Array<{
+  const [parentIdColumn] = await prisma.$queryRaw<Array<{ exists: boolean }>>`
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'Comment'
+        AND column_name = 'parentId'
+    ) as "exists"
+  `;
+
+  const hasParentIdColumn = parentIdColumn?.exists === true;
+
+  type CommentRow = {
     id: string;
+    parentId?: string | null;
     authorType: "CLIENT" | "FREELANCER";
     authorName: string;
     content: string;
@@ -186,11 +199,30 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
     yPosition: number | null;
     resolvedAt: Date | null;
     createdAt: Date;
-  }>;
+  };
+
+  let comments: CommentRow[];
 
   if (hasResolvedAtColumn) {
     if (hasAudioUrlColumn) {
-      comments = await prisma.$queryRaw<Array<any>>`
+      comments = hasParentIdColumn
+        ? await prisma.$queryRaw<CommentRow[]>`
+        SELECT
+          "id",
+          "parentId",
+          "authorType",
+          "authorName",
+          "content",
+          "audioUrl",
+          "xPosition",
+          "yPosition",
+          "resolvedAt",
+          "createdAt"
+        FROM "Comment"
+        WHERE "deliveryId" = ${delivery.id}
+        ORDER BY "createdAt" ASC
+      `
+        : await prisma.$queryRaw<CommentRow[]>`
         SELECT
           "id",
           "authorType",
@@ -206,7 +238,23 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
         ORDER BY "createdAt" ASC
       `;
     } else {
-      comments = await prisma.$queryRaw<Array<any>>`
+      comments = hasParentIdColumn
+        ? await prisma.$queryRaw<CommentRow[]>`
+        SELECT
+          "id",
+          "parentId",
+          "authorType",
+          "authorName",
+          "content",
+          "xPosition",
+          "yPosition",
+          "resolvedAt",
+          "createdAt"
+        FROM "Comment"
+        WHERE "deliveryId" = ${delivery.id}
+        ORDER BY "createdAt" ASC
+      `
+        : await prisma.$queryRaw<CommentRow[]>`
         SELECT
           "id",
           "authorType",
@@ -223,7 +271,24 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
     }
   } else {
     if (hasAudioUrlColumn) {
-      comments = await prisma.$queryRaw<Array<any>>`
+      comments = hasParentIdColumn
+        ? await prisma.$queryRaw<CommentRow[]>`
+        SELECT
+          "id",
+          "parentId",
+          "authorType",
+          "authorName",
+          "content",
+          "audioUrl",
+          "xPosition",
+          "yPosition",
+          NULL::timestamp as "resolvedAt",
+          "createdAt"
+        FROM "Comment"
+        WHERE "deliveryId" = ${delivery.id}
+        ORDER BY "createdAt" ASC
+      `
+        : await prisma.$queryRaw<CommentRow[]>`
         SELECT
           "id",
           "authorType",
@@ -239,7 +304,23 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
         ORDER BY "createdAt" ASC
       `;
     } else {
-      comments = await prisma.$queryRaw<Array<any>>`
+      comments = hasParentIdColumn
+        ? await prisma.$queryRaw<CommentRow[]>`
+        SELECT
+          "id",
+          "parentId",
+          "authorType",
+          "authorName",
+          "content",
+          "xPosition",
+          "yPosition",
+          NULL::timestamp as "resolvedAt",
+          "createdAt"
+        FROM "Comment"
+        WHERE "deliveryId" = ${delivery.id}
+        ORDER BY "createdAt" ASC
+      `
+        : await prisma.$queryRaw<CommentRow[]>`
         SELECT
           "id",
           "authorType",
@@ -258,10 +339,11 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
 
   const initialComments: CommentData[] = comments.map((c) => ({
     id: c.id,
+    parentId: c.parentId ?? null,
     authorType: c.authorType,
     authorName: c.authorName,
     content: c.content,
-    audioUrl: (c as any).audioUrl ?? null,
+    audioUrl: c.audioUrl ?? null,
     xPosition: c.xPosition,
     yPosition: c.yPosition,
     resolvedAt: c.resolvedAt?.toISOString() ?? null,

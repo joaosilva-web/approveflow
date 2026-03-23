@@ -5,6 +5,7 @@ import { z } from "zod";
 const commentSchema = z.object({
   authorName: z.string().min(1).max(100),
   authorType: z.enum(["CLIENT", "FREELANCER"]).optional().default("CLIENT"),
+  parentId: z.string().min(1).optional().nullable(),
   content: z.string().min(1).max(2000),
   xPosition: z.number().min(0).max(1).optional().nullable(),
   yPosition: z.number().min(0).max(1).optional().nullable(),
@@ -38,9 +39,40 @@ export async function POST(
     );
   }
 
-  const comment = await prisma.guestComment.create({
+  let parentId: string | null = null;
+
+  if (parsed.data.parentId) {
+    const parentComment = await prisma.guestComment.findFirst({
+      where: {
+        id: parsed.data.parentId,
+        guestUploadId: upload.id,
+      },
+      select: { id: true },
+    });
+
+    if (!parentComment) {
+      return NextResponse.json(
+        { error: "Parent comment not found" },
+        { status: 400 },
+      );
+    }
+
+    parentId = parentComment.id;
+  }
+
+  const comment: {
+    id: string;
+    parentId: string | null;
+    authorType: "CLIENT" | "FREELANCER";
+    authorName: string;
+    content: string;
+    xPosition: number | null;
+    yPosition: number | null;
+    createdAt: Date;
+  } = await prisma.guestComment.create({
     data: {
       guestUploadId: upload.id,
+      parentId,
       authorType: parsed.data.authorType,
       authorName: parsed.data.authorName,
       content: parsed.data.content,
@@ -54,6 +86,7 @@ export async function POST(
     authorType: comment.authorType,
     authorName: comment.authorName,
     content: comment.content,
+    parentId: comment.parentId,
     xPosition: comment.xPosition,
     yPosition: comment.yPosition,
     resolvedAt: null,

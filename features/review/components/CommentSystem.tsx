@@ -5,13 +5,15 @@ import { supabaseClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/Button";
 import AudioPlayer from "@/components/ui/AudioPlayer";
 import { Textarea } from "@/components/ui/Textarea";
-import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { Mic, Pause, X, SendHorizontal } from "lucide-react";
+import { Mic, Pause, X, SendHorizontal, Check, Reply } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui";
+
 
 export interface CommentData {
   id: string;
+  parentId?: string | null;
   authorType: "CLIENT" | "FREELANCER";
   authorName: string;
   content: string;
@@ -20,6 +22,16 @@ export interface CommentData {
   yPosition: number | null;
   resolvedAt: string | null;
   createdAt: string;
+}
+
+function getCommentPreview(comment: Pick<CommentData, "content" | "audioUrl">) {
+  if (comment.audioUrl || comment.content?.startsWith("__audio__:")) {
+    return "Audio";
+  }
+
+  const normalized = comment.content.replace(/\s+/g, " ").trim();
+  if (!normalized) return "Mensagem";
+  return normalized.length > 90 ? `${normalized.slice(0, 90)}...` : normalized;
 }
 
 interface CommentSystemProps {
@@ -54,19 +66,25 @@ function formatResolvedAt(dateStr: string): string {
 
 function CommentBubble({
   comment,
+  parentComment,
   isOwn,
   canResolve,
   isToggling,
   onToggleResolved,
+  onReply,
+  onJumpToComment,
   pinnedNumber,
   onOpenPin,
   active,
 }: {
   comment: CommentData;
+  parentComment?: CommentData | null;
   isOwn: boolean;
   canResolve: boolean;
   isToggling: boolean;
   onToggleResolved: (comment: CommentData) => void;
+  onReply: (comment: CommentData) => void;
+  onJumpToComment: (commentId: string) => void;
   pinnedNumber?: number | null;
   onOpenPin?: (id: string) => void;
   active?: boolean;
@@ -117,6 +135,23 @@ function CommentBubble({
             {timeAgo(comment.createdAt)}
           </span>
         </div>
+        {parentComment && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onJumpToComment(parentComment.id);
+            }}
+            className="mt-2 flex w-full flex-col rounded-lg border-l-2 border-violet-400/70 bg-white/[0.04] px-3 py-2 text-left transition hover:bg-white/[0.06]"
+          >
+            <span className="text-[10px] font-semibold text-violet-200">
+              Respondendo a {parentComment.authorName}
+            </span>
+            <span className="mt-1 text-[11px] text-white/60">
+              {getCommentPreview(parentComment)}
+            </span>
+          </button>
+        )}
         <div className="mt-1 break-words leading-relaxed">
           {comment.audioUrl || comment.content?.startsWith("__audio__:") ? (
             <AudioPlayer
@@ -128,25 +163,42 @@ function CommentBubble({
             comment.content
           )}
         </div>
+      </div>
+      <div
+        className={cn(
+          "flex items-center gap-1.5 px-1",
+          isOwn ? "justify-end" : "justify-start",
+        )}
+      >
         {canResolve && (
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleResolved(comment);
-            }}
+            onClick={onToggleResolved.bind(null, comment)}
             disabled={isToggling}
+            aria-label={
+              isToggling ? "Salvando" : isResolved ? "Desfazer resolucao" : "Resolver"
+            }
+            title={isToggling ? "Salvando..." : isResolved ? "Desfazer" : "Resolver"}
             className={cn(
-              "text-[11px] font-medium mt-2",
+              "inline-flex h-7 w-7 items-center justify-center rounded-full border shadow-sm transition",
               isResolved
-                ? "text-emerald-300/80 hover:text-emerald-200"
-                : "text-violet-300/80 hover:text-violet-200",
+                ? "border-rose-400/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/15"
+                : "border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15",
               isToggling && "cursor-not-allowed opacity-60",
             )}
           >
-            {isToggling ? "Salvando..." : isResolved ? "Desfazer" : "Resolver"}
+            {isResolved ? <X size={14} /> : <Check size={14} />}
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => onReply(comment)}
+          aria-label="Responder"
+          title="Responder"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.03] text-white/60 shadow-sm transition hover:border-violet-400/25 hover:bg-violet-500/10 hover:text-violet-200"
+        >
+          <Reply size={14} />
+        </button>
       </div>
       {/* Pin click handled on the bubble itself to ensure proper hit area */}
     </div>
@@ -184,10 +236,15 @@ export default function CommentSystem({
   const [namePromptVisible, setNamePromptVisible] = useState(false);
   const [formError, setFormError] = useState("");
   const [toggleError, setToggleError] = useState("");
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [togglingCommentId, setTogglingCommentId] = useState<string | null>(
     null,
   );
   const [isPending, startTransition] = useTransition();
+  const commentsById = Object.fromEntries(
+    comments.map((item) => [item.id, item] as const),
+  );
+  const replyingToComment = replyingToId ? commentsById[replyingToId] : null;
 
   useEffect(() => {
     setComments(initialComments);
@@ -290,6 +347,22 @@ export default function CommentSystem({
     onCommentsChange?.(comments);
   }, [comments, onCommentsChange]);
 
+  const jumpToComment = (commentId: string) => {
+    const container = commentsContainerRef.current;
+    if (!container) return;
+
+    const el = container.querySelector(
+      `[data-comment-id="${commentId}"]`,
+    ) as HTMLElement | null;
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setActiveCommentId(commentId);
+    window.setTimeout(() => {
+      setActiveCommentId((current) => (current === commentId ? null : current));
+    }, 3000);
+  };
+
   // Cleanup object URL for audio preview on unmount
   useEffect(() => {
     return () => {
@@ -353,12 +426,14 @@ export default function CommentSystem({
           audioUrl: finalAudioUrl ?? undefined,
           authorName: effectiveName,
           authorType: isFreelancer ? "FREELANCER" : "CLIENT",
+          parentId: replyingToId,
         }),
       });
 
       if (res.ok) {
         setContent(""); // Limpa o campo, o realtime cuidará do resto
         setAudioUrl(null);
+        setReplyingToId(null);
         // clear local preview
         removeAudioPreview();
       } else {
@@ -496,6 +571,9 @@ export default function CommentSystem({
             >
               <CommentBubble
                 comment={comment}
+                parentComment={
+                  comment.parentId ? commentsById[comment.parentId] : null
+                }
                 isOwn={
                   isFreelancer
                     ? comment.authorType === "FREELANCER"
@@ -504,6 +582,11 @@ export default function CommentSystem({
                 canResolve={isFreelancer && comment.authorType === "CLIENT"}
                 isToggling={togglingCommentId === comment.id}
                 onToggleResolved={toggleResolved}
+                onReply={(selectedComment) => {
+                  setReplyingToId(selectedComment.id);
+                  setFormError("");
+                }}
+                onJumpToComment={jumpToComment}
                 pinnedNumber={
                   pinnedComments ? pinnedComments[comment.id] : undefined
                 }
@@ -538,6 +621,26 @@ export default function CommentSystem({
                 {freelancerName}
               </span>
             </span>
+          </div>
+        )}
+
+        {replyingToComment && (
+          <div className="flex items-start justify-between gap-3 rounded-xl border border-violet-500/20 bg-violet-500/10 px-3 py-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-violet-200">
+                Respondendo a {replyingToComment.authorName}
+              </p>
+              <p className="mt-1 truncate text-xs text-white/65">
+                {getCommentPreview(replyingToComment)}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplyingToId(null)}
+              className="text-xs font-medium text-white/55 transition hover:text-white/80"
+            >
+              Cancelar
+            </button>
           </div>
         )}
 
@@ -587,6 +690,7 @@ export default function CommentSystem({
                   if (isRecording) stopRecording();
                   removeAudioPreview();
                   setContent("");
+                  setReplyingToId(null);
                 }}
                 variant="ghost"
                 aria-label="Cancelar"

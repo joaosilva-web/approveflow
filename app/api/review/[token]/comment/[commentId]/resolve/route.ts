@@ -102,6 +102,7 @@ export async function PATCH(
   const [comment] = await prisma.$queryRaw<
     Array<{
       id: string;
+      parentId: string | null;
       authorType: "CLIENT" | "FREELANCER";
       authorName: string;
       content: string;
@@ -113,6 +114,7 @@ export async function PATCH(
   >`
     SELECT
       "id",
+      "parentId",
       "authorType",
       "authorName",
       "content",
@@ -131,6 +133,7 @@ export async function PATCH(
 
   return NextResponse.json({
     id: comment.id,
+    parentId: comment.parentId,
     authorType: comment.authorType,
     authorName: comment.authorName,
     content: comment.content,
