@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { sendChangesRequestedEmail } from "@/lib/email";
+import { getFreelancerBrandingByUserId } from "@/lib/freelancer-branding";
 
 export async function POST(
   _request: NextRequest,
@@ -19,7 +20,13 @@ export async function POST(
         select: {
           name: true,
           clientName: true,
-          user: { select: { email: true, locale: true } },
+          userId: true,
+          user: {
+            select: {
+              email: true,
+              locale: true,
+            },
+          },
         },
       },
     },
@@ -45,17 +52,19 @@ export async function POST(
     data: { status: "CHANGES_REQUESTED" },
   });
 
-  // Notify freelancer (fire & forget)
   const ownerEmail = delivery.project.user?.email;
   if (ownerEmail) {
+    const branding = await getFreelancerBrandingByUserId(delivery.project.userId);
     sendChangesRequestedEmail({
       to: ownerEmail,
       projectName: delivery.project.name,
       clientName: delivery.project.clientName,
       reviewToken: delivery.reviewToken,
+      freelancerSlug: branding.slug,
       locale: (delivery.project.user?.locale as "pt" | "en") ?? "pt",
     }).catch(console.error);
   }
 
   return NextResponse.json({ ok: true });
 }
+

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { sendCommentNotificationEmail } from "@/lib/email";
+import { getFreelancerBrandingByUserId } from "@/lib/freelancer-branding";
 import { z } from "zod";
 
 const commentSchema = z.object({
@@ -10,7 +11,6 @@ const commentSchema = z.object({
   parentId: z.string().min(1).optional().nullable(),
   content: z.string().max(2000).optional(),
   audioUrl: z.string().url().optional(),
-  // Normalized image coordinates (0-1). null = general comment
   xPosition: z.number().min(0).max(1).optional().nullable(),
   yPosition: z.number().min(0).max(1).optional().nullable(),
 });
@@ -30,6 +30,7 @@ export async function POST(
         select: {
           id: true,
           name: true,
+          userId: true,
           user: {
             select: {
               email: true,
@@ -58,7 +59,6 @@ export async function POST(
     );
   }
 
-  // Either content or audioUrl must be provided
   if (!parsed.data.content && !parsed.data.audioUrl) {
     return NextResponse.json(
       { error: "Either content or audioUrl is required" },
@@ -77,6 +77,7 @@ export async function POST(
     yPosition: number | null;
     createdAt: Date;
   };
+
   try {
     let parentId: string | null = null;
 
@@ -116,8 +117,7 @@ export async function POST(
     console.error("Comment create failed:", err);
     return NextResponse.json(
       {
-        error:
-          err instanceof Error ? err.message : "Comment create failed",
+        error: err instanceof Error ? err.message : "Comment create failed",
       },
       { status: 500 },
     );
@@ -126,12 +126,14 @@ export async function POST(
   if (comment.authorType === "CLIENT") {
     const ownerEmail = delivery.project.user?.email;
     if (ownerEmail) {
+      const branding = await getFreelancerBrandingByUserId(delivery.project.userId);
       sendCommentNotificationEmail({
         to: ownerEmail,
         projectName: delivery.project.name,
         reviewToken: token,
         authorName: comment.authorName,
         comment: comment.content,
+        freelancerSlug: branding.slug,
         locale: (delivery.project.user?.locale as "pt" | "en") ?? "pt",
       }).catch(console.error);
     }
@@ -150,3 +152,4 @@ export async function POST(
     createdAt: comment.createdAt.toISOString(),
   });
 }
+

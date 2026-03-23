@@ -11,11 +11,13 @@ import {
 } from "@/features/deliveries/actions/deliveries";
 import { supabaseClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
+import { getPublicReviewPath } from "@/lib/freelancer-branding-shared";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface NewDeliveryModalProps {
   projectId: string;
+  freelancerSlug?: string | null;
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (reviewToken: string) => void;
@@ -25,9 +27,15 @@ type Step = "upload" | "uploading" | "done" | "error";
 
 // ─── Link copy toast ──────────────────────────────────────────────────────────
 
-function ReviewLinkBox({ token }: { token: string }) {
+function ReviewLinkBox({
+  token,
+  slug,
+}: {
+  token: string;
+  slug?: string | null;
+}) {
   const [copied, setCopied] = useState(false);
-  const url = `${window.location.origin}/review/${token}`;
+  const url = `${window.location.origin}${getPublicReviewPath(token, slug)}`;
 
   const copy = () => {
     navigator.clipboard.writeText(url).then(() => {
@@ -65,6 +73,7 @@ function ReviewLinkBox({ token }: { token: string }) {
 
 export default function NewDeliveryModal({
   projectId,
+  freelancerSlug,
   isOpen,
   onClose,
   onSuccess,
@@ -301,7 +310,7 @@ export default function NewDeliveryModal({
               </p>
             </div>
           </div>
-          <ReviewLinkBox token={reviewToken} />
+          <ReviewLinkBox token={reviewToken} slug={freelancerSlug} />
         </div>
       )}
 
@@ -348,3 +357,5 @@ export default function NewDeliveryModal({
     </Modal>
   );
 }
+
+

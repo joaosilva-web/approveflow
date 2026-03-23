@@ -38,7 +38,7 @@ export async function POST(
   response.cookies.set(`review_pw_${token}`, "1", {
     httpOnly: true,
     sameSite: "lax",
-    path: `/review/${token}`,
+    path: "/",
     maxAge: 60 * 60 * 4, // 4 hours
   });
 
