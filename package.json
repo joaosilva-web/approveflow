@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "next build && npx prisma migrate deploy --schema=prisma/schema.prisma",
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx prisma/seed.ts",
