@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { Mic, Pause, X, SendHorizontal } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 
 export interface CommentData {
   id: string;
@@ -180,6 +181,7 @@ export default function CommentSystem({
   const [audioPreview, setAudioPreview] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [authorName, setAuthorName] = useState("");
+  const [namePromptVisible, setNamePromptVisible] = useState(false);
   const [formError, setFormError] = useState("");
   const [toggleError, setToggleError] = useState("");
   const [togglingCommentId, setTogglingCommentId] = useState<string | null>(
@@ -190,6 +192,16 @@ export default function CommentSystem({
   useEffect(() => {
     setComments(initialComments);
   }, [initialComments]);
+
+  // load saved author name from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("review_author_name");
+      if (saved) setAuthorName(saved);
+    } catch (err) {
+      // ignore
+    }
+  }, []);
 
   // Realtime subscription
   useEffect(() => {
@@ -291,10 +303,15 @@ export default function CommentSystem({
       return;
     }
     setFormError("");
+    const trimmedName = authorName.trim();
+    if (!isFreelancer && !trimmedName) {
+      // ask for a name before sending
+      setNamePromptVisible(true);
+      setFormError("Por favor, informe seu nome para publicar comentários");
+      return;
+    }
 
-    const effectiveName = isFreelancer
-      ? freelancerName
-      : authorName.trim() || "Anonymous client";
+    const effectiveName = isFreelancer ? freelancerName : trimmedName || "Anonymous client";
 
     startTransition(async () => {
       let finalAudioUrl = audioUrl;
@@ -347,6 +364,23 @@ export default function CommentSystem({
         setFormError(data.error ?? "Falha ao publicar comentário");
       }
     });
+  };
+
+  const saveNameAndContinue = async () => {
+    const trimmed = authorName.trim();
+    if (!trimmed) {
+      setFormError("O nome não pode ficar vazio");
+      return;
+    }
+    try {
+      localStorage.setItem("review_author_name", trimmed);
+    } catch (err) {
+      // ignore write errors
+    }
+    setNamePromptVisible(false);
+    setFormError("");
+    // After saving name, submit the comment
+    submit();
   };
 
   // --- Audio recording helpers (stores audio as data URL in comment content prefixed)
@@ -506,8 +540,8 @@ export default function CommentSystem({
         )}
 
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 w-full">
-            <Textarea
+            <div className="flex items-center gap-2 w-full">
+              <Textarea
               placeholder={"Escrever..."}
               value={
                 content.startsWith("__audio__:")
@@ -573,6 +607,36 @@ export default function CommentSystem({
             {formError}
           </p>
         )}
+
+        <Modal
+          isOpen={namePromptVisible}
+          onClose={() => setNamePromptVisible(false)}
+          title="What's your name?"
+          description="Please enter your name so we can record who left this comment."
+          size="sm"
+          footer={
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setNamePromptVisible(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={saveNameAndContinue} variant="primary">
+                Save
+              </Button>
+            </div>
+          }
+        >
+          <div className="flex flex-col gap-3">
+            <Input
+              placeholder="Your name"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+            />
+            {formError && <p className="text-xs text-red-400">{formError}</p>}
+          </div>
+        </Modal>
 
         {/* <Button
           variant="secondary"

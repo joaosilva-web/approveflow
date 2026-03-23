@@ -147,10 +147,27 @@ function AddCommentPopup({
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showNameInput, setShowNameInput] = useState(true);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("review_author_name");
+      if (saved) {
+        setName(saved);
+        setShowNameInput(false);
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, []);
 
   const submit = async () => {
-    if (!name.trim() || !content.trim()) {
-      setError("Name and comment are required");
+    if (!content.trim()) {
+      setError("Comment is required");
+      return;
+    }
+    if (showNameInput && !name.trim()) {
+      setError("Name is required");
       return;
     }
     setError("");
@@ -171,6 +188,12 @@ function AddCommentPopup({
 
     if (res.ok) {
       const data: CommentData = await res.json();
+      // persist name for future comments
+      try {
+        if (name.trim()) localStorage.setItem("review_author_name", name.trim());
+      } catch (err) {
+        // ignore
+      }
       onAdd(data);
     } else {
       const data = await res.json().catch(() => ({}));
@@ -200,7 +223,8 @@ function AddCommentPopup({
         placeholder="Your name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        autoFocus
+        autoFocus={showNameInput}
+        style={{ display: showNameInput ? undefined : "none" }}
       />
       <textarea
         className={cn(
