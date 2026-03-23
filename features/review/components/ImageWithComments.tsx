@@ -190,7 +190,8 @@ function AddCommentPopup({
       const data: CommentData = await res.json();
       // persist name for future comments
       try {
-        if (name.trim()) localStorage.setItem("review_author_name", name.trim());
+        if (name.trim())
+          localStorage.setItem("review_author_name", name.trim());
       } catch (err) {
         // ignore
       }

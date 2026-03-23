@@ -311,7 +311,9 @@ export default function CommentSystem({
       return;
     }
 
-    const effectiveName = isFreelancer ? freelancerName : trimmedName || "Anonymous client";
+    const effectiveName = isFreelancer
+      ? freelancerName
+      : trimmedName || "Anonymous client";
 
     startTransition(async () => {
       let finalAudioUrl = audioUrl;
@@ -540,8 +542,8 @@ export default function CommentSystem({
         )}
 
         <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 w-full">
-              <Textarea
+          <div className="flex items-center gap-2 w-full">
+            <Textarea
               placeholder={"Escrever..."}
               value={
                 content.startsWith("__audio__:")
