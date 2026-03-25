@@ -8,6 +8,7 @@ export interface FreelancerBranding {
   logoPath: string | null;
   primaryColor: string;
   secondaryColor: string;
+  backgroundColor?: string | null;
   slug: string | null;
 }
 
@@ -81,9 +82,7 @@ function relativeLuminance(hex: string) {
       : Math.pow((value + 0.055) / 1.055, 2.4);
   };
 
-  return (
-    0.2126 * normalize(r) + 0.7152 * normalize(g) + 0.0722 * normalize(b)
-  );
+  return 0.2126 * normalize(r) + 0.7152 * normalize(g) + 0.0722 * normalize(b);
 }
 
 function mixHex(baseHex: string, otherHex: string, weight: number) {
@@ -129,4 +128,3 @@ export function getBrandTextColor(hex: string) {
 export function getPublicReviewPath(reviewToken: string, slug?: string | null) {
   return slug ? `/${slug}/review/${reviewToken}` : `/review/${reviewToken}`;
 }
-

@@ -51,8 +51,14 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
   const pageData = await loadReviewPageData(token);
   if (!pageData) notFound();
 
-  const { delivery, signedUrl, initialComments, allDeliveries, branding } =
-    pageData;
+  const {
+    delivery,
+    signedUrl,
+    initialComments,
+    allDeliveries,
+    branding,
+    subscription,
+  } = pageData;
 
   if (delivery.expiresAt && delivery.expiresAt < new Date()) {
     return (
@@ -128,6 +134,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
       freelancerDisplayName={delivery.project.user?.name ?? null}
       branding={branding}
       reviewPathSlug={branding?.slug ?? null}
+      subscription={subscription}
     />
   );
 }

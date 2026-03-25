@@ -60,19 +60,9 @@ export async function POST(
     parentId = parentComment.id;
   }
 
-  const comment: {
-    id: string;
-    parentId: string | null;
-    authorType: "CLIENT" | "FREELANCER";
-    authorName: string;
-    content: string;
-    xPosition: number | null;
-    yPosition: number | null;
-    createdAt: Date;
-  } = await prisma.guestComment.create({
+  const comment = await prisma.guestComment.create({
     data: {
       guestUploadId: upload.id,
-      parentId,
       authorType: parsed.data.authorType,
       authorName: parsed.data.authorName,
       content: parsed.data.content,
@@ -81,12 +71,24 @@ export async function POST(
     },
   });
 
+  if (parentId) {
+    try {
+      await prisma.$executeRaw`
+        UPDATE "GuestComment"
+        SET "parentId" = ${parentId}
+        WHERE id = ${comment.id}
+      `;
+    } catch (err) {
+      // ignore
+    }
+  }
+
   return NextResponse.json({
     id: comment.id,
     authorType: comment.authorType,
     authorName: comment.authorName,
     content: comment.content,
-    parentId: comment.parentId,
+    parentId: parentId,
     xPosition: comment.xPosition,
     yPosition: comment.yPosition,
     resolvedAt: null,

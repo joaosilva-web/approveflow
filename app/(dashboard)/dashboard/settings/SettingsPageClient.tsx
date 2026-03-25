@@ -20,11 +20,13 @@ import {
 interface SettingsPageClientProps {
   initialSettings: FreelancerBranding;
   fallbackName: string;
+  subscriptionPlan?: string;
 }
 
 export default function SettingsPageClient({
   initialSettings,
   fallbackName,
+  subscriptionPlan,
 }: SettingsPageClientProps) {
   const [displayName, setDisplayName] = useState(
     initialSettings.displayName === "ApproveFlow"
@@ -40,6 +42,7 @@ export default function SettingsPageClient({
   const [secondaryColor, setSecondaryColor] = useState(
     initialSettings.secondaryColor || DEFAULT_SECONDARY_COLOR,
   );
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSaving, startSaving] = useTransition();
@@ -88,6 +91,14 @@ export default function SettingsPageClient({
       setError("");
       setSuccess("");
 
+      // Block saving if user does not have 'studio' plan
+      if (subscriptionPlan !== "studio") {
+        setError(
+          "Upgrade para o plano Studio para editar estas configurações.",
+        );
+        return;
+      }
+
       const response = await fetch("/api/freelancer-settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -120,9 +131,11 @@ export default function SettingsPageClient({
     <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-8">
       <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/35">
-          Configurações     
+          Configurações
         </p>
-        <h1 className="text-3xl font-bold text-white">Sua identidade no link</h1>
+        <h1 className="text-3xl font-bold text-white">
+          Sua identidade no link
+        </h1>
         <p className="max-w-2xl text-sm text-white/45">
           Personalize nome exibido, logo, cores e o slug do link público sem
           alterar o fluxo atual dos reviews.
@@ -143,7 +156,9 @@ export default function SettingsPageClient({
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-3">
-                <label className="text-sm font-medium text-white/80">Logo</label>
+                <label className="text-sm font-medium text-white/80">
+                  Logo
+                </label>
                 {logoPreview && (
                   <button
                     type="button"
@@ -209,7 +224,9 @@ export default function SettingsPageClient({
                     onChange={(event) => setPrimaryColor(event.target.value)}
                     className="h-8 w-8 cursor-pointer rounded-full border-0 bg-transparent"
                   />
-                  <span className="text-sm text-white/75">{previewPrimary}</span>
+                  <span className="text-sm text-white/75">
+                    {previewPrimary}
+                  </span>
                 </div>
               </label>
 
@@ -229,6 +246,7 @@ export default function SettingsPageClient({
                   </span>
                 </div>
               </label>
+              {/* background color picker removed */}
             </div>
 
             <Input
@@ -256,7 +274,9 @@ export default function SettingsPageClient({
 
             {(error || success) && (
               <p
-                className={error ? "text-sm text-red-400" : "text-sm text-emerald-400"}
+                className={
+                  error ? "text-sm text-red-400" : "text-sm text-emerald-400"
+                }
                 role={error ? "alert" : "status"}
               >
                 {error || success}
@@ -264,9 +284,23 @@ export default function SettingsPageClient({
             )}
 
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="submit" size="sm" loading={isSaving}>
-                Salvar configurações
-              </Button>
+              {subscriptionPlan === "studio" ? (
+                <Button type="submit" size="sm" loading={isSaving}>
+                  Salvar configurações
+                </Button>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <p className="text-sm text-white/60">
+                    Estas configurações estão disponíveis apenas para usuários
+                    com o plano <strong>Studio</strong>.
+                  </p>
+                  <Link href="/dashboard/billing">
+                    <Button size="sm" variant="primary">
+                      Fazer upgrade
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </form>
         </Card>
@@ -279,6 +313,7 @@ export default function SettingsPageClient({
             className="p-5"
             style={{
               background: `linear-gradient(135deg, ${hexToRgba(previewPrimary, 0.25)}, ${hexToRgba(previewSecondary, 0.18)})`,
+              /* background color preview disabled */
             }}
           >
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">
@@ -310,7 +345,9 @@ export default function SettingsPageClient({
                 )}
               </div>
               <div>
-                <p className="text-lg font-semibold text-white">{previewName}</p>
+                <p className="text-lg font-semibold text-white">
+                  {previewName}
+                </p>
                 <p className="text-sm text-white/45">Ambiente do cliente</p>
               </div>
             </div>
@@ -385,8 +422,3 @@ export default function SettingsPageClient({
     </div>
   );
 }
-
-
-
-
-

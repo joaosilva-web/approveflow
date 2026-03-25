@@ -22,8 +22,9 @@ import {
   hexToRgba,
   type FreelancerBranding,
 } from "@/lib/freelancer-branding-shared";
+import type { SubscriptionInfo } from "@/features/billing/subscription";
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Types
 
 type Status = "PENDING" | "APPROVED" | "CHANGES_REQUESTED";
 
@@ -55,9 +56,10 @@ interface ReviewClientShellProps {
   freelancerDisplayName?: string | null;
   branding?: FreelancerBranding | null;
   reviewPathSlug?: string | null;
+  subscription?: SubscriptionInfo | null;
 }
 
-// â”€â”€â”€ Status badge map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Status badge map
 
 const statusVariant: Record<Status, BadgeVariant> = {
   PENDING: "warning",
@@ -68,10 +70,10 @@ const statusVariant: Record<Status, BadgeVariant> = {
 const statusLabel: Record<Status, string> = {
   PENDING: "Aguardando revisão",
   APPROVED: "Aprovado",
-  CHANGES_REQUESTED: "AlteraÃ§Ãµes solicitadas",
+  CHANGES_REQUESTED: "Alterações solicitadas",
 };
 
-// â”€â”€â”€ Download helper (blob fetch bypasses cross-origin anchor restriction) â”€â”€â”€
+// Download helper (blob fetch bypasses cross-origin anchor restriction)
 
 function DownloadFileButton({
   url,
@@ -124,7 +126,7 @@ function DownloadFileButton({
   );
 }
 
-// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Component
 
 export default function ReviewClientShell({
   token,
@@ -145,13 +147,20 @@ export default function ReviewClientShell({
   freelancerDisplayName,
   branding,
   reviewPathSlug,
+  subscription,
 }: ReviewClientShellProps) {
   const isImage = mimeType.startsWith("image/");
-  const primaryColor = branding?.primaryColor ?? DEFAULT_PRIMARY_COLOR;
-  const secondaryColor = branding?.secondaryColor ?? DEFAULT_SECONDARY_COLOR;
-  const brandName =
-    branding?.displayName ?? freelancerDisplayName ?? "ApproveFlow";
-  const brandLogo = branding?.logoUrl;
+  const isStudio = subscription?.planCode === "studio";
+  const primaryColor = isStudio
+    ? (branding?.primaryColor ?? DEFAULT_PRIMARY_COLOR)
+    : DEFAULT_PRIMARY_COLOR;
+  const secondaryColor = isStudio
+    ? (branding?.secondaryColor ?? DEFAULT_SECONDARY_COLOR)
+    : DEFAULT_SECONDARY_COLOR;
+  const brandName = isStudio
+    ? (branding?.displayName ?? freelancerDisplayName ?? "ApproveFlow")
+    : "ApproveFlow";
+  const brandLogo = isStudio ? branding?.logoUrl : null;
 
   const [status, setStatus] = useState<Status>(initialStatus);
   const [comments, setComments] = useState<CommentData[]>(initialComments);
@@ -174,7 +183,7 @@ export default function ReviewClientShell({
         backgroundImage: `radial-gradient(circle at top right, ${hexToRgba(primaryColor, 0.1)}, transparent 28%)`,
       }}
     >
-      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Header  */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 md:px-8 border-b border-white/[0.06] bg-[#06060f]/90 backdrop-blur-sm">
         <Link href="/" className="flex items-center gap-2.5">
           {brandLogo ? (
@@ -210,7 +219,7 @@ export default function ReviewClientShell({
         </div>
       </header>
 
-      {/* â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Body */}
       <div className="flex flex-1 lg:overflow-hidden flex-col lg:flex-row lg:max-h-[calc(100vh-100px)]">
         <main className="flex-1 overflow-y-auto p-4 md:p-4">
           <div className="flex items-center gap-2.5 mb-5">
@@ -243,8 +252,9 @@ export default function ReviewClientShell({
                   setShowChat(true);
                   setOpenPinCommentId(id);
                 }}
+                primaryColor={primaryColor}
               />
-                            {allowDownload && (
+              {allowDownload && (
                 <div className="flex justify-center mt-4">
                   <DownloadFileButton url={signedUrl} fileName={fileName} />
                 </div>
@@ -260,7 +270,7 @@ export default function ReviewClientShell({
           )}
         </main>
 
-        {/* â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* Sidebar */}
         <aside
           className={cn(
             "w-full lg:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.06]",
@@ -295,6 +305,8 @@ export default function ReviewClientShell({
                   onOpenPin={(id) => setOpenPinCommentId(id)}
                   openCommentId={openPinCommentId}
                   scrollable
+                  primaryColor={primaryColor}
+                  subscription={subscription}
                 />
               </div>
             </div>
@@ -327,11 +339,14 @@ export default function ReviewClientShell({
                     className="text-xs leading-snug"
                     style={{ color: hexToRgba(primaryColor, 0.88) }}
                   >
-                    <span className="font-semibold" style={{ color: primaryColor }}>
-                      Modo visualizaÃ§Ã£o
+                    <span
+                      className="font-semibold"
+                      style={{ color: primaryColor }}
+                    >
+                      Modo de visualização
                     </span>
-                    {" â€” "}o cliente vÃª este link, vocÃª pode responder os
-                    comentÃ¡rios abaixo.
+                    {" — "} o cliente vê este link; você pode responder os
+                    comentários abaixo.
                   </p>
                 </div>
               )}
@@ -365,7 +380,7 @@ export default function ReviewClientShell({
         </aside>
       </div>
 
-      {/* â”€â”€ Viral footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Viral footer */}
       <footer className="shrink-0 py-2.5 text-center border-t border-white/[0.04]">
         <p className="text-[11px] text-white/20">
           Revisão via{" "}
@@ -383,9 +398,3 @@ export default function ReviewClientShell({
     </div>
   );
 }
-
-
-
-
-
-

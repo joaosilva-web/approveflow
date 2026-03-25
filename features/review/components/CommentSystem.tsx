@@ -9,7 +9,12 @@ import { cn } from "@/lib/utils";
 import { Mic, Pause, X, SendHorizontal, Check, Reply } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui";
-
+import {
+  DEFAULT_PRIMARY_COLOR,
+  hexToRgba,
+  getBrandTextColor,
+} from "@/lib/freelancer-branding-shared";
+import type { SubscriptionInfo } from "@/features/billing/subscription";
 
 export interface CommentData {
   id: string;
@@ -45,6 +50,8 @@ interface CommentSystemProps {
   onCommentsChange?: (comments: CommentData[]) => void;
   onOpenPin?: (commentId: string) => void;
   openCommentId?: string | null;
+  primaryColor?: string;
+  subscription?: SubscriptionInfo | null;
 }
 
 function timeAgo(dateStr: string): string {
@@ -76,6 +83,7 @@ function CommentBubble({
   pinnedNumber,
   onOpenPin,
   active,
+  primaryColor,
 }: {
   comment: CommentData;
   parentComment?: CommentData | null;
@@ -88,9 +96,11 @@ function CommentBubble({
   pinnedNumber?: number | null;
   onOpenPin?: (id: string) => void;
   active?: boolean;
+  primaryColor?: string;
 }) {
   const isClient = comment.authorType === "CLIENT";
   const isResolved = Boolean(comment.resolvedAt);
+  const primary = primaryColor ?? DEFAULT_PRIMARY_COLOR;
   return (
     <div
       className={cn("flex flex-col gap-1", isOwn ? "items-end" : "items-start")}
@@ -104,28 +114,50 @@ function CommentBubble({
         }}
         className={cn(
           "max-w-[80%] px-3 py-2 rounded-xl border text-sm",
-          isOwn
-            ? "bg-violet-600/30 border-violet-500/30 text-white/90"
+          active && "ring-2",
+        )}
+        style={{
+          backgroundColor: isOwn
+            ? hexToRgba(primary, 0.3)
             : isClient
               ? isResolved
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-200"
-                : "bg-white/[0.04] border-violet-500/12 text-white/80"
-              : "bg-white/[0.02] border-white/[0.06] text-white/70",
-          active && "ring-2 ring-violet-400/60",
-        )}
+                ? hexToRgba("#10B981", 0.1)
+                : hexToRgba(primary, 0.04)
+              : "rgba(255,255,255,0.02)",
+          borderColor: isOwn
+            ? hexToRgba(primary, 0.3)
+            : isClient
+              ? isResolved
+                ? hexToRgba("#10B981", 0.2)
+                : hexToRgba(primary, 0.12)
+              : "rgba(255,255,255,0.06)",
+          color: isOwn ? getBrandTextColor(primary) : undefined,
+        }}
       >
         <div className="flex items-baseline gap-2">
           <span className="text-[10px] font-semibold">
             {comment.authorName}
           </span>
           {typeof pinnedNumber === "number" ? (
-            <span className="ml-1 inline-flex items-center justify-center text-[8px] p-1 bg-violet-600 text-white rounded-full">
+            <span
+              className="ml-1 inline-flex items-center justify-center text-[8px] p-1 rounded-full"
+              style={{
+                backgroundColor: primary,
+                color: getBrandTextColor(primary),
+              }}
+            >
               Pin #{pinnedNumber}
             </span>
           ) : (
             comment.xPosition !== null &&
             comment.yPosition !== null && (
-              <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-violet-700/80 text-white px-2 py-0.5 rounded-full">
+              <span
+                className="ml-2 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: hexToRgba(primary, 0.8),
+                  color: getBrandTextColor(primary),
+                }}
+              >
                 <span aria-hidden>📌</span>
                 <span>Fixado</span>
               </span>
@@ -136,13 +168,14 @@ function CommentBubble({
           </span>
         </div>
         {parentComment && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={(e) => {
               e.stopPropagation();
               onJumpToComment(parentComment.id);
             }}
-            className="mt-2 flex w-full flex-col rounded-lg border-l-2 border-violet-400/70 bg-white/[0.04] px-3 py-2 text-left transition hover:bg-white/[0.06]"
+            className="mt-2 flex w-full flex-col rounded-lg px-3 py-2 text-left transition"
+            style={{ borderLeft: `2px solid ${hexToRgba(primary, 0.7)}` }}
           >
             <span className="text-[10px] font-semibold text-violet-200">
               Respondendo a {parentComment.authorName}
@@ -150,7 +183,7 @@ function CommentBubble({
             <span className="mt-1 text-[11px] text-white/60">
               {getCommentPreview(parentComment)}
             </span>
-          </button>
+          </Button>
         )}
         <div className="mt-1 break-words leading-relaxed">
           {comment.audioUrl || comment.content?.startsWith("__audio__:") ? (
@@ -176,9 +209,15 @@ function CommentBubble({
             onClick={onToggleResolved.bind(null, comment)}
             disabled={isToggling}
             aria-label={
-              isToggling ? "Salvando" : isResolved ? "Desfazer resolucao" : "Resolver"
+              isToggling
+                ? "Salvando"
+                : isResolved
+                  ? "Desfazer resolucao"
+                  : "Resolver"
             }
-            title={isToggling ? "Salvando..." : isResolved ? "Desfazer" : "Resolver"}
+            title={
+              isToggling ? "Salvando..." : isResolved ? "Desfazer" : "Resolver"
+            }
             className={cn(
               "inline-flex h-7 w-7 items-center justify-center rounded-full border shadow-sm transition",
               isResolved
@@ -217,6 +256,7 @@ export default function CommentSystem({
   onOpenPin,
   openCommentId,
   scrollable,
+  primaryColor,
 }: CommentSystemProps & { scrollable?: boolean }) {
   const isFreelancer = mode === "freelancer";
   const [comments, setComments] = useState<CommentData[]>(initialComments);
@@ -592,6 +632,7 @@ export default function CommentSystem({
                 }
                 onOpenPin={onOpenPin}
                 active={activeCommentId === comment.id}
+                primaryColor={primaryColor}
               />
             </div>
           ))}
@@ -634,13 +675,14 @@ export default function CommentSystem({
                 {getCommentPreview(replyingToComment)}
               </p>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setReplyingToId(null)}
-              className="text-xs font-medium text-white/55 transition hover:text-white/80"
+              brandColor={primaryColor}
             >
               Cancelar
-            </button>
+            </Button>
           </div>
         )}
 
@@ -658,6 +700,7 @@ export default function CommentSystem({
               resize="none"
               fullWidth
               className="flex-1 h-12 px-4 py-2"
+              brandColor={primaryColor}
             />
 
             <div className="flex items-center gap-2">
@@ -666,6 +709,7 @@ export default function CommentSystem({
                   variant="danger"
                   onClick={stopRecording}
                   aria-label="Parar gravação"
+                  brandColor={primaryColor}
                 >
                   <Pause />
                 </Button>
@@ -676,11 +720,16 @@ export default function CommentSystem({
                   loading={isPending}
                   disabled={!content.trim() && !audioBlob && !audioUrl}
                   aria-label="Enviar comentário"
+                  brandColor={primaryColor}
                 >
                   <SendHorizontal />
                 </Button>
               ) : (
-                <Button onClick={startRecording} aria-label="Gravar áudio">
+                <Button
+                  onClick={startRecording}
+                  aria-label="Gravar áudio"
+                  brandColor={primaryColor}
+                >
                   <Mic />
                 </Button>
               )}
@@ -694,6 +743,7 @@ export default function CommentSystem({
                 }}
                 variant="ghost"
                 aria-label="Cancelar"
+                brandColor={primaryColor}
               >
                 <X />
               </Button>
@@ -725,10 +775,15 @@ export default function CommentSystem({
               <Button
                 variant="ghost"
                 onClick={() => setNamePromptVisible(false)}
+                brandColor={primaryColor}
               >
                 Cancel
               </Button>
-              <Button onClick={saveNameAndContinue} variant="primary">
+              <Button
+                onClick={saveNameAndContinue}
+                variant="primary"
+                brandColor={primaryColor}
+              >
                 Save
               </Button>
             </div>
@@ -739,6 +794,7 @@ export default function CommentSystem({
               placeholder="Your name"
               value={authorName}
               onChange={(e) => setAuthorName(e.target.value)}
+              brandColor={primaryColor}
             />
             {formError && <p className="text-xs text-red-400">{formError}</p>}
           </div>

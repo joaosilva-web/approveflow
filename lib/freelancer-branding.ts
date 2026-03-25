@@ -23,6 +23,7 @@ type SettingsRow = {
   logoUrl: string | null;
   primaryColor: string;
   secondaryColor: string;
+  backgroundColor?: string | null;
   slug: string;
   userName: string | null;
   userEmail: string | null;
@@ -37,6 +38,10 @@ async function resolveBranding(row: SettingsRow | null) {
     row?.secondaryColor ?? DEFAULT_SECONDARY_COLOR,
     DEFAULT_SECONDARY_COLOR,
   );
+
+  const backgroundColor = row?.backgroundColor
+    ? normalizeHexColor(row.backgroundColor, DEFAULT_PRIMARY_COLOR)
+    : null;
 
   let logoUrl: string | null = null;
   if (row?.logoUrl) {
@@ -58,30 +63,56 @@ async function resolveBranding(row: SettingsRow | null) {
     logoPath: row?.logoUrl ?? null,
     primaryColor,
     secondaryColor,
+    backgroundColor,
     slug: row?.slug ?? null,
   } satisfies FreelancerBranding;
 }
 
 export async function getFreelancerBrandingByUserId(userId: string) {
-  const [row] = await prisma.$queryRaw<SettingsRow[]>`
-    SELECT
-      fs."userId",
-      fs."displayName",
-      fs."logoUrl",
-      fs."primaryColor",
-      fs."secondaryColor",
-      fs."slug",
-      u."name" as "userName",
-      u."email" as "userEmail"
-    FROM "FreelancerSettings" fs
-    INNER JOIN "User" u ON u."id" = fs."userId"
-    WHERE fs."userId" = ${userId}
-    LIMIT 1
-  `;
+  let row: SettingsRow | undefined;
+  try {
+    const [r] = await prisma.$queryRaw<SettingsRow[]>`
+      SELECT
+        fs."userId",
+        fs."displayName",
+        fs."logoUrl",
+        fs."primaryColor",
+        fs."backgroundColor",
+        fs."secondaryColor",
+        fs."slug",
+        u."name" as "userName",
+        u."email" as "userEmail"
+      FROM "FreelancerSettings" fs
+      INNER JOIN "User" u ON u."id" = fs."userId"
+      WHERE fs."userId" = ${userId}
+      LIMIT 1
+    `;
+    row = r;
+  } catch (err: unknown) {
+    // Fallback to a simpler query if the DB doesn't include the backgroundColor column yet.
+    const [r] = await prisma.$queryRaw<SettingsRow[]>`
+      SELECT
+        fs."userId",
+        fs."displayName",
+        fs."logoUrl",
+        fs."primaryColor",
+        fs."secondaryColor",
+        fs."slug",
+        u."name" as "userName",
+        u."email" as "userEmail"
+      FROM "FreelancerSettings" fs
+      INNER JOIN "User" u ON u."id" = fs."userId"
+      WHERE fs."userId" = ${userId}
+      LIMIT 1
+    `;
+    row = r as SettingsRow | undefined;
+  }
 
   if (row) return resolveBranding(row);
 
-  const [user] = await prisma.$queryRaw<Array<{ userId: string; userName: string | null; userEmail: string | null }>>`
+  const [user] = await prisma.$queryRaw<
+    Array<{ userId: string; userName: string | null; userEmail: string | null }>
+  >`
     SELECT
       u."id" as "userId",
       u."name" as "userName",
@@ -101,6 +132,7 @@ export async function getFreelancerBrandingByUserId(userId: string) {
     logoUrl: null,
     primaryColor: DEFAULT_PRIMARY_COLOR,
     secondaryColor: DEFAULT_SECONDARY_COLOR,
+    backgroundColor: null,
     slug: "",
     userName: user.userName,
     userEmail: user.userEmail,
@@ -110,22 +142,44 @@ export async function getFreelancerBrandingByUserId(userId: string) {
 export async function getFreelancerBrandingBySlug(slug: string) {
   const normalizedSlug = normalizeSlug(slug);
   if (!normalizedSlug) return null;
-
-  const [row] = await prisma.$queryRaw<SettingsRow[]>`
-    SELECT
-      fs."userId",
-      fs."displayName",
-      fs."logoUrl",
-      fs."primaryColor",
-      fs."secondaryColor",
-      fs."slug",
-      u."name" as "userName",
-      u."email" as "userEmail"
-    FROM "FreelancerSettings" fs
-    INNER JOIN "User" u ON u."id" = fs."userId"
-    WHERE fs."slug" = ${normalizedSlug}
-    LIMIT 1
-  `;
+  let row: SettingsRow | undefined;
+  try {
+    const [r] = await prisma.$queryRaw<SettingsRow[]>`
+      SELECT
+        fs."userId",
+        fs."displayName",
+        fs."logoUrl",
+        fs."primaryColor",
+        fs."backgroundColor",
+        fs."secondaryColor",
+        fs."slug",
+        u."name" as "userName",
+        u."email" as "userEmail"
+      FROM "FreelancerSettings" fs
+      INNER JOIN "User" u ON u."id" = fs."userId"
+      WHERE fs."slug" = ${normalizedSlug}
+      LIMIT 1
+    `;
+    row = r;
+  } catch (err: unknown) {
+    // Fallback to a simpler query if the DB doesn't include the backgroundColor column yet.
+    const [r] = await prisma.$queryRaw<SettingsRow[]>`
+      SELECT
+        fs."userId",
+        fs."displayName",
+        fs."logoUrl",
+        fs."primaryColor",
+        fs."secondaryColor",
+        fs."slug",
+        u."name" as "userName",
+        u."email" as "userEmail"
+      FROM "FreelancerSettings" fs
+      INNER JOIN "User" u ON u."id" = fs."userId"
+      WHERE fs."slug" = ${normalizedSlug}
+      LIMIT 1
+    `;
+    row = r as SettingsRow | undefined;
+  }
 
   if (!row) return null;
   return resolveBranding(row);
@@ -161,39 +215,78 @@ export async function saveFreelancerBranding(input: {
   logoUrl: string | null;
   primaryColor: string;
   secondaryColor: string;
+  backgroundColor?: string | null;
   slug: string;
 }) {
-  await prisma.$executeRaw`
-    INSERT INTO "FreelancerSettings" (
-      "id",
-      "userId",
-      "displayName",
-      "logoUrl",
-      "primaryColor",
-      "secondaryColor",
-      "slug",
-      "createdAt",
-      "updatedAt"
-    )
-    VALUES (
-      ${randomUUID()},
-      ${input.userId},
-      ${input.displayName},
-      ${input.logoUrl},
-      ${input.primaryColor},
-      ${input.secondaryColor},
-      ${input.slug},
-      NOW(),
-      NOW()
-    )
-    ON CONFLICT ("userId")
-    DO UPDATE SET
-      "displayName" = EXCLUDED."displayName",
-      "logoUrl" = EXCLUDED."logoUrl",
-      "primaryColor" = EXCLUDED."primaryColor",
-      "secondaryColor" = EXCLUDED."secondaryColor",
-      "slug" = EXCLUDED."slug",
-      "updatedAt" = NOW()
-  `;
+  try {
+    await prisma.$executeRaw`
+      INSERT INTO "FreelancerSettings" (
+        "id",
+        "userId",
+        "displayName",
+        "logoUrl",
+        "primaryColor",
+        "backgroundColor",
+        "secondaryColor",
+        "slug",
+        "createdAt",
+        "updatedAt"
+      )
+      VALUES (
+        ${randomUUID()},
+        ${input.userId},
+        ${input.displayName},
+        ${input.logoUrl},
+        ${input.primaryColor},
+        ${input.backgroundColor},
+        ${input.secondaryColor},
+        ${input.slug},
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT ("userId")
+      DO UPDATE SET
+        "displayName" = EXCLUDED."displayName",
+        "logoUrl" = EXCLUDED."logoUrl",
+        "primaryColor" = EXCLUDED."primaryColor",
+        "backgroundColor" = EXCLUDED."backgroundColor",
+        "secondaryColor" = EXCLUDED."secondaryColor",
+        "slug" = EXCLUDED."slug",
+        "updatedAt" = NOW()
+    `;
+  } catch (err: unknown) {
+    // Fallback insert/update that omits backgroundColor when the DB doesn't have the column yet.
+    await prisma.$executeRaw`
+      INSERT INTO "FreelancerSettings" (
+        "id",
+        "userId",
+        "displayName",
+        "logoUrl",
+        "primaryColor",
+        "secondaryColor",
+        "slug",
+        "createdAt",
+        "updatedAt"
+      )
+      VALUES (
+        ${randomUUID()},
+        ${input.userId},
+        ${input.displayName},
+        ${input.logoUrl},
+        ${input.primaryColor},
+        ${input.secondaryColor},
+        ${input.slug},
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT ("userId")
+      DO UPDATE SET
+        "displayName" = EXCLUDED."displayName",
+        "logoUrl" = EXCLUDED."logoUrl",
+        "primaryColor" = EXCLUDED."primaryColor",
+        "secondaryColor" = EXCLUDED."secondaryColor",
+        "slug" = EXCLUDED."slug",
+        "updatedAt" = NOW()
+    `;
+  }
 }
-

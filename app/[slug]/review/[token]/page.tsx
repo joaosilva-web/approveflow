@@ -48,8 +48,14 @@ export default async function BrandedReviewPage({
   const pageData = await loadReviewPageData(token);
   if (!pageData) notFound();
 
-  const { delivery, signedUrl, initialComments, allDeliveries, branding } =
-    pageData;
+  const {
+    delivery,
+    signedUrl,
+    initialComments,
+    allDeliveries,
+    branding,
+    subscription,
+  } = pageData;
 
   if (!branding?.slug || branding.slug !== slug) {
     notFound();
@@ -129,6 +135,7 @@ export default async function BrandedReviewPage({
       freelancerDisplayName={delivery.project.user?.name ?? null}
       branding={branding}
       reviewPathSlug={slug}
+      subscription={subscription}
     />
   );
 }

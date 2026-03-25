@@ -2,6 +2,7 @@
 
 import React, { useId } from "react";
 import { cn } from "@/lib/utils";
+import { hexToRgba } from "@/lib/freelancer-branding-shared";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
   fullWidth?: boolean;
+  brandColor?: string;
 }
 
 // ─── Size map ─────────────────────────────────────────────────────────────────
@@ -52,6 +54,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       className,
       id,
       required,
+      brandColor,
       ...props
     },
     ref,
@@ -101,6 +104,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               rightElement ? paddingRight[inputSize] : undefined,
               className,
             )}
+            style={
+              brandColor
+                ? { borderColor: hexToRgba(brandColor, 0.18) }
+                : undefined
+            }
             aria-describedby={
               error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined
             }

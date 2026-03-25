@@ -66,21 +66,10 @@ export async function POST(
     );
   }
 
-  let comment: {
-    id: string;
-    parentId: string | null;
-    authorType: "CLIENT" | "FREELANCER";
-    authorName: string;
-    content: string;
-    audioUrl: string | null;
-    xPosition: number | null;
-    yPosition: number | null;
-    createdAt: Date;
-  };
+  let comment;
+  let parentId: string | null = null;
 
   try {
-    let parentId: string | null = null;
-
     if (parsed.data.parentId) {
       const parentComment = await prisma.comment.findFirst({
         where: {
@@ -103,7 +92,6 @@ export async function POST(
     comment = await prisma.comment.create({
       data: {
         deliveryId: delivery.id,
-        parentId,
         authorType: parsed.data.authorType,
         authorName: parsed.data.authorName,
         authorEmail: parsed.data.authorEmail || null,
@@ -113,6 +101,18 @@ export async function POST(
         yPosition: parsed.data.yPosition ?? null,
       } as unknown as Parameters<typeof prisma.comment.create>[0]["data"],
     });
+
+    if (parentId) {
+      try {
+        await prisma.$executeRaw`
+          UPDATE "Comment"
+          SET "parentId" = ${parentId}
+          WHERE id = ${comment.id}
+        `;
+      } catch (err) {
+        // ignore
+      }
+    }
   } catch (err: unknown) {
     console.error("Comment create failed:", err);
     return NextResponse.json(
@@ -126,7 +126,9 @@ export async function POST(
   if (comment.authorType === "CLIENT") {
     const ownerEmail = delivery.project.user?.email;
     if (ownerEmail) {
-      const branding = await getFreelancerBrandingByUserId(delivery.project.userId);
+      const branding = await getFreelancerBrandingByUserId(
+        delivery.project.userId,
+      );
       sendCommentNotificationEmail({
         to: ownerEmail,
         projectName: delivery.project.name,
@@ -145,11 +147,10 @@ export async function POST(
     authorName: comment.authorName,
     content: comment.content,
     audioUrl: comment.audioUrl,
-    parentId: comment.parentId,
+    parentId: parentId,
     xPosition: comment.xPosition,
     yPosition: comment.yPosition,
     resolvedAt: null,
     createdAt: comment.createdAt.toISOString(),
   });
 }
-

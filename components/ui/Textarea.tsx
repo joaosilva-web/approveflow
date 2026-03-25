@@ -2,6 +2,7 @@
 
 import React, { useId } from "react";
 import { cn } from "@/lib/utils";
+import { hexToRgba } from "@/lib/freelancer-branding-shared";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -11,6 +12,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   error?: string;
   fullWidth?: boolean;
   resize?: "none" | "both" | "horizontal" | "vertical";
+  brandColor?: string;
 }
 
 const resizeClasses = {
@@ -34,6 +36,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       id,
       required,
       rows = 4,
+      brandColor,
       ...props
     },
     ref,
@@ -73,6 +76,11 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             resizeClasses[resize],
             className,
           )}
+          style={
+            brandColor
+              ? { borderColor: hexToRgba(brandColor, 0.18) }
+              : undefined
+          }
           aria-describedby={
             error
               ? `${textareaId}-error`

@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { hexToRgba, getBrandTextColor } from "@/lib/freelancer-branding-shared";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   href?: string;
+  brandColor?: string;
 }
 
 // ─── Variant & size maps ──────────────────────────────────────────────────────
@@ -106,6 +108,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       disabled,
       href,
+      brandColor,
       ...props
     },
     ref,
@@ -136,9 +139,30 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       </>
     );
 
+    const styleOverride = brandColor
+      ? variant === "primary"
+        ? {
+            backgroundImage: "none",
+            backgroundColor: brandColor,
+            borderColor: hexToRgba(brandColor, 0.28),
+            color: getBrandTextColor(brandColor),
+          }
+        : variant === "outline"
+          ? {
+              borderColor: brandColor,
+              color: brandColor,
+              backgroundColor: hexToRgba(brandColor, 0.06),
+            }
+          : { color: brandColor }
+      : undefined;
+
     if (href) {
       return (
-        <Link href={href} className={classes}>
+        <Link
+          href={href}
+          className={classes}
+          style={styleOverride as React.CSSProperties}
+        >
           {inner}
         </Link>
       );
@@ -149,6 +173,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={classes}
+        style={styleOverride as React.CSSProperties}
         {...props}
       >
         {inner}

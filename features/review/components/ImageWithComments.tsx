@@ -2,6 +2,11 @@
 
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import {
+  hexToRgba,
+  getBrandTextColor,
+  DEFAULT_PRIMARY_COLOR,
+} from "@/lib/freelancer-branding-shared";
 import type { CommentData } from "@/features/review/components/CommentSystem";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -24,6 +29,7 @@ interface ImageWithCommentsProps {
   openPinCommentId?: string | null;
   onPinOpened?: () => void;
   onPinClick?: (commentId: string) => void;
+  primaryColor?: string;
 }
 
 // ─── Zoom constants ───────────────────────────────────────────────────────────
@@ -103,11 +109,14 @@ function PinMarker({
   number,
   style,
   active = false,
+  brandColor,
 }: {
   number: number;
   style: React.CSSProperties;
   active?: boolean;
+  brandColor?: string;
 }) {
+  const primary = brandColor ?? DEFAULT_PRIMARY_COLOR;
   return (
     <div
       className={cn(
@@ -115,11 +124,13 @@ function PinMarker({
         "flex items-center justify-center text-[10px] font-bold text-white select-none",
         "shadow-lg shadow-black/50",
         "border-2",
-        active
-          ? "bg-violet-600 border-violet-400 scale-110"
-          : "bg-violet-700/90 border-violet-500/60",
       )}
-      style={style}
+      style={{
+        ...(style || {}),
+        backgroundColor: active ? primary : hexToRgba(primary, 0.9),
+        borderColor: active ? hexToRgba(primary, 0.9) : hexToRgba(primary, 0.7),
+        color: getBrandTextColor(primary),
+      }}
     >
       {number}
     </div>
@@ -142,24 +153,28 @@ function AddCommentPopup({
   commentApiBase,
   onAdd,
   onCancel,
-}: AddCommentPopupProps) {
-  const [name, setName] = useState("");
+  primaryColor,
+}: AddCommentPopupProps & { primaryColor?: string }) {
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showNameInput, setShowNameInput] = useState(true);
-
-  useEffect(() => {
+  const [showNameInput, setShowNameInput] = useState(() => {
     try {
-      const saved = localStorage.getItem("review_author_name");
-      if (saved) {
-        setName(saved);
-        setShowNameInput(false);
-      }
-    } catch (err) {
-      // ignore
+      return !localStorage.getItem("review_author_name");
+    } catch {
+      return true;
     }
-  }, []);
+  });
+
+  // Initialize `name` lazily from localStorage to avoid synchronous setState in effects
+  const [initialName] = useState(() => {
+    try {
+      return localStorage.getItem("review_author_name") ?? "";
+    } catch {
+      return "";
+    }
+  });
+  const [name, setName] = useState(initialName);
 
   const submit = async () => {
     if (!content.trim()) {
@@ -205,8 +220,7 @@ function AddCommentPopup({
   return (
     <div
       className={cn(
-        "absolute z-30 w-64 flex flex-col gap-3 p-4",
-        "bg-[#0d0d1e] border border-white/[0.12] rounded-2xl shadow-2xl shadow-black/60",
+        "absolute z-30 w-64 flex flex-col gap-3 z\|#0d0d1e] border rounded-2xl shadow-2xl shadow-black/60",
       )}
       // Offset popup above/beside click point
       style={{ left: pin.clientX + 12, top: pin.clientY - 16 }}
@@ -217,9 +231,8 @@ function AddCommentPopup({
       </p>
       <input
         className={cn(
-          "w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5",
+          "w-full bg-white/[0.04] rounded-lg px-3 py-1.5",
           "text-sm text-white/80 placeholder:text-white/25 outline-none",
-          "focus:border-violet-500/50 focus:bg-violet-500/[0.04]",
         )}
         placeholder="Your name"
         value={name}
@@ -229,9 +242,8 @@ function AddCommentPopup({
       />
       <textarea
         className={cn(
-          "w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2",
+          "w-full bg-white/[0.04] rounded-lg px-3 py-2",
           "text-sm text-white/80 placeholder:text-white/25 outline-none resize-none",
-          "focus:border-violet-500/50 focus:bg-violet-500/[0.04]",
         )}
         placeholder="Write a comment…"
         rows={3}
@@ -242,14 +254,19 @@ function AddCommentPopup({
       <div className="flex gap-2">
         <button
           onClick={onCancel}
-          className="flex-1 py-1.5 rounded-lg text-xs text-white/50 hover:text-white/80 bg-white/[0.04] hover:bg-white/[0.07] transition-colors"
+          className="flex-1 py-1.5 rounded-lg text-xs text-white/50 hover:text-white/80 transition-colors"
+          style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
         >
           Cancel
         </button>
         <button
           onClick={submit}
           disabled={loading}
-          className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 transition-colors"
+          className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-50 transition-colors"
+          style={{
+            backgroundColor: primaryColor ?? DEFAULT_PRIMARY_COLOR,
+            color: getBrandTextColor(primaryColor ?? DEFAULT_PRIMARY_COLOR),
+          }}
         >
           {loading ? "Posting…" : "Post"}
         </button>
@@ -270,6 +287,7 @@ export default function ImageWithComments({
   openPinCommentId,
   onPinOpened,
   onPinClick,
+  primaryColor,
 }: ImageWithCommentsProps) {
   const imgRef = useRef<HTMLImageElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -434,6 +452,7 @@ export default function ImageWithComments({
                       number={i + 1}
                       style={{}}
                       active={activePinId === c.id}
+                      brandColor={primaryColor}
                     />
                   </div>
                 );
@@ -449,6 +468,7 @@ export default function ImageWithComments({
                   left: `${pendingPin.x * 100}%`,
                   top: `${pendingPin.y * 100}%`,
                 }}
+                brandColor={primaryColor}
               />
             )}
 
@@ -460,6 +480,7 @@ export default function ImageWithComments({
                 commentApiBase={commentApiBase ?? "/api/review"}
                 onAdd={handleCommentAdded}
                 onCancel={() => setPendingPin(null)}
+                primaryColor={primaryColor}
               />
             )}
           </div>

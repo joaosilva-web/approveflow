@@ -158,6 +158,7 @@ model FreelancerSettings {
     logoUrl        String?
     primaryColor   String   @default("#7C3AED")
     secondaryColor String   @default("#4F46E5")
+    backgroundColor String?
     slug           String   @unique
     createdAt      DateTime @default(now())
     updatedAt      DateTime @updatedAt
