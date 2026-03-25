@@ -104,10 +104,23 @@ model Delivery {
     createdAt     DateTime       @default(now())
     updatedAt     DateTime       @updatedAt
 
-    project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-    comments Comment[]
-    views    View[]
-    approval Approval?
+    project               Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    comments             Comment[]
+    views                View[]
+    approval             Approval?
+    chatNotificationState ChatNotificationState?
+}
+
+model ChatNotificationState {
+    id                     String    @id @default(cuid())
+    deliveryId             String    @unique
+    hasPendingNotification Boolean   @default(false)
+    unreadCount            Int       @default(0)
+    lastNotifiedAt         DateTime?
+    createdAt              DateTime  @default(now())
+    updatedAt              DateTime  @updatedAt
+
+    delivery Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
 }
 
 model Comment {
