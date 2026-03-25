@@ -58,8 +58,9 @@ export async function POST(req: NextRequest) {
     sessionId = result.sessionId;
   } catch (err) {
     console.error("[billing/create-checkout] Stripe error:", err);
+    const message = err instanceof Error ? err.message : "Failed to create checkout.";
     return NextResponse.json(
-      { error: "Failed to create checkout. Please try again." },
+      { error: `${message} Please contact support or check Stripe configuration.` },
       { status: 502 },
     );
   }

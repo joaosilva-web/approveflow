@@ -153,8 +153,12 @@ export default function BillingPageClient({
   const [loadingPlan, setLoadingPlan] = useState<"pro" | "studio" | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState<"pro" | "studio" | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const autoStartedRef = useRef(false);
+  const autoConfirmRef = useRef(false);
 
   // ── Pending-payment polling ─────────────────────────────────────────────────
   // If the user returns from Stripe with ?status=pending, poll until the webhook
@@ -214,19 +218,29 @@ export default function BillingPageClient({
   };
 
   // ── Checkout handler ────────────────────────────────────────────────────────
+  // Open confirmation dialog rather than starting checkout immediately.
   const handleUpgrade = async (planCode: "pro" | "studio") => {
-    setLoadingPlan(planCode);
+    setPendingPlan(planCode);
+    setShowCheckoutConfirm(true);
+  };
+
+  const confirmUpgrade = async () => {
+    if (!pendingPlan) return;
+    setCheckoutLoading(true);
     setApiError(null);
+    setLoadingPlan(pendingPlan);
     try {
       const res = await fetch("/api/billing/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planCode }),
+        body: JSON.stringify({ planCode: pendingPlan }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error ?? "Failed to start checkout.");
       }
+      // Close dialog and redirect to Stripe
+      setShowCheckoutConfirm(false);
       window.location.href = data.checkoutUrl as string;
     } catch (e) {
       setApiError(
@@ -235,6 +249,8 @@ export default function BillingPageClient({
           : "Failed to start checkout. Please try again.",
       );
       setLoadingPlan(null);
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
@@ -248,10 +264,15 @@ export default function BillingPageClient({
       // Only auto-start if it's not the current plan
       if (plan !== subscription.planCode) {
         autoStartedRef.current = true;
-        // give a tiny delay to allow UI to mount
-        setTimeout(() => {
-          handleUpgrade(plan as "pro" | "studio");
-        }, 300);
+        setPendingPlan(plan as "pro" | "studio");
+        setShowCheckoutConfirm(true);
+        // auto-confirm once after a short delay to preserve UX for marketing CTAs
+        if (!autoConfirmRef.current) {
+          autoConfirmRef.current = true;
+          setTimeout(() => {
+            confirmUpgrade();
+          }, 700);
+        }
       }
     }
   }, [subscription.planCode]);
@@ -274,6 +295,20 @@ export default function BillingPageClient({
 
   return (
     <>
+      <ConfirmDialog
+        open={showCheckoutConfirm}
+        title={pendingPlan === "studio" ? "Upgrade to Studio" : "Upgrade plan"}
+        description={`You will be redirected to Stripe to complete payment for the ${pendingPlan?.toUpperCase()} plan.`}
+        confirmLabel="Proceed to payment"
+        cancelLabel="Choose later"
+        loading={checkoutLoading}
+        onConfirm={confirmUpgrade}
+        onCancel={() => {
+          setShowCheckoutConfirm(false);
+          setPendingPlan(null);
+          setLoadingPlan(null);
+        }}
+      />
       <ConfirmDialog
         open={showCancelDialog}
         title="Downgrade to Free?"

@@ -45,6 +45,16 @@ export async function createStripeCheckout(
     );
   }
 
+  // Runtime validation: ensure the price exists in Stripe to avoid
+  // misleading "No such price" runtime errors (likely env mismatch).
+  try {
+    await stripe.prices.retrieve(priceId);
+  } catch (err) {
+    throw new Error(
+      `Stripe price validation failed for ${priceId}. Check STRIPE_PRICE_${params.planCode.toUpperCase()} and the Stripe environment (test vs live).`,
+    );
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     payment_method_types: ["card"],
