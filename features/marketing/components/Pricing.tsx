@@ -48,15 +48,20 @@ function translateFeatureToPt(feature: string) {
     "5 GB storage": "5 GB de armazenamento",
     "50 GB storage": "50 GB de armazenamento",
     "200 GB storage": "200 GB de armazenamento",
+    "Up to 3 active projects": "Até 3 projetos ativos",
     "Unlimited active projects": "Projetos ilimitados",
+    "Unlimited review links": "Links de revisão ilimitados",
     "Unlimited projects": "Projetos ilimitados",
-    "Public review links": "Links de revisão públicos",
     "Guest uploads (no client login needed)": "Uploads de clientes (sem login)",
     "Pinned comments on designs": "Comentários fixados em designs",
     "Everything in Free": "Tudo do Free",
     "Everything in Pro": "Tudo do Pro",
     "Priority support": "Suporte prioritário",
+    "Priority integrations": "Integrações prioritárias",
     "Custom branding": "Branding personalizado",
+    "Team members (coming soon)": "Membros da equipe (em breve)",
+    "Advanced workflow (coming soon)": "Fluxo avançado (em breve)",
+    "API access (coming soon)": "Acesso à API (em breve)",
   };
 
   return map[feature] ?? feature;
@@ -218,21 +223,25 @@ function PlanCard({ plan }: { plan: Plan }) {
         aria-label={`${plan.name} plan features`}
         role="list"
       >
-        {plan.features.map((feature) => (
-          <li key={feature} className="flex items-center gap-2.5">
-            <span className="shrink-0">
-              <CheckIcon highlighted={plan.highlight} />
-            </span>
-            <span
-              className={cn(
-                "text-sm",
-                plan.highlight ? "text-white/70" : "text-white/55",
-              )}
-            >
-              {feature}
-            </span>
-          </li>
-        ))}
+        {plan.features.map((feature) => {
+          const isStorage = /storage/i.test(feature);
+          return (
+            <li key={feature} className="flex items-center gap-2.5">
+              <span className="shrink-0">
+                <CheckIcon highlighted={plan.highlight} />
+              </span>
+              <span
+                className={cn(
+                  "text-sm",
+                  plan.highlight ? "text-white/70" : "text-white/55",
+                  isStorage ? "font-semibold text-white" : "",
+                )}
+              >
+                {feature}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </article>
   );
