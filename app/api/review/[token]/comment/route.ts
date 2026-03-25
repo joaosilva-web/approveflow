@@ -1,7 +1,9 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { sendCommentNotificationEmail } from "@/lib/email";
-import { getFreelancerBrandingByUserId } from "@/lib/freelancer-branding";
+import {
+  handleClientMessage,
+  handleFreelancerResponse,
+} from "@/lib/chat-notification";
 import { z } from "zod";
 
 const commentSchema = z.object({
@@ -124,21 +126,17 @@ export async function POST(
   }
 
   if (comment.authorType === "CLIENT") {
-    const ownerEmail = delivery.project.user?.email;
-    if (ownerEmail) {
-      const branding = await getFreelancerBrandingByUserId(
-        delivery.project.userId,
-      );
-      sendCommentNotificationEmail({
-        to: ownerEmail,
-        projectName: delivery.project.name,
+    handleClientMessage(
+      {
+        deliveryId: delivery.id,
         reviewToken: token,
-        authorName: comment.authorName,
-        comment: comment.content,
-        freelancerSlug: branding.slug,
-        locale: (delivery.project.user?.locale as "pt" | "en") ?? "pt",
-      }).catch(console.error);
-    }
+        project: delivery.project,
+      },
+      comment.authorName,
+      comment.content,
+    ).catch(console.error);
+  } else if (comment.authorType === "FREELANCER") {
+    handleFreelancerResponse(delivery.id).catch(console.error);
   }
 
   return NextResponse.json({

@@ -250,38 +250,70 @@ export async function sendCommentNotificationEmail(opts: {
   reviewToken: string;
   authorName: string;
   comment: string;
+  unreadCount?: number;
   freelancerSlug?: string | null;
   locale?: Locale;
 }) {
   const locale = opts.locale ?? "pt";
   const reviewUrl = getReviewUrl(opts.reviewToken, opts.freelancerSlug, true);
   const safeComment = escapeHtml(opts.comment).replace(/\r?\n/g, "<br />");
+  const count = opts.unreadCount ?? 1;
 
   const t =
     locale === "pt"
       ? {
-          subject: `Novo comentário em ${opts.projectName}`,
-          title: "Novo comentário do cliente",
-          body: `<strong>${escapeHtml(opts.authorName)}</strong> comentou no projeto <strong>${escapeHtml(opts.projectName)}</strong>.`,
-          quoteLabel: "Comentário",
+          subject:
+            count > 1
+              ? `${count} novas mensagens em ${opts.projectName}`
+              : `Nova mensagem em ${opts.projectName}`,
+          title:
+            count > 1
+              ? `${count} novas mensagens do cliente`
+              : "Nova mensagem do cliente",
+          body: `<strong>${escapeHtml(opts.authorName)}</strong> enviou uma mensagem no projeto <strong>${escapeHtml(opts.projectName)}</strong>.`,
+          countBadge:
+            count > 1
+              ? `Você tem <strong>${count}</strong> mensagens não lidas neste projeto.`
+              : null,
+          quoteLabel: "Mensagem",
           sub: "Abra o projeto para responder ou revisar o contexto completo.",
           cta: "Abrir Projeto",
-          text: `Novo comentário do cliente\n\n${opts.authorName} comentou no projeto ${opts.projectName}:\n\n"${opts.comment}"\n\nAbrir projeto:\n${reviewUrl}\n\n— ApproveFlow`,
+          text:
+            count > 1
+              ? `${count} novas mensagens do cliente\n\nVocê tem ${count} mensagens não lidas em ${opts.projectName}.\n\nÚltima mensagem de ${opts.authorName}:\n"${opts.comment}"\n\nAbrir projeto:\n${reviewUrl}\n\n— ApproveFlow`
+              : `Nova mensagem do cliente\n\n${opts.authorName} enviou uma mensagem no projeto ${opts.projectName}:\n\n"${opts.comment}"\n\nAbrir projeto:\n${reviewUrl}\n\n— ApproveFlow`,
         }
       : {
-          subject: `New comment on ${opts.projectName}`,
-          title: "New client comment",
-          body: `<strong>${escapeHtml(opts.authorName)}</strong> commented on <strong>${escapeHtml(opts.projectName)}</strong>.`,
-          quoteLabel: "Comment",
+          subject:
+            count > 1
+              ? `${count} new messages on ${opts.projectName}`
+              : `New message on ${opts.projectName}`,
+          title:
+            count > 1
+              ? `${count} new client messages`
+              : "New client message",
+          body: `<strong>${escapeHtml(opts.authorName)}</strong> sent a message on <strong>${escapeHtml(opts.projectName)}</strong>.`,
+          countBadge:
+            count > 1
+              ? `You have <strong>${count}</strong> unread messages on this project.`
+              : null,
+          quoteLabel: "Message",
           sub: "Open the project to reply or review the full context.",
           cta: "Open Project",
-          text: `New client comment\n\n${opts.authorName} commented on ${opts.projectName}:\n\n"${opts.comment}"\n\nOpen project:\n${reviewUrl}\n\n— ApproveFlow`,
+          text:
+            count > 1
+              ? `${count} new client messages\n\nYou have ${count} unread messages on ${opts.projectName}.\n\nLatest message from ${opts.authorName}:\n"${opts.comment}"\n\nOpen project:\n${reviewUrl}\n\n— ApproveFlow`
+              : `New client message\n\n${opts.authorName} sent a message on ${opts.projectName}:\n\n"${opts.comment}"\n\nOpen project:\n${reviewUrl}\n\n— ApproveFlow`,
         };
+
+  const countBadgeHtml = t.countBadge
+    ? `<p style="margin:0 0 20px;padding:10px 16px;background:#fef3c7;border-radius:6px;font-size:13px;color:#92400e">${t.countBadge}</p>`
+    : "";
 
   const body = `
     <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#111">${t.title}</p>
     <p style="margin:4px 0 24px;font-size:15px;color:#555">${t.body}</p>
-
+    ${countBadgeHtml}
     <div style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#888">
       ${t.quoteLabel}
     </div>
