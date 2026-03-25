@@ -15,7 +15,7 @@ type Tab = "signin" | "register";
 
 // ─── Sign in form ─────────────────────────────────────────────────────────────
 
-function SignInForm() {
+function SignInForm({ next }: { next?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -33,7 +33,8 @@ function SignInForm() {
       if (result?.error) {
         setError("Invalid email or password");
       } else {
-        window.location.href = "/dashboard";
+        const target = next ?? new URLSearchParams(window.location.search).get("next");
+        window.location.href = target ?? "/dashboard";
       }
     });
   };
@@ -78,7 +79,7 @@ function SignInForm() {
 
 // ─── Register form ────────────────────────────────────────────────────────────
 
-function RegisterForm() {
+function RegisterForm({ next }: { next?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -87,16 +88,18 @@ function RegisterForm() {
     const formData = new FormData(e.currentTarget);
 
     startTransition(async () => {
+      if (next) formData.set("next", next);
       const result = await registerUser(formData);
       if (result?.error) {
         setError(result.error);
       }
-      // On success, registerUser redirects to /dashboard
+      // registerUser will redirect on success based on `next`
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <input type="hidden" name="next" value={next ?? ""} />
       <Input
         name="name"
         label="Full name"
@@ -146,6 +149,8 @@ function RegisterForm() {
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<Tab>("signin");
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const next = searchParams.get("next") ?? undefined;
 
   return (
     <div className="w-full max-w-sm flex flex-col gap-8">
@@ -186,7 +191,7 @@ export default function LoginPage() {
           ))}
         </div>
 
-        {activeTab === "signin" ? <SignInForm /> : <RegisterForm />}
+        {activeTab === "signin" ? <SignInForm next={next} /> : <RegisterForm next={next} />}
       </div>
 
       <p className="text-center text-xs text-white/25">

@@ -40,6 +40,7 @@ type Plan = {
   cta: string;
   highlight: boolean;
   badge?: string;
+  code?: string;
 };
 
 function translateFeatureToPt(feature: string) {
@@ -67,7 +68,9 @@ function planToCard(lang: Lang, planCode: string): Plan {
   if (def.priceBrl === 0) {
     price = "R$0";
   } else {
-    const formatted = def.priceBrl.toFixed(2).replace('.', lang === 'pt' ? ',' : '.');
+    const formatted = def.priceBrl
+      .toFixed(2)
+      .replace(".", lang === "pt" ? "," : ".");
     price = `R$${formatted}`;
   }
   const period = lang === "pt" ? "/ mês" : "/ month";
@@ -192,7 +195,9 @@ function PlanCard({ plan }: { plan: Plan }) {
       <Button
         variant={plan.highlight ? "primary" : "secondary"}
         fullWidth
-        href="/login"
+        href={`/login?next=${encodeURIComponent(
+          `/dashboard/billing?plan=${encodeURIComponent(plan.code ?? plan.name.toLowerCase())}`,
+        )}`}
         className="mb-7"
       >
         {plan.cta}

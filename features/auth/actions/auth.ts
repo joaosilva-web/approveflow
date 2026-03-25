@@ -57,12 +57,15 @@ export async function registerUser(
     });
   }
 
+  // Determine redirect target (from form `next` or default)
+  const next = (formData.get("next") as string) || null;
+
   // Sign in immediately after registration
   await signIn("credentials", {
     email: parsed.data.email,
     password: parsed.data.password,
-    redirectTo: "/dashboard",
+    redirectTo: next ?? "/dashboard",
   });
 
-  redirect("/dashboard");
+  redirect(next ?? "/dashboard");
 }
