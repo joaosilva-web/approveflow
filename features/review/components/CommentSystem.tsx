@@ -36,7 +36,7 @@ function getCommentPreview(comment: Pick<CommentData, "content" | "audioUrl">) {
 
   const normalized = comment.content.replace(/\s+/g, " ").trim();
   if (!normalized) return "Mensagem";
-  return normalized.length > 90 ? `${normalized.slice(0, 90)}...` : normalized;
+  return normalized.length > 50 ? `${normalized.slice(0, 50)}…` : normalized;
 }
 
 interface CommentSystemProps {
@@ -168,22 +168,22 @@ function CommentBubble({
           </span>
         </div>
         {parentComment && (
-          <Button
-            variant="secondary"
+          <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onJumpToComment(parentComment.id);
             }}
-            className="mt-2 flex w-full flex-col rounded-lg px-3 py-2 text-left transition"
+            className="mt-1.5 flex w-full flex-col items-start gap-0.5 rounded-md bg-white/[0.06] px-2.5 py-2 text-left transition hover:bg-white/[0.10]"
             style={{ borderLeft: `2px solid ${hexToRgba(primary, 0.7)}` }}
           >
             <span className="text-[10px] font-semibold text-violet-200">
               Respondendo a {parentComment.authorName}
             </span>
-            <span className="mt-1 text-[11px] text-white/60">
+            <span className="truncate w-full text-[11px] leading-snug text-white/60">
               {getCommentPreview(parentComment)}
             </span>
-          </Button>
+          </button>
         )}
         <div className="mt-1 break-words leading-relaxed">
           {comment.audioUrl || comment.content?.startsWith("__audio__:") ? (
