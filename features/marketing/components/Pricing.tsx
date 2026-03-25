@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
 import { useLang, type Lang } from "@/features/marketing/context/lang-context";
+import { PLANS } from "@/features/billing/plans";
 
 // ─── Bilingual copy ───────────────────────────────────────────────────────────
 
@@ -41,103 +42,55 @@ type Plan = {
   badge?: string;
 };
 
+function translateFeatureToPt(feature: string) {
+  const map: Record<string, string> = {
+    "5 GB storage": "5 GB de armazenamento",
+    "50 GB storage": "50 GB de armazenamento",
+    "200 GB storage": "200 GB de armazenamento",
+    "Unlimited active projects": "Projetos ilimitados",
+    "Unlimited projects": "Projetos ilimitados",
+    "Public review links": "Links de revisão públicos",
+    "Guest uploads (no client login needed)": "Uploads de clientes (sem login)",
+    "Pinned comments on designs": "Comentários fixados em designs",
+    "Everything in Free": "Tudo do Free",
+    "Everything in Pro": "Tudo do Pro",
+    "Priority support": "Suporte prioritário",
+    "Custom branding": "Branding personalizado",
+  };
+
+  return map[feature] ?? feature;
+}
+
+function planToCard(lang: Lang, planCode: string) : Plan {
+  const def = PLANS[planCode];
+  const price = `R$${Math.round(def.priceBrl)}`;
+  const period = lang === "pt" ? "/ mês" : "/ month";
+  const description = lang === "pt" ? def.description : def.description;
+
+  const features = def.features.map((f) => (lang === "pt" ? translateFeatureToPt(f) : f));
+
+  const ctaMap: Record<string, {pt:string;en:string;badge?:string;highlight?:boolean}> = {
+    free: { pt: "Começar grátis", en: "Start for free", highlight: false },
+    pro: { pt: "Assinar Pro", en: "Get Pro", badge: "Mais Popular", highlight: true },
+    studio: { pt: "Assinar Studio", en: "Get Studio", highlight: false },
+  };
+
+  const meta = ctaMap[planCode];
+
+  return {
+    name: lang === "pt" ? (planCode === "free" ? "Free" : planCode === "pro" ? "Pro" : "Studio") : def.name,
+    price,
+    period: lang === "pt" && def.priceBrl === 0 ? "para sempre" : period,
+    description: lang === "pt" ? (planCode === "free" ? "Perfeito para começar com um ou dois clientes." : def.description) : def.description,
+    features,
+    cta: lang === "pt" ? meta.pt : meta.en,
+    highlight: !!meta.highlight,
+    badge: meta.badge,
+  };
+}
+
 function getPlans(lang: Lang): Plan[] {
-  if (lang === "pt") {
-    return [
-      {
-        name: "Free",
-        price: "R$0",
-        period: "para sempre",
-        description: "Perfeito para começar com um ou dois clientes.",
-        features: [
-          "3 projetos ativos",
-          "5 GB de armazenamento",
-          "Links de revisão públicos",
-          "Fluxo de aprovação",
-          "Histórico de versões (3 versões)",
-          "Notificações por e-mail",
-        ],
-        cta: "Começar grátis",
-        highlight: false,
-      },
-      {
-        name: "Pro",
-        price: "R$29",
-        period: "/ mês",
-        description:
-          "Para freelancers ativos com vários projetos em andamento.",
-        features: [
-          "Projetos ilimitados",
-          "50 GB de armazenamento",
-          "Expiração de link personalizada",
-          "Histórico de versões ilimitado",
-          "Links protegidos por senha",
-          "Notificações por e-mail",
-        ],
-        cta: "Assinar Pro",
-        highlight: true,
-        badge: "Mais Popular",
-      },
-      {
-        name: "Studio",
-        price: "R$59",
-        period: "/ mês",
-        description:
-          "Para equipes e agências que gerenciam projetos de clientes em escala.",
-        features: [
-          "Tudo do Pro",
-          "200 GB de armazenamento",
-          "Suporte dedicado",
-        ],
-        cta: "Assinar Studio",
-        highlight: false,
-      },
-    ];
-  }
-  return [
-    {
-      name: "Free",
-      price: "R$0",
-      period: "forever",
-      description: "Perfect for getting started with one or two clients.",
-      features: [
-        "3 active projects",
-        "5 GB storage",
-        "Public review links",
-        "Approval flow",
-        "Version history (3 versions)",
-        "Email notifications",
-      ],
-      cta: "Start for free",
-      highlight: false,
-    },
-    {
-      name: "Pro",
-      price: "R$29",
-      period: "/ month",
-      description: "For active freelancers with multiple ongoing projects.",
-      features: [
-        "Unlimited projects",
-        "50 GB storage",
-        "Custom link expiration",
-        "Unlimited version history",
-        "Password-protected links",
-        "Email notifications",
-      ],
-      cta: "Get Pro",
-      highlight: true,
-      badge: "Most Popular",
-    },
-    {
-      name: "Studio",
-      price: "R$59",
-      period: "/ month",
-      description: "For teams and agencies managing client projects at scale.",
-      features: ["Everything in Pro", "200 GB storage", "Dedicated support"],
-      cta: "Get Studio",
-      highlight: false,
-    },
-  ];
+  return ["free", "pro", "studio"].map((code) => planToCard(lang, code));
 }
 
 // ─── Check icon ───────────────────────────────────────────────────────────────
