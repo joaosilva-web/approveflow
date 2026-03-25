@@ -61,27 +61,55 @@ function translateFeatureToPt(feature: string) {
   return map[feature] ?? feature;
 }
 
-function planToCard(lang: Lang, planCode: string) : Plan {
+function planToCard(lang: Lang, planCode: string): Plan {
   const def = PLANS[planCode];
-  const price = `R$${Math.round(def.priceBrl)}`;
+  let price: string;
+  if (def.priceBrl === 0) {
+    price = "R$0";
+  } else {
+    const formatted = def.priceBrl.toFixed(2).replace('.', lang === 'pt' ? ',' : '.');
+    price = `R$${formatted}`;
+  }
   const period = lang === "pt" ? "/ mês" : "/ month";
   const description = lang === "pt" ? def.description : def.description;
 
-  const features = def.features.map((f) => (lang === "pt" ? translateFeatureToPt(f) : f));
+  const features = def.features.map((f) =>
+    lang === "pt" ? translateFeatureToPt(f) : f,
+  );
 
-  const ctaMap: Record<string, {pt:string;en:string;badge?:string;highlight?:boolean}> = {
+  const ctaMap: Record<
+    string,
+    { pt: string; en: string; badge?: string; highlight?: boolean }
+  > = {
     free: { pt: "Começar grátis", en: "Start for free", highlight: false },
-    pro: { pt: "Assinar Pro", en: "Get Pro", badge: "Mais Popular", highlight: true },
+    pro: {
+      pt: "Assinar Pro",
+      en: "Get Pro",
+      badge: "Mais Popular",
+      highlight: true,
+    },
     studio: { pt: "Assinar Studio", en: "Get Studio", highlight: false },
   };
 
   const meta = ctaMap[planCode];
 
   return {
-    name: lang === "pt" ? (planCode === "free" ? "Free" : planCode === "pro" ? "Pro" : "Studio") : def.name,
+    name:
+      lang === "pt"
+        ? planCode === "free"
+          ? "Free"
+          : planCode === "pro"
+            ? "Pro"
+            : "Studio"
+        : def.name,
     price,
     period: lang === "pt" && def.priceBrl === 0 ? "para sempre" : period,
-    description: lang === "pt" ? (planCode === "free" ? "Perfeito para começar com um ou dois clientes." : def.description) : def.description,
+    description:
+      lang === "pt"
+        ? planCode === "free"
+          ? "Perfeito para começar com um ou dois clientes."
+          : def.description
+        : def.description,
     features,
     cta: lang === "pt" ? meta.pt : meta.en,
     highlight: !!meta.highlight,
@@ -120,7 +148,7 @@ function PlanCard({ plan }: { plan: Plan }) {
   return (
     <article
       className={cn(
-        "relative flex flex-col rounded-2xl p-7 transition-all duration-300",
+        "relative flex flex-col h-full rounded-2xl p-7 transition-all duration-300",
         plan.highlight
           ? "bg-gradient-to-b from-[#130d2a] to-[#0e0a22] border border-violet-500/30 shadow-2xl shadow-violet-900/20 scale-[1.02]"
           : "bg-[#0d0d1e] border border-white/[0.06] hover:border-white/[0.10]",
