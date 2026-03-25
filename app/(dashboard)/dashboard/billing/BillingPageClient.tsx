@@ -154,6 +154,7 @@ export default function BillingPageClient({
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const autoStartedRef = useRef(false);
 
   // ── Pending-payment polling ─────────────────────────────────────────────────
   // If the user returns from Stripe with ?status=pending, poll until the webhook
@@ -236,6 +237,24 @@ export default function BillingPageClient({
       setLoadingPlan(null);
     }
   };
+
+  // ── Auto-start checkout when arriving with ?plan=pro|studio (from pricing CTA)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (autoStartedRef.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get("plan");
+    if (plan === "pro" || plan === "studio") {
+      // Only auto-start if it's not the current plan
+      if (plan !== subscription.planCode) {
+        autoStartedRef.current = true;
+        // give a tiny delay to allow UI to mount
+        setTimeout(() => {
+          handleUpgrade(plan as "pro" | "studio");
+        }, 300);
+      }
+    }
+  }, [subscription.planCode]);
 
   // ── Usage calculations ──────────────────────────────────────────────────────
   const usedProjects = subscription.projectCount;
