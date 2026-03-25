@@ -79,7 +79,14 @@ function planToCard(lang: Lang, planCode: string): Plan {
     price = `R$${formatted}`;
   }
   const period = lang === "pt" ? "/ mês" : "/ month";
-  const description = lang === "pt" ? def.description : def.description;
+  // Translations for plan short descriptions
+  const planDescriptionPtMap: Record<string, string> = {
+    free: "Perfeito para começar com um ou dois clientes.",
+    pro: "Para freelancers e estúdios em crescimento",
+    studio: "Para equipes e agências",
+  };
+
+  const description = lang === "pt" ? planDescriptionPtMap[planCode] ?? def.description : def.description;
 
   const features = def.features.map((f) =>
     lang === "pt" ? translateFeatureToPt(f) : f,
@@ -102,6 +109,7 @@ function planToCard(lang: Lang, planCode: string): Plan {
   const meta = ctaMap[planCode];
 
   return {
+    code: def.code,
     name:
       lang === "pt"
         ? planCode === "free"
@@ -112,12 +120,7 @@ function planToCard(lang: Lang, planCode: string): Plan {
         : def.name,
     price,
     period: lang === "pt" && def.priceBrl === 0 ? "para sempre" : period,
-    description:
-      lang === "pt"
-        ? planCode === "free"
-          ? "Perfeito para começar com um ou dois clientes."
-          : def.description
-        : def.description,
+    description: description,
     features,
     cta: lang === "pt" ? meta.pt : meta.en,
     highlight: !!meta.highlight,
